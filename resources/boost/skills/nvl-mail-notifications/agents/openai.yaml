@@ -1,0 +1,4 @@
+interface:
+  display_name: "NVL Mail Notifications"
+  short_description: "Build safe provider-neutral mail lifecycle infrastructure"
+  default_prompt: "Use $nvl-mail-notifications to implement or review opt-in tracking, scheduling, adapters, webhooks, privacy storage/anonymization, lifecycle invariants, and diagnostics."
