@@ -340,7 +340,7 @@ return new class extends Migration
         };
         $expectedShape = $expectedType
             && ($column['nullable'] ?? null) === true
-            && ($column['default'] ?? null) === null
+            && $this->isNullDefault($column['default'] ?? null)
             && ($column['auto_increment'] ?? null) === false
             && ($column['generation'] ?? null) === null;
 
@@ -350,6 +350,15 @@ return new class extends Migration
                 $table,
             ));
         }
+    }
+
+    /**
+     * Normalize the explicit NULL marker returned by MariaDB's schema inspector.
+     */
+    private function isNullDefault(mixed $default): bool
+    {
+        return $default === null
+            || (is_string($default) && strtoupper(trim($default)) === 'NULL');
     }
 
     /**

@@ -116,7 +116,8 @@ function dropMailStatusInvariant(
 
     $dropClause = match ($driver) {
         'pgsql' => 'drop constraint',
-        'mysql', 'mariadb' => 'drop check',
+        'mysql' => 'drop check',
+        'mariadb' => 'drop constraint',
         default => throw new LogicException(
             "Unsupported status-constraint test driver [{$driver}].",
         ),
