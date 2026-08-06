@@ -60,15 +60,16 @@ it('normalizes public tracking identifiers', function () {
         ->identifier->toBe('account-1');
 });
 
-it('preserves exact internationalized recipient identities accepted by Symfony', function () {
+it('preserves exact recipient casing and internationalized display names accepted by Symfony', function () {
     $caseSensitive = new Recipient(' User.Name@Example.COM ', ' Recipient ');
-    $internationalized = new Recipient('δοκιμή@παράδειγμα.δοκιμή');
+    $internationalized = new Recipient('delivery@example.com', ' Παραλήπτης ');
 
     expect($caseSensitive)
         ->email->toBe('User.Name@Example.COM')
         ->name->toBe('Recipient')
-        ->and($internationalized->email)
-        ->toBe('δοκιμή@παράδειγμα.δοκιμή');
+        ->and($internationalized)
+        ->email->toBe('delivery@example.com')
+        ->name->toBe('Παραλήπτης');
 });
 
 it('rejects recipients that Symfony cannot deliver', function () {
