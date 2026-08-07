@@ -34,7 +34,7 @@ the host wants editable copies at Laravel's conventional override path.
   variable `check_constraint_checks` enabled
 
 ```bash
-composer require nvl/mail-notifications
+composer require nvl/laravel-suite:^1.0
 php artisan vendor:publish --tag=mail-notifications-config
 php artisan vendor:publish --tag=mail-notifications-skills
 php artisan vendor:publish --tag=mail-notifications-mail-views
