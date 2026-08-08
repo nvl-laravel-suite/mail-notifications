@@ -1,4 +1,6 @@
-# NVL Mail Notifications
+# NVL Mail Notifications — API and usage
+
+[← NVL Laravel Suite](../../../README.md)
 
 Provider-neutral, explicitly opt-in outbound mail tracking for Laravel.
 
