@@ -2,6 +2,16 @@
 
 [← NVL Laravel Suite](../../../README.md)
 
+## Quick reference
+
+| Item | Value |
+|---|---|
+| Installed through | `composer require nvl/laravel-suite:^1.0` |
+| Module identifier | `nvl/mail-notifications` |
+| PHP namespace | `Nvl\MailNotifications` |
+| Service provider | `Nvl\MailNotifications\Providers\MailNotificationsServiceProvider` |
+| Configuration | `config/mail-notifications.php` |
+
 Provider-neutral, explicitly opt-in outbound mail tracking for Laravel.
 
 ## Purpose
