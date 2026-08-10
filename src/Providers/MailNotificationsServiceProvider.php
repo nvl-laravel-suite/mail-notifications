@@ -15,6 +15,7 @@ use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Mail\Markdown;
 use Illuminate\Support\ServiceProvider;
 use LogicException;
+use Nvl\Data\Services\TypeScriptSourceRegistry;
 use Nvl\MailNotifications\Console\Commands\AnonymizeMailNotificationsCommand;
 use Nvl\MailNotifications\Console\Commands\MailNotificationsDoctorCommand;
 use Nvl\MailNotifications\Console\Commands\ProcessScheduledMailCommand;
@@ -242,6 +243,13 @@ final class MailNotificationsServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->bound(TypeScriptSourceRegistry::class)) {
+            $this->app->make(TypeScriptSourceRegistry::class)->register(
+                __DIR__.'/..',
+                'nvl/mail-notifications',
+            );
+        }
+
         TrackingRuntimeBridge::clear();
         SensitiveStorageBridge::clear();
         SensitiveStorageBridge::use(

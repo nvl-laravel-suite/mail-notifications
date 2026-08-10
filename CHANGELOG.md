@@ -4,6 +4,8 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+- Registered public backed enums with NVL Data when the suite TypeScript source
+  registry is available, including `MailDeliveryStatus`.
 - Registered migration publication through Laravel's timestamp-aware API and
   made Doctor warn when automatic vendor loading overlaps a published host copy.
 - Added a provider-neutral tracking lifecycle and package-owned schema.

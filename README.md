@@ -978,6 +978,17 @@ customizations, and application-facing projections.
 After changing environment-backed settings or configured extension classes in
 production, rebuild Laravel's configuration cache and restart queue workers.
 
+When installed through `nvl/laravel-suite` with NVL Data enabled, the provider
+registers its public backed enums as TypeScript sources. Strict generation can
+therefore resolve contracts such as
+`Nvl.MailNotifications.Enums.MailDeliveryStatus` without a host
+`LiteralTypeScriptType` replacement:
+
+```bash
+php artisan nvl:data:types:generate --fail-on-warning
+php artisan nvl:data:types:check --fail-on-warning
+```
+
 Package services and model-managed timestamps are generated, stored, compared,
 and restored in UTC with microsecond precision, independently from the host
 application timezone. The configured database/session timezone must still be
