@@ -1,6 +1,6 @@
 ---
 name: nvl-mail-notifications
-description: Implement, integrate, test, or review nvl/mail-notifications in Laravel 12–13. Use for opt-in mail tracking, per-message or per-mailer exclusions, lifecycle transitions, effective recipient capture, provider adapters, webhook normalization, protected storage, anonymization, scheduled delivery, bounded retention, database invariants, and schema diagnostics.
+description: Implement, integrate, test, or review nvl/mail-notifications in Laravel 12–13. Use for opt-in mail tracking, lifecycle transitions, provider adapters, webhook normalization, protected storage, legacy adoption, authorized administrative reads, scheduled delivery, bounded retention, database invariants, and schema diagnostics.
 ---
 
 # NVL Mail Notifications
@@ -108,6 +108,38 @@ Laravel Mail or rewrite business recipients.
   when validating physical ownership cascades.
 - Reject invalid configured extensions, unsafe privacy configuration, and
   oversized or provider-mismatched webhooks.
+
+## Adopt legacy schemas through one reviewed manifest
+
+- Publish `mail-notifications-adoption` and edit the version 1 manifest. Never
+  infer table, column, status, notifiable, scheduled-factory, or foreign-key
+  mappings during deployment.
+- Run `nvl:mail-notifications:adopt <manifest> --stage` without `--apply`
+  before package migrations when legacy tables occupy canonical names. Apply
+  only after reviewing every rename and detached host foreign key.
+- Run the command without `--stage` after package migrations. Dry-run first and
+  require exact source counts, UUID identities, registered notifiable aliases,
+  explicit status maps, and scheduled factory alias/version support.
+- Allowlist support-safe metadata and normalized provider-event milestones.
+  Never import bodies, raw provider responses, tokens, traces, scheduler claims,
+  or legacy worker locks.
+- Restore only declared host foreign keys after identity reconciliation. Keep
+  `drop_sources=false` through the rollback window and treat applied cutovers as
+  forward-only.
+
+## Use package administrative read contracts
+
+- Bind `MailNotificationReadAuthorization`; the default adapter denies reads
+  until the host explicitly authorizes list, view, statistics, or suggestions.
+- Use `MailNotificationReadQuery` and the package list/show/statistics/suggestion
+  Actions instead of querying mutable package models in controllers.
+- Keep search, dates, status, mailer/category filters, sorts, page sizes, and
+  suggestion limits bounded by the package contracts and configuration.
+- Return package read value objects. Do not add recipient arrays, metadata,
+  webhook payloads, scheduled payloads, claims, or locks to administrative
+  projections.
+- Keep routes, controllers, rate limits, permissions, translations, and UI
+  composition host-owned.
 
 ## Protect delivery and data
 

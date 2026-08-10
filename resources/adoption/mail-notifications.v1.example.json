@@ -1,0 +1,114 @@
+{
+    "version": 1,
+    "connection": null,
+    "staging": [
+        {
+            "source_table": "mail_notifications",
+            "staging_table": "mail_notifications_legacy"
+        },
+        {
+            "source_table": "scheduled_emails",
+            "staging_table": "scheduled_emails_legacy"
+        }
+    ],
+    "notifications": {
+        "table": "mail_notifications_legacy",
+        "expected_count": 0,
+        "columns": {
+            "id": "id",
+            "status": "status",
+            "mailer": "driver",
+            "provider_message_id": "provider_message_id",
+            "message_category": "notification_type",
+            "subject": "subject",
+            "from_email": "from_email",
+            "from_name": "from_name",
+            "to_recipients": "to_recipients",
+            "cc_recipients": "cc_recipients",
+            "bcc_recipients": "bcc_recipients",
+            "primary_recipient_email": "primary_recipient_email",
+            "notifiable_type": "notifiable_type",
+            "notifiable_id": "notifiable_id",
+            "metadata": "metadata",
+            "accepted_at": "sent_at",
+            "delivered_at": "delivered_at",
+            "failed_at": "failed_at",
+            "created_at": "created_at",
+            "updated_at": "updated_at"
+        },
+        "status_map": {
+            "pending": "pending",
+            "sent": "accepted",
+            "failed": "failed",
+            "delivered": "delivered",
+            "opened": "opened",
+            "clicked": "clicked",
+            "bounced": "bounced",
+            "spam": "complained",
+            "unsubscribed": "unsubscribed"
+        },
+        "notifiable_type_map": {
+            "Host\\Models\\User": "user"
+        },
+        "event_timestamps": {
+            "delivered": "delivered_at",
+            "opened": "opened_at",
+            "clicked": "clicked_at"
+        },
+        "metadata_allowlist": [
+            "notification_type",
+            "language"
+        ]
+    },
+    "scheduled_messages": {
+        "table": "scheduled_emails_legacy",
+        "expected_count": 0,
+        "columns": {
+            "id": "id",
+            "factory_key": "mailable_class",
+            "payload": "payload",
+            "to_recipients": "to_recipients",
+            "cc_recipients": "cc_recipients",
+            "bcc_recipients": "bcc_recipients",
+            "status": "status",
+            "scheduled_for": "scheduled_for",
+            "attempts": "attempts",
+            "max_attempts": "max_attempts",
+            "notifiable_type": "notifiable_type",
+            "notifiable_id": "notifiable_id",
+            "metadata": "metadata",
+            "sent_at": "sent_at",
+            "failed_at": "failed_at",
+            "cancelled_at": "cancelled_at",
+            "created_at": "created_at",
+            "updated_at": "updated_at"
+        },
+        "status_map": {
+            "pending": "pending",
+            "sent": "sent",
+            "failed": "failed",
+            "cancelled": "cancelled"
+        },
+        "notifiable_type_map": {
+            "Host\\Models\\User": "user"
+        },
+        "factory_map": {
+            "Host\\Mail\\LegacyReceiptMail": {
+                "alias": "receipt",
+                "version": 1
+            }
+        },
+        "metadata_allowlist": [
+            "locale"
+        ]
+    },
+    "foreign_keys": [
+        {
+            "table": "reminder_occurrences",
+            "column": "mail_notification_id",
+            "name": "reminder_occurrences_mail_notification_id_foreign",
+            "on_delete": "null"
+        }
+    ],
+    "drop_sources": false
+}

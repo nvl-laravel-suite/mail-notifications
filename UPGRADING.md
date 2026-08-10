@@ -180,6 +180,35 @@ redaction marker, while immutable identity conflicts remain errors.
 
 ## Adopting a legacy tracker
 
+Suite 1.0.2 adds a first-party, dry-run-first adoption boundary. Publish the
+versioned manifest, replace every placeholder with reviewed source facts, and
+record exact counts before changing schema:
+
+```bash
+php artisan vendor:publish --tag=mail-notifications-adoption
+php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json --stage
+php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json --stage --apply
+php artisan migrate
+php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json
+php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json --apply
+```
+
+`--stage` is the pre-migration phase for incompatible tables occupying package
+names. It validates every source/destination pair first, detaches only
+manifest-declared host foreign keys, and renames the tables. After package
+migrations create the canonical schema, omit `--stage` to validate and import.
+Import refuses unknown statuses and notifiable types, unregistered scheduled
+factory aliases or payload versions, invalid UUID identities, unreconciled host
+references, count drift, target identity collisions, and enabled protected
+storage. It creates normalized provider-event milestones, imports only
+allowlisted metadata, never copies scheduler claims or locks, and restores
+declared host foreign keys after exact reconciliation.
+
+Set `drop_sources` only after the rollback window closes. An applied cutover is
+forward-only: stop writers, inspect the report and database state, and continue
+with an operator-reviewed forward migration instead of renaming tables back
+while package delivery is enabled.
+
 The package migration dated `2026_07_28` is a read-only preflight. Its earlier
 timestamp deliberately sorts it before the first-release `2026_07_29` table
 creator, so an incompatible configured legacy table stops the migration before
@@ -244,9 +273,10 @@ for support and audit.
 ### Replacing a legacy MailNotifications module
 
 This is a controlled application migration, not a namespace-only Composer
-swap. The package replaces the module's portable write-side infrastructure,
-while application delivery and read surfaces stay in the host or move into
-another application-owned integration layer.
+swap. The package replaces the module's portable write-side infrastructure and
+provides privacy-bounded read Actions, while application delivery endpoints,
+controllers, and presentation stay in the host or another application-owned
+integration layer.
 
 | Legacy module surface | Replacement |
 | --- | --- |
@@ -254,18 +284,18 @@ another application-owned integration layer.
 | `forNotifiable()` and `withTrackingMetadata()` | Same fluent intent; package values are one-delivery state and clear after every real send attempt |
 | Legacy queued-Mailable `failed()` tracking | Built into `TracksMailDelivery`; a host `failed(?Throwable)` hook must call `recordMailTrackingFailure()` |
 | `setLocale()` | Laravel's native Mailable `locale()`; notifiable fallback remains host policy |
-| `getMailNotification()` | Package lifecycle events and a host read projection; a sent Mailable does not retain an Eloquent tracking model |
-| Module `MailTrackable` and `HandlesNotifications` | Package `MailTrackable` supplies only stable alias/identifier; keep relations, statistics, timeline, and convenience queries host-owned |
+| `getMailNotification()` | Use `ShowMailNotificationAction` with explicit read authorization; a sent Mailable does not retain an Eloquent tracking model |
+| Module `MailTrackable` and `HandlesNotifications` | Package `MailTrackable` supplies only stable alias/identifier; use package read Actions for bounded delivery statistics and queries, while relations and timelines remain host-owned |
 | `ProvidesMailerSendConfig` | Keep or relocate this transport/template contract in the host; the package does not own message content or the MailerSend sending driver |
-| `MailNotificationStatusChanged` | `MailDeliveryStatusChanged` carries safe identifiers and enums; query the package model when a host projection needs more data |
+| `MailNotificationStatusChanged` | `MailDeliveryStatusChanged` carries safe identifiers and enums; use an authorized package read Action when a host projection needs more data |
 | `sent` / `spam` status | Map to package `accepted` / `complained`; package also distinguishes `delayed` and `rejected` |
 | Register/deregister webhook commands | `nvl:mail-notifications:webhooks:sync` / `webhooks:remove`, with dry-run and explicit force/all safeguards |
 | Reflection-based scheduled Mailable construction | Registered `ScheduledMessageFactory` alias plus payload version |
 | Scheduled processing command | Package process and stale-claim recovery commands |
-| Module status-check query/API | Keep a host-owned read projection over the package model; query by exact provider plus provider-message identity and expose only authorized fields. Database allowlists and the doctor protect writes, not that API surface |
+| Module status-check query/API | Use package list/show/statistics/suggestion read Actions behind a host `MailNotificationReadAuthorization`; keep controllers and exact provider-status endpoints host-owned when needed |
 | Manual status updates or history deletion | Retire direct model mutation; use package lifecycle services and bounded anonymize/prune commands |
 | Plain JSON payload/recipient history | Optional package sensitive-array transformer plus a separate bounded anonymization stage |
-| Controllers, API resources, filters, statistics, policies, permissions, translations, admin UI, and activity timeline | Keep host-owned; read package models/projections, route every mutation through package services/contracts, and react to package events |
+| Controllers, policies, permissions, translations, admin UI, and activity timeline | Keep host-owned; consume package privacy-bounded read DTOs, route every mutation through package services/contracts, and react to package events |
 
 Every migrated tracked Mailable must implement `trackingContext()`. Preserve
 stable categories rather than class names. Existing host models may keep their
@@ -428,8 +458,8 @@ MailerSend, set `MAIL_NOTIFICATIONS_MAILERSEND_SIGNING_SECRET`, reload cached
 configuration, and run the strict doctor. The fixed `webhook.test` secret is
 only for URL validation.
 
-Build any legacy admin screen as a read projection over the package tables
-instead of retaining a second write path. After the import, run:
+Build any legacy admin screen from the package's authorized, privacy-bounded
+read Actions instead of retaining a second write path. After the import, run:
 
 ```bash
 php artisan nvl:mail-notifications:doctor --strict --format=json

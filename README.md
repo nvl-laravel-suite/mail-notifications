@@ -53,6 +53,29 @@ php artisan vendor:publish --tag=mail-notifications-mail-views
 php artisan migrate
 ```
 
+For a legacy-schema cutover, publish the versioned manifest template and keep
+tracking and scheduling disabled until the import and strict doctor pass:
+
+```bash
+php artisan vendor:publish --tag=mail-notifications-adoption
+php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json --stage
+php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json --stage --apply
+php artisan migrate
+php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json
+php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json --apply
+php artisan nvl:mail-notifications:doctor --strict --format=json
+```
+
+Both adoption phases are dry runs without `--apply`. Staging validates every
+rename before detaching explicitly declared host foreign keys and moving
+canonical-name legacy tables aside. Import requires the complete package
+schema, validates exact counts, status and notifiable maps, safe metadata and
+provider-event mappings, and every scheduled factory alias/version before one
+data transaction starts. It clears legacy scheduler locks, reconciles imported
+identities, restores declared host foreign keys, and drops source tables only
+when `drop_sources` is explicitly true. Keep that option false through the
+rollback window.
+
 Package discovery registers `MailNotificationsServiceProvider`. Migrations
 load automatically unless `mail-notifications.migrations.enabled` is false.
 Choose exactly one migration owner:
@@ -889,6 +912,28 @@ message-level. Send a separate tracked message per recipient when the provider
 emits recipient-specific delivery outcomes that must remain independently
 queryable.
 
+## Administrative delivery reads
+
+The package exposes `ListMailNotificationsAction`,
+`ShowMailNotificationAction`, `GetMailNotificationStatisticsAction`, and
+`SuggestMailNotificationsAction`. Bind `MailNotificationReadAuthorization`, or
+configure a class implementing it under
+`mail-notifications.management.authorization.class`. The built-in adapter
+denies every read unless the host explicitly authorizes the distinct `list`,
+`view`, `statistics`, or `suggest` ability.
+
+`MailNotificationReadQuery` accepts only bounded search, status, mailer,
+category, date, accepted/failed, sort, direction, and pagination values. List
+results use a deterministic secondary ID order and cap page size with
+`management.maximum_per_page`; suggestions require a non-empty bounded search
+and use `management.suggestion_limit`.
+
+The Actions return stable value objects rather than mutable Eloquent models.
+Their projections do not select or serialize TO/CC/BCC arrays, notification or
+provider-event metadata, raw webhook content, scheduled payloads, or scheduler
+claims. Hosts continue to own controllers, routes, rate limiting, permissions,
+translations, and UI composition.
+
 ## Failure policy
 
 `fail_closed` is the default. A failure to create the pending record prevents
@@ -971,9 +1016,9 @@ php artisan nvl:mail-notifications:doctor --strict --format=json
 ```
 
 The host owns mail transport configuration, queue policy, webhook routes,
-provider credentials, authorization, scheduled-mail command frequency,
-retention/anonymization scheduling, encryption-key retention, published view
-customizations, and application-facing projections.
+provider credentials, authorization decisions, scheduled-mail command
+frequency, retention/anonymization scheduling, encryption-key retention,
+published view customizations, controllers, and UI composition.
 
 After changing environment-backed settings or configured extension classes in
 production, rebuild Laravel's configuration cache and restart queue workers.

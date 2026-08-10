@@ -16,6 +16,7 @@ use Illuminate\Mail\Markdown;
 use Illuminate\Support\ServiceProvider;
 use LogicException;
 use Nvl\Data\Services\TypeScriptSourceRegistry;
+use Nvl\MailNotifications\Console\Commands\AdoptMailNotificationsCommand;
 use Nvl\MailNotifications\Console\Commands\AnonymizeMailNotificationsCommand;
 use Nvl\MailNotifications\Console\Commands\MailNotificationsDoctorCommand;
 use Nvl\MailNotifications\Console\Commands\ProcessScheduledMailCommand;
@@ -23,6 +24,7 @@ use Nvl\MailNotifications\Console\Commands\PruneMailNotificationsCommand;
 use Nvl\MailNotifications\Console\Commands\RecoverScheduledMailCommand;
 use Nvl\MailNotifications\Console\Commands\RemoveRemoteWebhooksCommand;
 use Nvl\MailNotifications\Console\Commands\SyncRemoteWebhooksCommand;
+use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
 use Nvl\MailNotifications\Contracts\ProviderAdapter;
 use Nvl\MailNotifications\Contracts\ProviderMessageIdResolver;
 use Nvl\MailNotifications\Contracts\ProvidesNotifiableTypes;
@@ -33,6 +35,7 @@ use Nvl\MailNotifications\Contracts\SensitiveDataTransformer;
 use Nvl\MailNotifications\Contracts\TrackingLifecycle;
 use Nvl\MailNotifications\Laravel\Listeners\TrackMessageAfterSending;
 use Nvl\MailNotifications\Laravel\Listeners\TrackMessageBeforeSending;
+use Nvl\MailNotifications\Services\ConfiguredMailNotificationReadAuthorization;
 use Nvl\MailNotifications\Services\DatabaseTrackingLifecycle;
 use Nvl\MailNotifications\Services\DefaultSensitiveDataRedactor;
 use Nvl\MailNotifications\Services\MailAnonymizationConfiguration;
@@ -77,6 +80,22 @@ final class MailNotificationsServiceProvider extends ServiceProvider
         $this->replaceConfigRecursivelyFrom(
             dirname(__DIR__, 2).'/config/mail-notifications.php',
             'mail-notifications',
+        );
+        $readAuthorization = config(
+            'mail-notifications.management.authorization.class',
+            ConfiguredMailNotificationReadAuthorization::class,
+        );
+
+        if (! is_string($readAuthorization)
+            || ! is_a($readAuthorization, MailNotificationReadAuthorization::class, true)) {
+            throw new LogicException(
+                'mail-notifications.management.authorization.class must implement MailNotificationReadAuthorization.',
+            );
+        }
+
+        $this->app->bindIf(
+            MailNotificationReadAuthorization::class,
+            $readAuthorization,
         );
         $this->registerConfiguredExtensions(
             'mail-notifications.extensions.provider_adapters',
@@ -282,6 +301,9 @@ final class MailNotificationsServiceProvider extends ServiceProvider
             dirname(__DIR__, 2).'/resources/boost/skills' => base_path('.agents/skills'),
         ], 'mail-notifications-skills');
         $this->publishes([
+            dirname(__DIR__, 2).'/resources/adoption/mail-notifications.v1.example.json' => base_path('mail-notifications.adoption.json'),
+        ], 'mail-notifications-adoption');
+        $this->publishes([
             dirname(__DIR__, 2).'/resources/views/mail' => resource_path('views/vendor/mail'),
         ], 'mail-notifications-mail-views');
 
@@ -294,6 +316,7 @@ final class MailNotificationsServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
+                AdoptMailNotificationsCommand::class,
                 AnonymizeMailNotificationsCommand::class,
                 MailNotificationsDoctorCommand::class,
                 PruneMailNotificationsCommand::class,

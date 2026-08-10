@@ -4,6 +4,12 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+- Added a bounded, manifest-driven legacy adoption command with separate
+  dry-run staging/import phases, explicit scheduled factory mappings, safe
+  metadata/event conversion, identity reconciliation, host foreign-key repair,
+  and opt-in source removal.
+- Added fail-closed authorized list, show, statistics, and suggestion Actions
+  with bounded filters and privacy-safe delivery-history value objects.
 - Registered public backed enums with NVL Data when the suite TypeScript source
   registry is available, including `MailDeliveryStatus`.
 - Registered migration publication through Laravel's timestamp-aware API and

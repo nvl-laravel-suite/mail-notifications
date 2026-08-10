@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Nvl\MailNotifications\Services\ConfiguredMailNotificationReadAuthorization;
 use Nvl\MailNotifications\Services\DatabaseTrackingLifecycle;
 use Nvl\MailNotifications\Services\DefaultSensitiveDataRedactor;
 
@@ -150,6 +151,20 @@ return [
     ],
 
     'notifiable_types' => [],
+
+    'management' => [
+        'maximum_per_page' => 100,
+        'suggestion_limit' => 20,
+        'authorization' => [
+            'class' => ConfiguredMailNotificationReadAuthorization::class,
+            'callback' => null,
+        ],
+    ],
+
+    'adoption' => [
+        'maximum_manifest_bytes' => 1_048_576,
+        'maximum_records' => 10_000,
+    ],
 
     'extensions' => [
         'provider_adapters' => [],

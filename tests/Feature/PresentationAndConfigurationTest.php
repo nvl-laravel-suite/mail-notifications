@@ -10,6 +10,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Mail\Markdown;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
 use Nvl\MailNotifications\Contracts\SensitiveDataRedactor;
 use Nvl\MailNotifications\Contracts\SensitiveDataTransformer;
 use Nvl\MailNotifications\Contracts\TrackingLifecycle;
@@ -18,6 +19,7 @@ use Nvl\MailNotifications\Exceptions\SensitiveStorageException;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
 use Nvl\MailNotifications\Providers\MailNotificationsServiceProvider;
+use Nvl\MailNotifications\Services\ConfiguredMailNotificationReadAuthorization;
 use Nvl\MailNotifications\Services\DatabaseTrackingLifecycle;
 use Nvl\MailNotifications\Services\DefaultSensitiveDataRedactor;
 use Nvl\MailNotifications\Services\MailNotificationNotifiableTypeRegistry;
@@ -78,6 +80,18 @@ it('publishes the tokenized theme to Laravels conventional override path', funct
         );
 });
 
+it('publishes the versioned legacy adoption manifest', function () {
+    $paths = MailNotificationsServiceProvider::pathsToPublish(
+        MailNotificationsServiceProvider::class,
+        'mail-notifications-adoption',
+    );
+
+    expect($paths)->toHaveKey(
+        dirname(__DIR__, 2).'/resources/adoption/mail-notifications.v1.example.json',
+        base_path('mail-notifications.adoption.json'),
+    );
+});
+
 it('registers package migrations for timestamp-aware publishing', function () {
     $paths = MailNotificationsServiceProvider::pathsToPublish(
         MailNotificationsServiceProvider::class,
@@ -108,6 +122,8 @@ it('exposes serializable defaults for every host integration seam', function () 
             'webhook_managers' => [],
         ])
         ->and(config('mail-notifications.notifiable_types'))->toBe([])
+        ->and(app(MailNotificationReadAuthorization::class))
+        ->toBeInstanceOf(ConfiguredMailNotificationReadAuthorization::class)
         ->and(config('mail-notifications.services.tracking_lifecycle'))
         ->toBe(DatabaseTrackingLifecycle::class)
         ->and(config('mail-notifications.services.sensitive_data_redactor'))
