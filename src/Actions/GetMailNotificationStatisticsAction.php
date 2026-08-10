@@ -46,11 +46,14 @@ final readonly class GetMailNotificationStatisticsAction
         foreach (MailDeliveryStatus::cases() as $status) {
             $count = $rawCounts[$status->value] ?? 0;
 
-            if (! is_int($count) && (! is_string($count) || ! ctype_digit($count))) {
-                $count = 0;
+            if (! is_int($count)) {
+                $validatedCount = is_string($count)
+                    ? filter_var($count, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]])
+                    : false;
+                $count = is_int($validatedCount) ? $validatedCount : 0;
             }
 
-            $statuses[$status->value] = is_int($count) ? $count : (int) $count;
+            $statuses[$status->value] = $count;
         }
 
         $accepted = (clone $query)->whereNotNull('accepted_at')->count();

@@ -927,7 +927,9 @@ final readonly class AdoptMailNotificationsAction
             return $value;
         }
 
-        if (is_string($value) && ctype_digit($value)) {
+        if (is_string($value)
+            && $value !== ''
+            && strspn($value, '0123456789') === strlen($value)) {
             return (int) $value;
         }
 
