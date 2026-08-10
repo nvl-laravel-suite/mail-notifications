@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\GenericUser;
+use Illuminate\Support\Facades\DB;
 use Nvl\MailNotifications\Actions\GetMailNotificationStatisticsAction;
 use Nvl\MailNotifications\Actions\ListMailNotificationsAction;
 use Nvl\MailNotifications\Actions\ShowMailNotificationAction;
@@ -75,6 +76,33 @@ it('returns bounded filtered pages without sensitive arrays or metadata', functi
             'bcc_recipients',
             'metadata',
         ]);
+});
+
+it('keeps administrative list queries independent of result size', function (): void {
+    $measure = static function (): int {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+
+        $page = app(ListMailNotificationsAction::class)->execute(
+            mailNotificationAdministrator(),
+            new MailNotificationReadQuery(perPage: 100),
+        );
+        $queryCount = count(DB::getQueryLog());
+        $page->toArray();
+
+        expect(DB::getQueryLog())->toHaveCount($queryCount);
+        DB::disableQueryLog();
+
+        return $queryCount;
+    };
+
+    MailNotification::factory()->delivered()->create();
+    $singleQueryCount = $measure();
+    MailNotification::factory()->delivered()->count(24)->create();
+    $populatedQueryCount = $measure();
+
+    expect($singleQueryCount)->toBeLessThanOrEqual(2)
+        ->and($populatedQueryCount)->toBe($singleQueryCount);
 });
 
 it('authorizes show statistics and suggestion reads independently', function (): void {
