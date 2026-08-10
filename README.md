@@ -55,11 +55,12 @@ php artisan migrate
 
 Package discovery registers `MailNotificationsServiceProvider`. Migrations
 load automatically unless `mail-notifications.migrations.enabled` is false.
-When the application must own migration files, disable automatic package
-migrations in the published config before running `migrate`, publish
-`mail-notifications-migrations`, and then migrate. Do not enable both migration
-sources. Keep the configured storage connection and table names stable between
-forward migrations. The first-release creator migrations install queue-failure
+Choose exactly one migration owner:
+
+1. **Automatic vendor loading (default):** leave `mail-notifications.migrations.enabled=true`, do not publish `mail-notifications-migrations`, and run `php artisan migrate`.
+2. **Host-owned published migrations:** publish `mail-notifications-migrations`, set `mail-notifications.migrations.enabled=false` before migrating, and maintain the published files as application migrations.
+
+Never run both sources. Laravel retimestamps files published through the migration tag. `php artisan nvl:mail-notifications:doctor` reports a warning when automatic loading remains enabled and `database/migrations` contains a timestamp-independent name matching a package migration; `--strict` promotes that warning to failure. Keep the configured storage connection and table names stable between forward migrations. The first-release creator migrations install queue-failure
 identity, privacy markers, retention indexes, and exact status invariants as one
 complete schema contract. This unpublished package has no corrective
 queue/status/privacy migration chain to replay.

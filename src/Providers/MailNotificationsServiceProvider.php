@@ -267,7 +267,7 @@ final class MailNotificationsServiceProvider extends ServiceProvider
         $this->publishes([
             dirname(__DIR__, 2).'/config/mail-notifications.php' => config_path('mail-notifications.php'),
         ], 'mail-notifications-config');
-        $this->publishes([
+        $this->publishesMigrations([
             dirname(__DIR__, 2).'/database/migrations' => database_path('migrations'),
         ], 'mail-notifications-migrations');
         $this->publishes([

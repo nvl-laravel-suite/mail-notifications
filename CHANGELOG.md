@@ -4,6 +4,8 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+- Registered migration publication through Laravel's timestamp-aware API and
+  made Doctor warn when automatic vendor loading overlaps a published host copy.
 - Added a provider-neutral tracking lifecycle and package-owned schema.
 - Added configurable tokenized Laravel Markdown HTML/text components, optional
   automatic loading, and conventional host view publishing.

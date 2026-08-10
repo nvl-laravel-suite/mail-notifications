@@ -9,6 +9,7 @@ use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Mail\Markdown;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\ServiceProvider;
 use Nvl\MailNotifications\Contracts\SensitiveDataRedactor;
 use Nvl\MailNotifications\Contracts\SensitiveDataTransformer;
 use Nvl\MailNotifications\Contracts\TrackingLifecycle;
@@ -77,16 +78,21 @@ it('publishes the tokenized theme to Laravels conventional override path', funct
         );
 });
 
-it('publishes migrations without renaming auto-loaded package files', function () {
+it('registers package migrations for timestamp-aware publishing', function () {
     $paths = MailNotificationsServiceProvider::pathsToPublish(
         MailNotificationsServiceProvider::class,
         'mail-notifications-migrations',
+    );
+    $migrationPath = realpath(dirname(__DIR__, 2).'/database/migrations');
+    $publishableMigrationPaths = array_map(
+        static fn (string $path): string|false => realpath($path),
+        ServiceProvider::publishableMigrationPaths(),
     );
 
     expect($paths)->toHaveKey(
         dirname(__DIR__, 2).'/database/migrations',
         database_path('migrations'),
-    );
+    )->and($publishableMigrationPaths)->toContain($migrationPath);
 });
 
 it('exposes serializable defaults for every host integration seam', function () {
@@ -416,6 +422,33 @@ it('reports healthy package configuration and schema', function () {
         '--format' => 'json',
     ])->assertSuccessful()
         ->expectsOutputToContain('"healthy": true');
+});
+
+it('warns when automatic migrations overlap a published host copy', function () {
+    $published = database_path(
+        'migrations/2099_01_01_000000_create_mail_notification_tables.php',
+    );
+    file_put_contents($published, "<?php\n");
+
+    try {
+        $check = collect(app(MailNotificationsDoctor::class)->inspect())
+            ->firstWhere('key', 'schema.migration_ownership');
+
+        expect($check)
+            ->not->toBeNull()
+            ->passed->toBeFalse()
+            ->severity->toBe('warning')
+            ->message->toContain('create_mail_notification_tables');
+
+        $this->artisan('nvl:mail-notifications:doctor', ['--format' => 'json'])
+            ->assertSuccessful();
+        $this->artisan('nvl:mail-notifications:doctor', [
+            '--strict' => true,
+            '--format' => 'json',
+        ])->assertFailed();
+    } finally {
+        unlink($published);
+    }
 });
 
 it('reports exact package migration ownership as healthy', function () {
