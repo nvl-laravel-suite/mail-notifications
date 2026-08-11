@@ -277,9 +277,11 @@ it('plans and applies a separate pre-migration table staging phase', function ()
         ->and(Schema::hasTable('mail_notifications_collision'))->toBeTrue()
         ->and(Schema::hasTable('mail_notifications_staged'))->toBeFalse();
 
-    mailNotificationAdoptionAction()->execute($manifest, stage: true, apply: true);
+    $result = mailNotificationAdoptionAction()->execute($manifest, stage: true, apply: true);
 
-    expect(Schema::hasTable('mail_notifications_collision'))->toBeFalse()
+    expect($result['foreign_keys_detached'])->toBe([
+        'legacy_stage_links_mail_notification_foreign',
+    ])->and(Schema::hasTable('mail_notifications_collision'))->toBeFalse()
         ->and(Schema::hasTable('mail_notifications_staged'))->toBeTrue()
         ->and(Schema::getForeignKeys('legacy_stage_links'))->toBe([]);
 });
