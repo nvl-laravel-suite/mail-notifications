@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Schema;
 use Nvl\MailNotifications\Adapters\MailerSend\MailerSendAdapter;
 use Nvl\MailNotifications\Contracts\SensitiveDataRedactor;
 use Nvl\MailNotifications\Contracts\TrackingLifecycle;
+use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Events\MailAcceptedByProvider;
 use Nvl\MailNotifications\Events\MailDeliveryStatusChanged;
@@ -537,7 +538,7 @@ it('detects multiple provider identity candidates in a broken schema', function 
         .'/database/migrations/2026_07_29_000000_create_mail_notification_tables.php';
     $migration->up();
     Schema::connection($connectionName)->table(
-        'mail_notifications',
+        MailNotificationsTables::Notifications,
         static function (Blueprint $table): void {
             $table->dropUnique(
                 'mail_notifications_provider_message_unique',

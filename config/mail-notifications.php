@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Services\ConfiguredMailNotificationReadAuthorization;
 use Nvl\MailNotifications\Services\DatabaseTrackingLifecycle;
 use Nvl\MailNotifications\Services\DefaultSensitiveDataRedactor;
@@ -320,15 +321,15 @@ return [
         'tables' => [
             'notifications' => env(
                 'MAIL_NOTIFICATIONS_TABLE',
-                'mail_notifications',
+                MailNotificationsTables::Notifications,
             ),
             'events' => env(
                 'MAIL_NOTIFICATION_EVENTS_TABLE',
-                'mail_notification_events',
+                MailNotificationsTables::Events,
             ),
             'scheduled_messages' => env(
                 'MAIL_NOTIFICATIONS_SCHEDULED_MESSAGES_TABLE',
-                'scheduled_mail_messages',
+                MailNotificationsTables::ScheduledMessages,
             ),
         ],
     ],

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Services\ScheduledMailClaimer;
@@ -53,7 +54,7 @@ function runPostgreSqlScheduledClaimWorker($socket, int $limit): never
                 if (! $waitingAtClaimBoundary
                     || ! $normalizedQuery->startsWith('select')
                     || ! $normalizedQuery->contains(
-                        'scheduled_mail_messages',
+                        MailNotificationsTables::ScheduledMessages,
                     )
                     || ! $normalizedQuery->contains('for update')) {
                     return;

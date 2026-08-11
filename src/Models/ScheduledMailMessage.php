@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 use Nvl\MailNotifications\Database\Factories\ScheduledMailMessageFactory;
+use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Laravel\Casts\SensitiveArrayCast;
 use Nvl\MailNotifications\Laravel\Casts\UtcImmutableDateTimeCast;
@@ -51,7 +52,7 @@ final class ScheduledMailMessage extends Model
 
     use HasUuids;
 
-    public const string TABLE = 'scheduled_mail_messages';
+    public const string TABLE = MailNotificationsTables::ScheduledMessages;
 
     /**
      * Preserve the microsecond precision declared by the package schema.
@@ -139,12 +140,12 @@ final class ScheduledMailMessage extends Model
     {
         $table = config(
             'mail-notifications.storage.tables.scheduled_messages',
-            self::TABLE,
+            MailNotificationsTables::ScheduledMessages,
         );
 
         return is_string($table) && trim($table) !== ''
             ? trim($table)
-            : self::TABLE;
+            : MailNotificationsTables::ScheduledMessages;
     }
 
     /**

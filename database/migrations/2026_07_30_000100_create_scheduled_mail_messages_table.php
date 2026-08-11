@@ -8,6 +8,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Support\StatusConstraintDatabase;
 use Nvl\MailNotifications\Support\StatusConstraintInspector;
@@ -137,12 +138,12 @@ return new class extends Migration
     {
         $configured = config(
             'mail-notifications.storage.tables.scheduled_messages',
-            'scheduled_mail_messages',
+            MailNotificationsTables::ScheduledMessages,
         );
 
         return is_string($configured) && trim($configured) !== ''
             ? trim($configured)
-            : 'scheduled_mail_messages';
+            : MailNotificationsTables::ScheduledMessages;
     }
 
     /**

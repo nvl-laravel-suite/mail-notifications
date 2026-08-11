@@ -8,6 +8,7 @@ use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Facades\Schema;
+use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Support\StatusConstraintDatabase;
 
@@ -33,19 +34,19 @@ return new class extends Migration
             : null;
         $configuredNotificationTable = config(
             'mail-notifications.storage.tables.notifications',
-            'mail_notifications',
+            MailNotificationsTables::Notifications,
         );
         $notificationTable = is_string($configuredNotificationTable)
             && $configuredNotificationTable !== ''
                 ? $configuredNotificationTable
-                : 'mail_notifications';
+                : MailNotificationsTables::Notifications;
         $configuredEventTable = config(
             'mail-notifications.storage.tables.events',
-            'mail_notification_events',
+            MailNotificationsTables::Events,
         );
         $eventTable = is_string($configuredEventTable) && $configuredEventTable !== ''
             ? $configuredEventTable
-            : 'mail_notification_events';
+            : MailNotificationsTables::Events;
         $schema = Schema::connection($connection);
         $this->assertCreatorMayProceed(
             schema: $schema,

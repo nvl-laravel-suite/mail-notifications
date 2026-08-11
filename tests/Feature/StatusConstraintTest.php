@@ -11,6 +11,7 @@ use Illuminate\Database\Schema\Builder as SchemaBuilder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Models\MailNotification;
@@ -577,8 +578,8 @@ it('uses version-compatible MariaDB check metadata', function (
     $schema = $this->mock(SchemaBuilder::class);
     $schema->shouldReceive('parseSchemaAndTable')
         ->once()
-        ->with('mail_notifications')
-        ->andReturn([null, 'mail_notifications']);
+        ->with(MailNotificationsTables::Notifications)
+        ->andReturn([null, MailNotificationsTables::Notifications]);
     $connection = $this->mock(Connection::class);
     $connection->shouldReceive('getDriverName')
         ->andReturn('mariadb');
@@ -619,7 +620,7 @@ it('uses version-compatible MariaDB check metadata', function (
 
             return $bindings === [
                 'mail_database',
-                'mail_notifications',
+                MailNotificationsTables::Notifications,
                 'mail_notifications_status_check',
             ];
         })
@@ -629,7 +630,7 @@ it('uses version-compatible MariaDB check metadata', function (
 
     expect(StatusConstraintInspector::matches(
         connection: $connection,
-        table: 'mail_notifications',
+        table: MailNotificationsTables::Notifications,
         column: 'status',
         constraint: 'mail_notifications_status_check',
         allowedValues: mailDeliveryStatusValues(),
@@ -790,7 +791,7 @@ it('requires PostgreSQL 18 check constraints to be enforced', function (
     $schema->shouldReceive('parseSchemaAndTable')
         ->once()
         ->with('public.mail_notifications')
-        ->andReturn(['public', 'mail_notifications']);
+        ->andReturn(['public', MailNotificationsTables::Notifications]);
     $connection = $this->mock(Connection::class);
     $connection->shouldReceive('getDriverName')
         ->andReturn('pgsql');
@@ -823,7 +824,7 @@ it('requires PostgreSQL 18 check constraints to be enforced', function (
 
             return $bindings === [
                 'public',
-                'mail_notifications',
+                MailNotificationsTables::Notifications,
                 'mail_notifications_status_check',
             ];
         })

@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Nvl\MailNotifications\Contracts\ScheduledMessageFactory;
 use Nvl\MailNotifications\Contracts\SensitiveDataTransformer;
 use Nvl\MailNotifications\Contracts\TrackingLifecycle;
+use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Exceptions\SensitiveStorageException;
@@ -90,7 +91,7 @@ it('round trips protected tracking and replaced scheduled arrays without plainte
     $notificationRaw = DB::table($notification->getTable())
         ->where('id', $notification->id)
         ->firstOrFail();
-    $eventRaw = DB::table('mail_notification_events')
+    $eventRaw = DB::table(MailNotificationsTables::Events)
         ->where('mail_notification_id', $notification->id)
         ->firstOrFail();
 

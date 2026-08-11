@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Nvl\MailNotifications\Database\Factories\MailNotificationFactory;
+use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Laravel\Casts\SensitiveArrayCast;
 use Nvl\MailNotifications\Laravel\Casts\UtcImmutableDateTimeCast;
@@ -53,7 +54,7 @@ final class MailNotification extends Model
 
     use HasUuids;
 
-    public const string TABLE = 'mail_notifications';
+    public const string TABLE = MailNotificationsTables::Notifications;
 
     /**
      * Preserve the microsecond precision declared by the package schema.
@@ -130,12 +131,12 @@ final class MailNotification extends Model
     {
         $table = config(
             'mail-notifications.storage.tables.notifications',
-            self::TABLE,
+            MailNotificationsTables::Notifications,
         );
 
         return is_string($table) && $table !== ''
             ? $table
-            : self::TABLE;
+            : MailNotificationsTables::Notifications;
     }
 
     /**

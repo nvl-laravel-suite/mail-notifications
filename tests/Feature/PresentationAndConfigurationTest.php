@@ -14,6 +14,7 @@ use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
 use Nvl\MailNotifications\Contracts\SensitiveDataRedactor;
 use Nvl\MailNotifications\Contracts\SensitiveDataTransformer;
 use Nvl\MailNotifications\Contracts\TrackingLifecycle;
+use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Exceptions\MailTrackingException;
 use Nvl\MailNotifications\Exceptions\SensitiveStorageException;
 use Nvl\MailNotifications\Models\MailNotification;
@@ -527,7 +528,7 @@ it('detects no-op rollback history before migration ownership is refused', funct
         ->and($schemaColumns)
         ->not->toBeNull()
         ->passed->toBeTrue()
-        ->and(Schema::hasTable('scheduled_mail_messages'))
+        ->and(Schema::hasTable(MailNotificationsTables::ScheduledMessages))
         ->toBeTrue()
         ->and(static fn () => $migration->up())
         ->toThrow(
@@ -548,7 +549,7 @@ it('allows a missing creator to complete when only its owned table is absent', f
     app(Migrator::class)->getRepository()->delete((object) [
         'migration' => $migrationName,
     ]);
-    Schema::drop('scheduled_mail_messages');
+    Schema::drop(MailNotificationsTables::ScheduledMessages);
 
     $history = collect(app(MailNotificationsDoctor::class)->inspect())
         ->firstWhere('key', 'schema.migrations');
@@ -563,12 +564,12 @@ it('allows a missing creator to complete when only its owned table is absent', f
         ->message->toContain($migrationName)
         ->toContain('own no existing configured tables')
         ->toContain('run the pending package migrations')
-        ->and(Schema::hasTable('mail_notifications'))->toBeTrue()
-        ->and(Schema::hasTable('mail_notification_events'))->toBeTrue()
-        ->and(Schema::hasTable('scheduled_mail_messages'))->toBeFalse()
+        ->and(Schema::hasTable(MailNotificationsTables::Notifications))->toBeTrue()
+        ->and(Schema::hasTable(MailNotificationsTables::Events))->toBeTrue()
+        ->and(Schema::hasTable(MailNotificationsTables::ScheduledMessages))->toBeFalse()
         ->and(static fn () => $migration->up())
         ->not->toThrow(Throwable::class)
-        ->and(Schema::hasTable('scheduled_mail_messages'))->toBeTrue();
+        ->and(Schema::hasTable(MailNotificationsTables::ScheduledMessages))->toBeTrue();
 });
 
 it('accepts host-owned migration history when package migrations are disabled', function () {
@@ -606,9 +607,9 @@ it('recommends pending migrations only for a genuinely fresh package schema', fu
         ]);
     }
 
-    Schema::drop('mail_notification_events');
-    Schema::drop('mail_notifications');
-    Schema::drop('scheduled_mail_messages');
+    Schema::drop(MailNotificationsTables::Events);
+    Schema::drop(MailNotificationsTables::Notifications);
+    Schema::drop(MailNotificationsTables::ScheduledMessages);
 
     $history = collect(app(MailNotificationsDoctor::class)->inspect())
         ->firstWhere('key', 'schema.migrations');
@@ -857,7 +858,7 @@ it('reports incomplete package schema as unhealthy', function () {
     expect($schema)
         ->not->toBeNull()
         ->passed->toBeFalse()
-        ->message->toContain('mail_notification_events');
+        ->message->toContain(MailNotificationsTables::Events);
 
     $this->artisan('nvl:mail-notifications:doctor', [
         '--strict' => true,

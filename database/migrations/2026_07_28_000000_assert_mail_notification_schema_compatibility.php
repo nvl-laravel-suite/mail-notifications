@@ -6,6 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Facades\Schema;
+use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Support\ForeignKeyInspector;
 use Nvl\MailNotifications\Support\StatusConstraintDatabase;
@@ -216,11 +217,11 @@ return new class extends Migration
 
         $notificationTable = $this->configuredTable(
             'mail-notifications.storage.tables.notifications',
-            'mail_notifications',
+            MailNotificationsTables::Notifications,
         );
         $eventTable = $this->configuredTable(
             'mail-notifications.storage.tables.events',
-            'mail_notification_events',
+            MailNotificationsTables::Events,
         );
 
         $notificationExists = $schema->hasTable($notificationTable);

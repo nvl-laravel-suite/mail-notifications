@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Nvl\MailNotifications\Actions\AdoptMailNotificationsAction;
+use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
@@ -199,7 +200,7 @@ it('dry-runs and applies a reconciled privacy-bounded legacy import', function (
         ->and(Schema::hasTable('legacy_scheduled_mail'))->toBeFalse()
         ->and(collect(Schema::getForeignKeys('legacy_reminders'))->contains(
             static fn (array $foreignKey): bool => ($foreignKey['columns'] ?? []) === ['mail_notification_id']
-                && ($foreignKey['foreign_table'] ?? null) === 'mail_notifications',
+                && ($foreignKey['foreign_table'] ?? null) === MailNotificationsTables::Notifications,
         ))->toBeTrue();
 });
 
