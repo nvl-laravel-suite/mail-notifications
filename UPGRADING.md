@@ -1,5 +1,17 @@
 # Upgrading NVL Mail Notifications
 
+## Canonical configuration namespace
+
+Package webhook and MailerSend readiness reads only:
+
+- `config('mail-notifications.webhooks.enabled')`;
+- `config('mail-notifications.providers.mailersend.signing_secret')`;
+- `config('mail-notifications.providers.mailersend.management.enabled')`.
+
+Never place these values under the predecessor `mailnotifications.*` namespace.
+A host may retain that older namespace for unrelated reminder settings, but it
+does not configure this package and strict readiness will not inspect it.
+
 ## Upgrading to 1.0
 
 Version 1.0 introduces the standalone provider-neutral package.

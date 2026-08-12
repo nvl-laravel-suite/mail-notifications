@@ -444,7 +444,25 @@ php artisan nvl:mail-notifications:recover-scheduled --limit=50
 ```
 
 Run both commands from the host scheduler at a cadence appropriate to the
-application and claim TTL. `ScheduledMailClaimed`, `ScheduledMailSent`,
+application and claim TTL. A safe default is:
+
+```php
+use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('nvl:mail-notifications:process-scheduled')
+    ->everyMinute()
+    ->onOneServer()
+    ->withoutOverlapping();
+
+Schedule::command('nvl:mail-notifications:recover-scheduled')
+    ->everyMinute()
+    ->onOneServer()
+    ->withoutOverlapping();
+```
+
+Install these entries only while `mail-notifications.scheduling.enabled=true`.
+The package never registers them or chooses their cadence, and scheduling
+readiness is skipped while the feature is disabled. `ScheduledMailClaimed`, `ScheduledMailSent`,
 `ScheduledMailRetrying`, `ScheduledMailFailed`, and `ScheduledMailRecovered`
 cover processing. `ScheduledMailScheduled`, `ScheduledMailCancelled`,
 `ScheduledMailRescheduled`, and `ScheduledMailReplaced` cover host mutations.
@@ -871,6 +889,13 @@ after-commit event. Set
 changing Laravel mail delivery. When the MailerSend adapter is registered and
 webhooks are enabled, the strict package doctor validates its signing secret,
 header names, and allowed Laravel mailer names before traffic arrives.
+
+The canonical readiness namespaces are
+`mail-notifications.webhooks.enabled`,
+`mail-notifications.providers.mailersend.signing_secret`, and
+`mail-notifications.providers.mailersend.management.enabled`. Never configure
+these package capabilities under the predecessor `mailnotifications.*`
+namespace.
 
 A MailerSend sending domain may also emit valid events for untracked Mailables.
 Tracked-message lookup misses use a separate

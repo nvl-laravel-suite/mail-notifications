@@ -4,6 +4,13 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- Documented host-owned scheduling and the canonical package configuration
+  namespace for webhook and MailerSend readiness.
+
+## [1.0.2] - 2026-08-12
+
 - Added a bounded, manifest-driven legacy adoption command with separate
   dry-run staging/import phases, explicit scheduled factory mappings, safe
   metadata/event conversion, identity reconciliation, host foreign-key repair,
@@ -113,6 +120,6 @@ All notable changes to `nvl/mail-notifications` are documented here.
   fallback uniqueness and exactly-once lifecycle events, with per-test
   `migrate:fresh` restricted to explicitly named disposable databases.
 
-## [1.0.0] - Unreleased
+## [1.0.0] - 2026-08-08
 
 - Initial standalone package implementation.

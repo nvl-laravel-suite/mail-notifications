@@ -406,6 +406,22 @@ it('rejects invalid statuses immediately in a fresh creator schema', function ()
         ->toBe(0);
 });
 
+it('accepts every current scheduled status in a fresh SQLite creator schema', function () {
+    if (DB::getDriverName() !== 'sqlite') {
+        $this->markTestSkipped('Creator fixture uses isolated SQLite.');
+    }
+
+    configureMailStatusCreatorStorage();
+
+    foreach (ScheduledMailStatus::cases() as $status) {
+        $message = ScheduledMailMessage::factory()->create([
+            'status' => $status,
+        ]);
+
+        expect($message->refresh()->status)->toBe($status);
+    }
+});
+
 it('refuses to adopt a configuration-drifted scheduled table', function () {
     if (DB::getDriverName() !== 'sqlite') {
         $this->markTestSkipped('Configuration-drift fixture uses isolated SQLite.');
