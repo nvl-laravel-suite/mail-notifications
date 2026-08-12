@@ -462,7 +462,9 @@ Schedule::command('nvl:mail-notifications:recover-scheduled')
 
 Install these entries only while `mail-notifications.scheduling.enabled=true`.
 The package never registers them or chooses their cadence, and scheduling
-readiness is skipped while the feature is disabled. `ScheduledMailClaimed`, `ScheduledMailSent`,
+readiness is skipped while the feature is disabled. Configure Laravel's
+scheduler mutex cache to use one shared lock store across every application
+node so both guards coordinate globally. `ScheduledMailClaimed`, `ScheduledMailSent`,
 `ScheduledMailRetrying`, `ScheduledMailFailed`, and `ScheduledMailRecovered`
 cover processing. `ScheduledMailScheduled`, `ScheduledMailCancelled`,
 `ScheduledMailRescheduled`, and `ScheduledMailReplaced` cover host mutations.

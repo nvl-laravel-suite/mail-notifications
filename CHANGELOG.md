@@ -4,10 +4,13 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-08-12
+
 ### Changed
 
-- Documented host-owned scheduling and the canonical package configuration
-  namespace for webhook and MailerSend readiness.
+- Documented and verified host-owned scheduling, shared scheduler locks, and
+  the canonical package configuration namespace for webhook and MailerSend
+  readiness.
 
 ## [1.0.2] - 2026-08-12
 

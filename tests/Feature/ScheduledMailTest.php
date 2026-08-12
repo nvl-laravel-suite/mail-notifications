@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Mail\Factory as MailFactory;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Database\Schema\Blueprint;
@@ -117,6 +118,23 @@ it('keeps scheduling disabled by default and refuses mutations while disabled', 
             scheduledMailRequest(),
         ))->toThrow(ScheduledMailException::class, 'disabled')
         ->and(ScheduledMailMessage::query()->count())->toBe(0);
+});
+
+it('leaves scheduled processing cadence to the host application', function () {
+    config()->set('mail-notifications.scheduling.enabled', true);
+
+    $commands = collect(app(Schedule::class)->events())
+        ->map(static fn ($event): string => (string) $event->command);
+
+    expect($commands->contains(
+        static fn (string $command): bool => str_contains(
+            $command,
+            'nvl:mail-notifications:process-scheduled',
+        ) || str_contains(
+            $command,
+            'nvl:mail-notifications:recover-scheduled',
+        ),
+    ))->toBeFalse();
 });
 
 it('rejects malformed scheduling feature switches', function (string $key) {
