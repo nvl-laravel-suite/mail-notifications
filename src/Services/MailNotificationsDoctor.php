@@ -7,7 +7,9 @@ namespace Nvl\MailNotifications\Services;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Facades\Schema;
+use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
 use Nvl\MailNotifications\Contracts\ProviderConfigurationValidator;
+use Nvl\MailNotifications\Contracts\ScheduledMailReadAuthorization;
 use Nvl\MailNotifications\Contracts\SensitiveDataRedactor;
 use Nvl\MailNotifications\Contracts\TrackingLifecycle;
 use Nvl\MailNotifications\Contracts\WebhookEventNormalizer;
@@ -239,6 +241,8 @@ final readonly class MailNotificationsDoctor
         private MailAnonymizationConfiguration $anonymization,
         private SensitiveStorageCodec $sensitiveStorage,
         private Migrator $migrator,
+        private ?MailNotificationReadAuthorization $readAuthorization = null,
+        private ?ScheduledMailReadAuthorization $scheduledReadAuthorization = null,
     ) {}
 
     /**
@@ -250,6 +254,7 @@ final readonly class MailNotificationsDoctor
     {
         return [
             $this->configurationCheck(),
+            ...$this->managementAuthorizationChecks(),
             $this->sensitiveStorageConfigurationCheck(),
             $this->retentionConfigurationCheck(),
             $this->anonymizationConfigurationCheck(),
@@ -259,6 +264,103 @@ final readonly class MailNotificationsDoctor
             ...$this->schemaChecks(),
             ...$this->scheduledMail->inspect(),
         ];
+    }
+
+    /**
+     * Report both separately replaceable administrative read boundaries.
+     *
+     * @return list<MailNotificationsDoctorCheck>
+     */
+    private function managementAuthorizationChecks(): array
+    {
+        return [
+            $this->managementAuthorizationCheck(
+                key: 'management.delivery_authorization',
+                authorization: $this->readAuthorization,
+                defaultClass: ConfiguredMailNotificationReadAuthorization::class,
+                callbackKey: 'mail-notifications.management.authorization.callback',
+                subject: 'Delivery-history',
+            ),
+            $this->managementAuthorizationCheck(
+                key: 'management.scheduled_authorization',
+                authorization: $this->scheduledReadAuthorization,
+                defaultClass: ConfiguredScheduledMailReadAuthorization::class,
+                callbackKey: 'mail-notifications.management.scheduled_authorization.callback',
+                subject: 'Scheduled-mail',
+            ),
+        ];
+    }
+
+    /**
+     * Validate one built-in callback or report its custom implementation.
+     *
+     * @param  class-string  $defaultClass
+     */
+    private function managementAuthorizationCheck(
+        string $key,
+        MailNotificationReadAuthorization|ScheduledMailReadAuthorization|null $authorization,
+        string $defaultClass,
+        string $callbackKey,
+        string $subject,
+    ): MailNotificationsDoctorCheck {
+        if ($authorization === null) {
+            return new MailNotificationsDoctorCheck(
+                key: $key,
+                severity: 'error',
+                passed: false,
+                message: "{$subject} read authorization is unavailable.",
+            );
+        }
+
+        $implementation = $authorization::class;
+
+        if ($implementation !== $defaultClass) {
+            return new MailNotificationsDoctorCheck(
+                key: $key,
+                severity: 'error',
+                passed: true,
+                message: sprintf(
+                    '%s reads resolve to custom authorization [%s].',
+                    $subject,
+                    $implementation,
+                ),
+            );
+        }
+
+        $callback = config($callbackKey);
+
+        if ($callback === null) {
+            return new MailNotificationsDoctorCheck(
+                key: $key,
+                severity: 'warning',
+                passed: true,
+                message: sprintf(
+                    '%s reads resolve to [%s] in fail-closed mode; no callback is configured, so every read remains denied.',
+                    $subject,
+                    $implementation,
+                ),
+            );
+        }
+
+        if (! is_callable($callback)) {
+            return new MailNotificationsDoctorCheck(
+                key: $key,
+                severity: 'error',
+                passed: false,
+                message: "Configuration [{$callbackKey}] must be null or callable while using [{$implementation}].",
+            );
+        }
+
+        return new MailNotificationsDoctorCheck(
+            key: $key,
+            severity: 'error',
+            passed: true,
+            message: sprintf(
+                '%s reads resolve to [%s] with an explicit host authorization callback.',
+                $subject,
+                $implementation,
+            ),
+        );
     }
 
     /**

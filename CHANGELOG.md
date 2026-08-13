@@ -6,11 +6,21 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [1.0.5] - 2026-08-12
 
+### Added
+
+- Added authorized, safe-projection delivery lookups for an exact registered
+  notifiable identity and exact registered provider message identity.
+- Added separately authorized scheduled-mail list, detail, and statistics
+  Actions with bounded filters and primary-recipient-only safe projections.
+
 ### Changed
 
 - Documented and verified host-owned scheduling, shared scheduler locks, and
   the canonical package configuration namespace for webhook and MailerSend
   readiness.
+- Extended Doctor visibility across both fail-closed administrative read
+  authorizers, required host scheduler entries, and the enabled scheduler's
+  minimum registered factory requirement.
 
 ## [1.0.2] - 2026-08-12
 

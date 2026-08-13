@@ -462,7 +462,9 @@ Schedule::command('nvl:mail-notifications:recover-scheduled')
 
 Install these entries only while `mail-notifications.scheduling.enabled=true`.
 The package never registers them or chooses their cadence, and scheduling
-readiness is skipped while the feature is disabled. Configure Laravel's
+readiness is skipped while the feature is disabled. While enabled, the strict
+Doctor requires at least one registered scheduled-message factory and both
+host scheduler entries. Configure Laravel's
 scheduler mutex cache to use one shared lock store across every application
 node so both guards coordinate globally. `ScheduledMailClaimed`, `ScheduledMailSent`,
 `ScheduledMailRetrying`, `ScheduledMailFailed`, and `ScheduledMailRecovered`
@@ -943,7 +945,10 @@ queryable.
 
 The package exposes `ListMailNotificationsAction`,
 `ShowMailNotificationAction`, `GetMailNotificationStatisticsAction`, and
-`SuggestMailNotificationsAction`. Bind `MailNotificationReadAuthorization`, or
+`SuggestMailNotificationsAction`. Exact identity reads are available through
+`ListMailNotificationsForNotifiableAction` with a registered
+`NotifiableReference`, and `ShowMailNotificationByProviderMessageAction` with a
+registered `ProviderMessageId`. Bind `MailNotificationReadAuthorization`, or
 configure a class implementing it under
 `mail-notifications.management.authorization.class`. The built-in adapter
 denies every read unless the host explicitly authorizes the distinct `list`,
@@ -960,6 +965,20 @@ Their projections do not select or serialize TO/CC/BCC arrays, notification or
 provider-event metadata, raw webhook content, scheduled payloads, or scheduler
 claims. Hosts continue to own controllers, routes, rate limiting, permissions,
 translations, and UI composition.
+
+Scheduled queue administration is a separate fail-closed surface. Bind
+`ScheduledMailReadAuthorization`, or configure its implementation and callback
+under `mail-notifications.management.scheduled_authorization`. The
+`ListScheduledMailMessagesAction`, `ShowScheduledMailMessageAction`, and
+`GetScheduledMailStatisticsAction` authorize distinct `list`, `view`, and
+`statistics` abilities. `ScheduledMailReadQuery` accepts bounded status,
+factory, registered notifiable, delivery-window, due-only, sort, direction, and
+pagination filters; page size is capped by `scheduled_maximum_per_page`.
+
+Scheduled list, detail, page, and statistics value objects never expose the
+serialized payload, metadata, CC/BCC envelopes, errors, claim token, or lock
+state. They decrypt the TO envelope only inside the package and project a
+single primary recipient for display; redacted history returns no recipient.
 
 ## Failure policy
 
@@ -1035,8 +1054,9 @@ retry.
 Inspect configuration, retention and anonymization bounds, sensitive-storage
 round trips, production interception safety, required column types, lengths,
 nullability and defaults, exact database status invariants, case-sensitive
-provider identities, foreign-key ownership, UTC behavior, and operational
-indexes without mutation:
+provider identities, webhook readiness, both administrative authorization
+boundaries, scheduled-message factories, required host scheduler entries,
+foreign-key ownership, UTC behavior, and operational indexes without mutation:
 
 ```bash
 php artisan nvl:mail-notifications:doctor --strict --format=json

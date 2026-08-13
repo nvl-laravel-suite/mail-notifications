@@ -243,6 +243,50 @@ it('reports scheduling bounds, factory count, and full schema readiness', functi
         ->message->toContain('operational indexes');
 });
 
+it('rejects enabled scheduling without a registered message factory', function () {
+    app()->instance(
+        ScheduledMessageFactoryRegistry::class,
+        new ScheduledMessageFactoryRegistry,
+    );
+
+    $configuration = collect(app(MailNotificationsDoctor::class)->inspect())
+        ->firstWhere('key', 'scheduling.configuration');
+
+    expect($configuration)
+        ->not->toBeNull()
+        ->passed->toBeFalse()
+        ->message->toContain('at least one registered scheduled message factory');
+});
+
+it('requires both host scheduler entries while scheduling is enabled', function () {
+    $schedule = app(Schedule::class);
+    $missing = collect(app(MailNotificationsDoctor::class)->inspect())
+        ->firstWhere('key', 'scheduling.scheduler');
+
+    expect($missing)
+        ->not->toBeNull()
+        ->passed->toBeFalse()
+        ->message->toContain('nvl:mail-notifications:process-scheduled')
+        ->toContain('nvl:mail-notifications:recover-scheduled');
+
+    $schedule->command('nvl:mail-notifications:process-scheduled')
+        ->everyMinute()
+        ->onOneServer()
+        ->withoutOverlapping();
+    $schedule->command('nvl:mail-notifications:recover-scheduled')
+        ->everyMinute()
+        ->onOneServer()
+        ->withoutOverlapping();
+
+    $registered = collect(app(MailNotificationsDoctor::class)->inspect())
+        ->firstWhere('key', 'scheduling.scheduler');
+
+    expect($registered)
+        ->not->toBeNull()
+        ->passed->toBeTrue()
+        ->message->toContain('Both required host scheduler entries are registered');
+});
+
 it('reports invalid recipient bounds as scheduling configuration failures', function () {
     config()->set('mail-notifications.scheduling.max_recipients', 0);
     $checks = collect(app(MailNotificationsDoctor::class)->inspect())

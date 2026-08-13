@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Services\ConfiguredMailNotificationReadAuthorization;
+use Nvl\MailNotifications\Services\ConfiguredScheduledMailReadAuthorization;
 use Nvl\MailNotifications\Services\DatabaseTrackingLifecycle;
 use Nvl\MailNotifications\Services\DefaultSensitiveDataRedactor;
 
@@ -155,9 +156,14 @@ return [
 
     'management' => [
         'maximum_per_page' => 100,
+        'scheduled_maximum_per_page' => 100,
         'suggestion_limit' => 20,
         'authorization' => [
             'class' => ConfiguredMailNotificationReadAuthorization::class,
+            'callback' => null,
+        ],
+        'scheduled_authorization' => [
+            'class' => ConfiguredScheduledMailReadAuthorization::class,
             'callback' => null,
         ],
     ],

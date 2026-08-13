@@ -11,6 +11,7 @@ use Illuminate\Mail\Markdown;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
+use Nvl\MailNotifications\Contracts\ScheduledMailReadAuthorization;
 use Nvl\MailNotifications\Contracts\SensitiveDataRedactor;
 use Nvl\MailNotifications\Contracts\SensitiveDataTransformer;
 use Nvl\MailNotifications\Contracts\TrackingLifecycle;
@@ -21,6 +22,7 @@ use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
 use Nvl\MailNotifications\Providers\MailNotificationsServiceProvider;
 use Nvl\MailNotifications\Services\ConfiguredMailNotificationReadAuthorization;
+use Nvl\MailNotifications\Services\ConfiguredScheduledMailReadAuthorization;
 use Nvl\MailNotifications\Services\DatabaseTrackingLifecycle;
 use Nvl\MailNotifications\Services\DefaultSensitiveDataRedactor;
 use Nvl\MailNotifications\Services\MailNotificationNotifiableTypeRegistry;
@@ -125,6 +127,8 @@ it('exposes serializable defaults for every host integration seam', function () 
         ->and(config('mail-notifications.notifiable_types'))->toBe([])
         ->and(app(MailNotificationReadAuthorization::class))
         ->toBeInstanceOf(ConfiguredMailNotificationReadAuthorization::class)
+        ->and(app(ScheduledMailReadAuthorization::class))
+        ->toBeInstanceOf(ConfiguredScheduledMailReadAuthorization::class)
         ->and(config('mail-notifications.services.tracking_lifecycle'))
         ->toBe(DatabaseTrackingLifecycle::class)
         ->and(config('mail-notifications.services.sensitive_data_redactor'))
@@ -209,6 +213,59 @@ it('rejects invalid configured service implementations', function (
 })->with([
     'tracking lifecycle' => 'mail-notifications.services.tracking_lifecycle',
     'sensitive data redactor' => 'mail-notifications.services.sensitive_data_redactor',
+]);
+
+it('rejects invalid configured read authorization implementations', function (
+    string $configKey,
+) {
+    config()->set($configKey, stdClass::class);
+
+    expect(fn () => (new MailNotificationsServiceProvider(app()))->register())
+        ->toThrow(LogicException::class, 'must implement');
+})->with([
+    'delivery history' => 'mail-notifications.management.authorization.class',
+    'scheduled mail' => 'mail-notifications.management.scheduled_authorization.class',
+]);
+
+it('reports both fail-closed administrative read authorization boundaries', function () {
+    $checks = collect(app(MailNotificationsDoctor::class)->inspect())
+        ->keyBy('key');
+
+    expect($checks['management.delivery_authorization'])
+        ->passed->toBeTrue()
+        ->severity->toBe('warning')
+        ->message->toContain(ConfiguredMailNotificationReadAuthorization::class)
+        ->toContain('fail-closed')
+        ->and($checks['management.scheduled_authorization'])
+        ->passed->toBeTrue()
+        ->severity->toBe('warning')
+        ->message->toContain(ConfiguredScheduledMailReadAuthorization::class)
+        ->toContain('fail-closed');
+});
+
+it('reports invalid built-in read authorization callbacks as unhealthy', function (
+    string $configKey,
+    string $checkKey,
+) {
+    config()->set($configKey, 'not-callable');
+
+    $check = collect(app(MailNotificationsDoctor::class)->inspect())
+        ->firstWhere('key', $checkKey);
+
+    expect($check)
+        ->not->toBeNull()
+        ->passed->toBeFalse()
+        ->severity->toBe('error')
+        ->message->toContain('must be null or callable');
+})->with([
+    'delivery history' => [
+        'mail-notifications.management.authorization.callback',
+        'management.delivery_authorization',
+    ],
+    'scheduled mail' => [
+        'mail-notifications.management.scheduled_authorization.callback',
+        'management.scheduled_authorization',
+    ],
 ]);
 
 it('rejects enabled sensitive storage without a valid bounded transformer', function (

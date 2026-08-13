@@ -133,8 +133,21 @@ Laravel Mail or rewrite business recipients.
   until the host explicitly authorizes list, view, statistics, or suggestions.
 - Use `MailNotificationReadQuery` and the package list/show/statistics/suggestion
   Actions instead of querying mutable package models in controllers.
+- Use `ListMailNotificationsForNotifiableAction` with a registered
+  `NotifiableReference` for one subject's history, and
+  `ShowMailNotificationByProviderMessageAction` with a registered
+  `ProviderMessageId` for provider callbacks and status lookup.
 - Keep search, dates, status, mailer/category filters, sorts, page sizes, and
   suggestion limits bounded by the package contracts and configuration.
+- Bind `ScheduledMailReadAuthorization` separately and use the scheduled
+  list/show/statistics Actions with `ScheduledMailReadQuery`; grant its list,
+  view, and statistics abilities independently.
+- Require the Doctor to report both effective read-authorization
+  implementations. The built-in adapters with no callbacks are intentionally
+  healthy but visibly fail closed; invalid non-null callbacks are unhealthy.
+- Return only the package scheduled-mail value objects. The primary recipient
+  display is intentionally one address/name pair; never expose payload,
+  metadata, complete TO/CC/BCC envelopes, errors, claims, or locks.
 - Return package read value objects. Do not add recipient arrays, metadata,
   webhook payloads, scheduled payloads, claims, or locks to administrative
   projections.
@@ -225,6 +238,8 @@ Laravel Mail or rewrite business recipients.
   instant and optional `availableAt` as package claim/submission eligibility.
 - Keep both caller inputs in UTC and reject initial availability later than
   intended delivery. Omit `availableAt` to default it to `scheduledFor`.
+- When scheduling is enabled, require at least one registered versioned factory
+  and both host-owned process/recovery commands to pass Doctor readiness.
 - Use early availability only when the host factory maps
   `ScheduledMessageData::$scheduledFor` to the provider's real `sendAt` or
   equivalent option. Keep provider lead-time limits and validation host-owned.

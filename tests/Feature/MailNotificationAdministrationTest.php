@@ -7,13 +7,21 @@ use Illuminate\Auth\GenericUser;
 use Illuminate\Support\Facades\DB;
 use Nvl\MailNotifications\Actions\GetMailNotificationStatisticsAction;
 use Nvl\MailNotifications\Actions\ListMailNotificationsAction;
+use Nvl\MailNotifications\Actions\ListMailNotificationsForNotifiableAction;
 use Nvl\MailNotifications\Actions\ShowMailNotificationAction;
+use Nvl\MailNotifications\Actions\ShowMailNotificationByProviderMessageAction;
 use Nvl\MailNotifications\Actions\SuggestMailNotificationsAction;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Enums\MailNotificationReadAbility;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
+use Nvl\MailNotifications\Services\MailNotificationNotifiableTypeRegistry;
+use Nvl\MailNotifications\Services\ProviderRegistry;
+use Nvl\MailNotifications\Tests\Fixtures\PluggedProviderAdapter;
+use Nvl\MailNotifications\Tests\Fixtures\TestTrackable;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadQuery;
+use Nvl\MailNotifications\ValueObjects\NotifiableReference;
+use Nvl\MailNotifications\ValueObjects\ProviderMessageId;
 
 function mailNotificationAdministrator(): GenericUser
 {
@@ -76,6 +84,112 @@ it('returns bounded filtered pages without sensitive arrays or metadata', functi
             'bcc_recipients',
             'metadata',
         ]);
+});
+
+it('returns authorized delivery history for one registered notifiable identity', function (): void {
+    app()->instance(
+        MailNotificationNotifiableTypeRegistry::class,
+        new MailNotificationNotifiableTypeRegistry(configuredTypes: [
+            'test-account' => TestTrackable::class,
+        ]),
+    );
+    $matching = MailNotification::factory()->delivered()->create([
+        'notifiable_type' => 'test-account',
+        'notifiable_id' => 'account-123',
+        'metadata' => ['secret' => 'must-not-leak'],
+        'to_recipients' => [['email' => 'private@example.test', 'name' => null]],
+    ]);
+    MailNotification::factory()->delivered()->create([
+        'notifiable_type' => 'test-account',
+        'notifiable_id' => 'account-456',
+    ]);
+
+    $page = app(ListMailNotificationsForNotifiableAction::class)->execute(
+        mailNotificationAdministrator(),
+        new NotifiableReference('test-account', 'account-123'),
+    );
+
+    expect($page->total)->toBe(1)
+        ->and($page->items[0]->id)->toBe($matching->id)
+        ->and($page->toArray()['data'][0])->not->toHaveKeys([
+            'to_recipients',
+            'cc_recipients',
+            'bcc_recipients',
+            'metadata',
+        ]);
+});
+
+it('resolves one authorized delivery by registered provider identity', function (): void {
+    app()->instance(
+        ProviderRegistry::class,
+        new ProviderRegistry([new PluggedProviderAdapter]),
+    );
+    $notification = MailNotification::factory()->delivered()->create([
+        'provider' => 'plugged-provider',
+        'provider_message_id' => 'provider-message-123',
+        'metadata' => ['secret' => 'must-not-leak'],
+        'bcc_recipients' => [['email' => 'hidden@example.test', 'name' => null]],
+    ]);
+
+    $result = app(ShowMailNotificationByProviderMessageAction::class)->execute(
+        mailNotificationAdministrator(),
+        new ProviderMessageId('plugged-provider', 'provider-message-123'),
+    );
+
+    expect($result->id)->toBe($notification->id)
+        ->and($result->toArray())->not->toHaveKeys([
+            'to_recipients',
+            'cc_recipients',
+            'bcc_recipients',
+            'metadata',
+        ]);
+});
+
+it('rejects unknown exact delivery identities and unauthorized reads', function (): void {
+    app()->instance(
+        MailNotificationNotifiableTypeRegistry::class,
+        new MailNotificationNotifiableTypeRegistry,
+    );
+    app()->instance(ProviderRegistry::class, new ProviderRegistry);
+
+    expect(fn () => app(ListMailNotificationsForNotifiableAction::class)->execute(
+        mailNotificationAdministrator(),
+        new NotifiableReference('unknown', 'account-123'),
+    ))->toThrow(DomainException::class, 'not registered')
+        ->and(fn () => app(ShowMailNotificationByProviderMessageAction::class)->execute(
+            mailNotificationAdministrator(),
+            new ProviderMessageId('unknown', 'provider-message-123'),
+        ))->toThrow(DomainException::class, 'not registered');
+
+    config()->set('mail-notifications.management.authorization.callback', null);
+    app()->instance(
+        MailNotificationNotifiableTypeRegistry::class,
+        new MailNotificationNotifiableTypeRegistry(configuredTypes: [
+            'test-account' => TestTrackable::class,
+        ]),
+    );
+
+    expect(fn () => app(ListMailNotificationsForNotifiableAction::class)->execute(
+        mailNotificationAdministrator(),
+        new NotifiableReference('test-account', 'account-123'),
+    ))->toThrow(AuthorizationException::class);
+});
+
+it('rejects unauthorized exact provider reads', function (): void {
+    app()->instance(
+        ProviderRegistry::class,
+        new ProviderRegistry([new PluggedProviderAdapter]),
+    );
+    MailNotification::factory()->delivered()->create([
+        'provider' => 'plugged-provider',
+        'provider_message_id' => 'provider-message-denied',
+    ]);
+    config()->set('mail-notifications.management.authorization.callback', null);
+
+    expect(fn () => app(ShowMailNotificationByProviderMessageAction::class)->execute(
+        mailNotificationAdministrator(),
+        new ProviderMessageId('plugged-provider', 'provider-message-denied'),
+    ))->toThrow(AuthorizationException::class);
 });
 
 it('keeps administrative list queries independent of result size', function (): void {

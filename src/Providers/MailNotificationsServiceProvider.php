@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Providers;
 
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -29,6 +30,7 @@ use Nvl\MailNotifications\Contracts\ProviderAdapter;
 use Nvl\MailNotifications\Contracts\ProviderMessageIdResolver;
 use Nvl\MailNotifications\Contracts\ProvidesNotifiableTypes;
 use Nvl\MailNotifications\Contracts\RemoteWebhookManager;
+use Nvl\MailNotifications\Contracts\ScheduledMailReadAuthorization;
 use Nvl\MailNotifications\Contracts\ScheduledMessageFactory;
 use Nvl\MailNotifications\Contracts\SensitiveDataRedactor;
 use Nvl\MailNotifications\Contracts\SensitiveDataTransformer;
@@ -36,6 +38,7 @@ use Nvl\MailNotifications\Contracts\TrackingLifecycle;
 use Nvl\MailNotifications\Laravel\Listeners\TrackMessageAfterSending;
 use Nvl\MailNotifications\Laravel\Listeners\TrackMessageBeforeSending;
 use Nvl\MailNotifications\Services\ConfiguredMailNotificationReadAuthorization;
+use Nvl\MailNotifications\Services\ConfiguredScheduledMailReadAuthorization;
 use Nvl\MailNotifications\Services\DatabaseTrackingLifecycle;
 use Nvl\MailNotifications\Services\DefaultSensitiveDataRedactor;
 use Nvl\MailNotifications\Services\MailAnonymizationConfiguration;
@@ -96,6 +99,22 @@ final class MailNotificationsServiceProvider extends ServiceProvider
         $this->app->bindIf(
             MailNotificationReadAuthorization::class,
             $readAuthorization,
+        );
+        $scheduledReadAuthorization = config(
+            'mail-notifications.management.scheduled_authorization.class',
+            ConfiguredScheduledMailReadAuthorization::class,
+        );
+
+        if (! is_string($scheduledReadAuthorization)
+            || ! is_a($scheduledReadAuthorization, ScheduledMailReadAuthorization::class, true)) {
+            throw new LogicException(
+                'mail-notifications.management.scheduled_authorization.class must implement ScheduledMailReadAuthorization.',
+            );
+        }
+
+        $this->app->bindIf(
+            ScheduledMailReadAuthorization::class,
+            $scheduledReadAuthorization,
         );
         $this->registerConfiguredExtensions(
             'mail-notifications.extensions.provider_adapters',
@@ -245,6 +264,7 @@ final class MailNotificationsServiceProvider extends ServiceProvider
                 anonymization: $app->make(
                     MailAnonymizationConfiguration::class,
                 ),
+                schedule: $app->make(Schedule::class),
                 factories: static fn (): ScheduledMessageFactoryRegistry => $app->make(
                     ScheduledMessageFactoryRegistry::class,
                 ),

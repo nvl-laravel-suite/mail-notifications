@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Services;
 
 use Closure;
+use Illuminate\Console\Scheduling\Event;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Facades\Schema;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
+use Nvl\MailNotifications\Exceptions\ScheduledMailException;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\StatusConstraintInspector;
 use Nvl\MailNotifications\ValueObjects\MailNotificationsDoctorCheck;
@@ -18,6 +21,16 @@ use Throwable;
  */
 final readonly class ScheduledMailReadiness
 {
+    /**
+     * Host-owned commands required while scheduled delivery is enabled.
+     *
+     * @var list<string>
+     */
+    private const array REQUIRED_COMMANDS = [
+        'nvl:mail-notifications:process-scheduled',
+        'nvl:mail-notifications:recover-scheduled',
+    ];
+
     /**
      * Columns read or written by the scheduled-mail runtime.
      *
@@ -132,6 +145,7 @@ final readonly class ScheduledMailReadiness
         private MailRetentionConfiguration $retention,
         private MailAnonymizationConfiguration $anonymization,
         private Closure $factories,
+        private ?Schedule $schedule = null,
     ) {}
 
     /**
@@ -175,6 +189,7 @@ final readonly class ScheduledMailReadiness
 
         return [
             $this->configurationCheck(),
+            $this->schedulerCheck(),
             $this->schemaCheck(),
         ];
     }
@@ -194,6 +209,12 @@ final readonly class ScheduledMailReadiness
                 ->maximumRecipients();
             $this->configuration->retryDelaySeconds(1);
             $factoryCount = count(($this->factories)()->all());
+
+            if ($factoryCount === 0) {
+                throw new ScheduledMailException(
+                    'Enabled scheduled mail requires at least one registered scheduled message factory.',
+                );
+            }
 
             return new MailNotificationsDoctorCheck(
                 key: 'scheduling.configuration',
@@ -217,6 +238,49 @@ final readonly class ScheduledMailReadiness
                 message: $exception->getMessage(),
             );
         }
+    }
+
+    /**
+     * Require both host-owned scheduling commands while delivery is enabled.
+     */
+    private function schedulerCheck(): MailNotificationsDoctorCheck
+    {
+        if ($this->schedule === null) {
+            return new MailNotificationsDoctorCheck(
+                key: 'scheduling.scheduler',
+                severity: 'error',
+                passed: false,
+                message: 'Host scheduler inspection is unavailable.',
+            );
+        }
+
+        $registeredCommands = array_values(array_filter(array_map(
+            static fn (Event $event): ?string => is_string($event->command)
+                ? $event->command
+                : null,
+            $this->schedule->events(),
+        )));
+        $missingCommands = array_values(array_filter(
+            self::REQUIRED_COMMANDS,
+            static fn (string $requiredCommand): bool => ! collect(
+                $registeredCommands,
+            )->contains(
+                static fn (string $registeredCommand): bool => str_contains(
+                    $registeredCommand,
+                    $requiredCommand,
+                ),
+            ),
+        ));
+
+        return new MailNotificationsDoctorCheck(
+            key: 'scheduling.scheduler',
+            severity: 'error',
+            passed: $missingCommands === [],
+            message: $missingCommands === []
+                ? 'Both required host scheduler entries are registered.'
+                : 'Missing required host scheduler entries: '
+                    .implode(', ', $missingCommands).'.',
+        );
     }
 
     /**
