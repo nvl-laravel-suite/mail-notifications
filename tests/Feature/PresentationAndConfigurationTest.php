@@ -243,6 +243,29 @@ it('reports both fail-closed administrative read authorization boundaries', func
         ->toContain('fail-closed');
 });
 
+it('reports explicit host callbacks for both administrative read boundaries', function () {
+    config()->set(
+        'mail-notifications.management.authorization.callback',
+        static fn (): bool => true,
+    );
+    config()->set(
+        'mail-notifications.management.scheduled_authorization.callback',
+        static fn (): bool => true,
+    );
+
+    $checks = collect(app(MailNotificationsDoctor::class)->inspect())
+        ->keyBy('key');
+
+    expect($checks['management.delivery_authorization'])
+        ->passed->toBeTrue()
+        ->severity->toBe('error')
+        ->message->toContain('explicit host authorization callback')
+        ->and($checks['management.scheduled_authorization'])
+        ->passed->toBeTrue()
+        ->severity->toBe('error')
+        ->message->toContain('explicit host authorization callback');
+});
+
 it('reports invalid built-in read authorization callbacks as unhealthy', function (
     string $configKey,
     string $checkKey,
