@@ -37,7 +37,7 @@ the host wants editable copies at Laravel's conventional override path.
 
 ## Requirements and installation
 
-- PHP 8.3 or newer
+- PHP 8.4 or newer
 - Laravel 12 or 13
 - SQLite
 - PostgreSQL supported by the installed Laravel version
