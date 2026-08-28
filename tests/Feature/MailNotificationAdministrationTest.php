@@ -19,6 +19,7 @@ use Nvl\MailNotifications\Services\MailNotificationNotifiableTypeRegistry;
 use Nvl\MailNotifications\Services\ProviderRegistry;
 use Nvl\MailNotifications\Tests\Fixtures\PluggedProviderAdapter;
 use Nvl\MailNotifications\Tests\Fixtures\TestTrackable;
+use Nvl\MailNotifications\ValueObjects\MailNotificationAggregate;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadQuery;
 use Nvl\MailNotifications\ValueObjects\NotifiableReference;
 use Nvl\MailNotifications\ValueObjects\ProviderMessageId;
@@ -266,6 +267,52 @@ it('authorizes show statistics and suggestion reads independently', function ():
             MailNotificationReadAbility::Statistics,
             MailNotificationReadAbility::Suggest,
         ]);
+});
+
+it('returns bounded normalized mailer and category statistics with constant queries', function (): void {
+    $dimensions = [
+        ['smtp', 'domain.reminder'],
+        ['smtp', 'domain.reminder'],
+        [' ', ' '],
+        ['', ''],
+        ['array', 'account.receipt'],
+    ];
+
+    foreach (range(0, 8) as $index) {
+        $key = sprintf('z%02d', $index);
+        $dimensions[] = [$key, $key];
+    }
+
+    foreach ($dimensions as [$mailer, $category]) {
+        MailNotification::factory()->create([
+            'mailer' => $mailer,
+            'message_category' => $category,
+        ]);
+    }
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $statistics = app(GetMailNotificationStatisticsAction::class)->execute(
+        mailNotificationAdministrator(),
+        new MailNotificationReadQuery,
+    );
+    $queries = DB::getQueryLog();
+    DB::disableQueryLog();
+
+    expect($statistics->mailers)->toHaveCount(10)
+        ->and($statistics->categories)->toHaveCount(10)
+        ->and($statistics->mailers[0])->toBeInstanceOf(MailNotificationAggregate::class)
+        ->and($statistics->mailers[0]->key)->toBe('smtp')
+        ->and($statistics->mailers[0]->count)->toBe(2)
+        ->and($statistics->mailers[1]->key)->toBe('unknown')
+        ->and($statistics->mailers[1]->count)->toBe(2)
+        ->and($statistics->categories[0]->key)->toBe('domain.reminder')
+        ->and($statistics->categories[1]->key)->toBe('unknown')
+        ->and($statistics->toArray()['mailers'][0])->toBe([
+            'key' => 'smtp',
+            'count' => 2,
+        ])
+        ->and($queries)->toHaveCount(6);
 });
 
 it('rejects unbounded or non-allowlisted read filters', function (): void {

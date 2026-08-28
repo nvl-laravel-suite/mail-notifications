@@ -70,6 +70,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             $this->events->dispatch(new MailTrackingStarted(
                 attempt: $attempt,
                 category: $notification->message_category,
+                correlation: $message->context->correlation,
             ));
 
             return $attempt;
@@ -439,6 +440,11 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         CarbonImmutable $now,
     ): array {
         $notifiable = $message->context->notifiable;
+        $metadata = $message->context->metadata;
+
+        if ($message->context->correlation !== []) {
+            $metadata['correlation'] = $message->context->correlation;
+        }
 
         return [
             'id' => $message->correlationId,
@@ -457,7 +463,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             'notifiable_type' => $notifiable?->type,
             'notifiable_id' => $notifiable?->identifier,
             'metadata' => $this->redactor->redact(
-                $message->context->metadata,
+                $metadata,
             ),
             'status_changed_at' => $now,
         ];
@@ -514,6 +520,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         $this->events->dispatch(new MailTrackingStarted(
             attempt: $this->attempt($notification),
             category: $notification->message_category,
+            correlation: $message->context->correlation,
         ));
         $this->failNotification($notification, $exception);
     }

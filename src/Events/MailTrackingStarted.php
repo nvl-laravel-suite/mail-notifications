@@ -16,9 +16,12 @@ final class MailTrackingStarted
 
     /**
      * Create the tracking-started event.
+     *
+     * @param  array<string, string|int|bool|null>  $correlation
      */
     public function __construct(
         public readonly TrackingAttempt $attempt,
         public readonly string $category,
+        public readonly array $correlation = [],
     ) {}
 }

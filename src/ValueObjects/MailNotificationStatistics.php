@@ -12,6 +12,8 @@ final readonly class MailNotificationStatistics
     /**
      * @param  array<string, int>  $statuses
      * @param  list<MailNotificationReadData>  $recent
+     * @param  list<MailNotificationAggregate>  $mailers
+     * @param  list<MailNotificationAggregate>  $categories
      */
     public function __construct(
         public int $total,
@@ -22,6 +24,8 @@ final readonly class MailNotificationStatistics
         public float $successRate,
         public float $failureRate,
         public array $recent,
+        public array $mailers = [],
+        public array $categories = [],
     ) {}
 
     /**
@@ -40,6 +44,14 @@ final readonly class MailNotificationStatistics
             'recent' => array_map(
                 static fn (MailNotificationReadData $item): array => $item->toArray(),
                 $this->recent,
+            ),
+            'mailers' => array_map(
+                static fn (MailNotificationAggregate $aggregate): array => $aggregate->toArray(),
+                $this->mailers,
+            ),
+            'categories' => array_map(
+                static fn (MailNotificationAggregate $aggregate): array => $aggregate->toArray(),
+                $this->categories,
             ),
         ];
     }

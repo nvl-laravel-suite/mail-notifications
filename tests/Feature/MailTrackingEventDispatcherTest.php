@@ -5,9 +5,14 @@ declare(strict_types=1);
 use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Nvl\MailNotifications\Contracts\TrackingLifecycle;
 use Nvl\MailNotifications\Events\MailTrackingStarted;
+use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Services\MailTrackingEventDispatcher;
+use Nvl\MailNotifications\ValueObjects\PreparedMessage;
+use Nvl\MailNotifications\ValueObjects\Recipient;
 use Nvl\MailNotifications\ValueObjects\TrackingAttempt;
+use Nvl\MailNotifications\ValueObjects\TrackingContext;
 
 /**
  * Configure a package storage connection independent from the host default.
@@ -98,4 +103,48 @@ it('does not dispatch when the storage transaction rolls back', function () {
         RuntimeException::class,
         'rollback storage transaction',
     )->and($received)->toBe([]);
+});
+
+it('dispatches only approved correlation without reloading persisted metadata', function (): void {
+    $received = [];
+    Event::listen(
+        MailTrackingStarted::class,
+        static function (MailTrackingStarted $event) use (&$received): void {
+            $received[] = $event;
+        },
+    );
+    $context = TrackingContext::forCategory('domain.reminder')
+        ->withMetadata([
+            'nested' => ['private' => true],
+            'object' => (object) ['private' => true],
+            'recipient_email' => 'recipient@example.test',
+            'api_token' => 'must-not-leak',
+        ])
+        ->withCorrelation([
+            'reminder_occurrence_id' => 'occurrence-42',
+            'attempt' => 2,
+        ]);
+
+    $attempt = app(TrackingLifecycle::class)->begin(new PreparedMessage(
+        correlationId: '5027f267-245e-4f88-bda2-759d192b4afb',
+        mailer: 'array',
+        context: $context,
+        from: new Recipient('sender@example.test'),
+        to: [new Recipient('recipient@example.test')],
+    ));
+    $notification = MailNotification::query()->findOrFail($attempt->id);
+
+    expect($received)->toHaveCount(1)
+        ->and($received[0]->correlation)->toBe([
+            'reminder_occurrence_id' => 'occurrence-42',
+            'attempt' => 2,
+        ])
+        ->and(get_object_vars($received[0]))->not->toHaveKeys([
+            'metadata',
+            'nested',
+            'object',
+            'recipient_email',
+            'api_token',
+        ])
+        ->and($notification->metadata['correlation'] ?? null)->toBe($received[0]->correlation);
 });

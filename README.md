@@ -678,8 +678,20 @@ attached without persisting a PHP class name. Its
 ```php
 $context = TrackingContext::forCategory('account.password-reset')
     ->forNotifiable($account)
-    ->withMetadata(['request_id' => $requestId]);
+    ->withMetadata(['request_id' => $requestId])
+    ->withCorrelation(['reset_record_id' => $resetRecordId]);
 ```
+
+Use `withCorrelation()` only for identifiers that an in-process
+`MailTrackingStarted` listener needs without reloading the notification row.
+The validated map is delivered directly on the event and is also persisted
+under the redacted `metadata.correlation` key. It contains at most 20
+lowercase snake-case keys of at most 64 characters. Values are only UTF-8
+strings up to 255 characters, integers, booleans, or null. Keys containing
+`email`, `token`, `secret`, `password`, or `payload` are rejected, as are
+nested values, objects, resources, floats, and invalid UTF-8. Correlation is
+preserved through `forNotifiable()` and `withMetadata()` in either order.
+General metadata is never copied onto the event.
 
 The configured redactor recursively masks sensitive keys before persistence,
 redacts object/resource values by default, and bounds nesting, item count,
@@ -965,6 +977,13 @@ Their projections do not select or serialize TO/CC/BCC arrays, notification or
 provider-event metadata, raw webhook content, scheduled payloads, or scheduler
 claims. Hosts continue to own controllers, routes, rate limiting, permissions,
 translations, and UI composition.
+
+`GetMailNotificationStatisticsAction` includes `mailers` and `categories` as
+lists of `MailNotificationAggregate { key, count }` values. Each dimension uses
+one grouped query over the same authorized filters, orders by count descending
+then key ascending, and returns at most ten rows. Null or blank dimension values
+are combined under `unknown`. Consumers should reuse these projections instead
+of grouping `MailNotification` directly.
 
 Scheduled queue administration is a separate fail-closed surface. Bind
 `ScheduledMailReadAuthorization`, or configure its implementation and callback

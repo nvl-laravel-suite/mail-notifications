@@ -21,6 +21,14 @@ Laravel Mail or rewrite business recipients.
 
 - Use `TrackingContext` for stable categories, notifiable references, and safe
   correlation metadata.
+- Use `TrackingContext::withCorrelation()` only for identifiers needed directly
+  by `MailTrackingStarted` listeners. It accepts at most 20 lowercase snake-case
+  keys (64 characters), rejects keys containing `email`, `token`, `secret`,
+  `password`, or `payload`, and allows only UTF-8 strings up to 255 characters,
+  integers, booleans, or null. Nested values, objects, resources, and floats are
+  rejected. The map survives `forNotifiable()`/`withMetadata()` clone order,
+  persists under redacted `metadata.correlation`, and is passed directly on the
+  event; arbitrary metadata is never copied to the event or reloaded for it.
 - Prefer `notifiable_types` for direct host aliases and
   `extensions.notifiable_type_providers` for modular providers.
 - Prefer configuration-first registration under `extensions.provider_adapters`
@@ -133,6 +141,13 @@ Laravel Mail or rewrite business recipients.
   until the host explicitly authorizes list, view, statistics, or suggestions.
 - Use `MailNotificationReadQuery` and the package list/show/statistics/suggestion
   Actions instead of querying mutable package models in controllers.
+- `GetMailNotificationStatisticsAction` returns top `mailers` and `categories`
+  as `Nvl\MailNotifications\ValueObjects\MailNotificationAggregate` values
+  with public readonly `key` and `count` fields from the same authorized
+  filters. Its signature is `execute(Authenticatable $actor,
+  MailNotificationReadQuery $filters): MailNotificationStatistics`. Each
+  dimension uses one grouped query, orders count descending/key ascending,
+  normalizes blank/null keys to `unknown`, and returns at most ten rows.
 - Use `ListMailNotificationsForNotifiableAction` with a registered
   `NotifiableReference` for one subject's history, and
   `ShowMailNotificationByProviderMessageAction` with a registered
@@ -153,6 +168,57 @@ Laravel Mail or rewrite business recipients.
   projections.
 - Keep routes, controllers, rate limits, permissions, translations, and UI
   composition host-owned.
+
+```php
+use Illuminate\Mail\Mailable;
+use Nvl\MailNotifications\Actions\GetMailNotificationStatisticsAction;
+use Nvl\MailNotifications\Contracts\TrackableMessage;
+use Nvl\MailNotifications\Events\MailTrackingStarted;
+use Nvl\MailNotifications\Laravel\Concerns\TracksMailDelivery;
+use Nvl\MailNotifications\ValueObjects\MailNotificationAggregate;
+use Nvl\MailNotifications\ValueObjects\MailNotificationReadQuery;
+use Nvl\MailNotifications\ValueObjects\TrackingContext;
+
+$statistics = app(GetMailNotificationStatisticsAction::class)->execute(
+    $actor,
+    new MailNotificationReadQuery(from: $windowStart),
+);
+$topMailers = $statistics->mailers;
+$topCategories = $statistics->categories;
+
+final class ReminderMail extends Mailable implements TrackableMessage
+{
+    use TracksMailDelivery;
+
+    public function __construct(public readonly string $occurrenceId) {}
+
+    public function trackingContext(): TrackingContext
+    {
+        return TrackingContext::forCategory('domain.reminder')
+            ->withCorrelation(['reminder_occurrence_id' => $this->occurrenceId]);
+    }
+}
+
+final class LinkReminderAttempt
+{
+    public function handle(MailTrackingStarted $event): void
+    {
+        $occurrenceId = $event->correlation['reminder_occurrence_id'] ?? null;
+    }
+}
+
+/** @var MailNotificationAggregate $aggregate */
+$aggregate = $topMailers[0];
+$key = $aggregate->key;
+$count = $aggregate->count;
+```
+
+`TrackingContext::withMetadata()` clones persistent context metadata.
+`$mailable->withTrackingMetadata()` comes from `TracksMailDelivery`; it is a
+fluent, one-send Mailable override merged into the returned context immediately
+before staging.
+Neither method adds values to the event-safe correlation map; use
+`TrackingContext::withCorrelation()` explicitly for that boundary.
 
 ## Protect delivery and data
 

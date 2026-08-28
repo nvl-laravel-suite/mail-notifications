@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Nvl\MailNotifications\Contracts\SensitiveDataRedactor;
 use Nvl\MailNotifications\Exceptions\MailTrackingException;
+use Nvl\MailNotifications\Tests\Fixtures\TestTrackable;
+use Nvl\MailNotifications\ValueObjects\TrackingContext;
 
 it('normalizes sensitive-key configuration without redacting unrelated metadata', function () {
     config()->set('mail-notifications.privacy.redacted_keys', [
@@ -181,4 +183,50 @@ it('fails closed when metadata budget configuration is invalid', function (
         10_485_761,
         'total byte limit',
     ],
+]);
+
+it('preserves validated correlation through every tracking context clone order', function (): void {
+    $correlation = [
+        'reminder_occurrence_id' => 'occurrence-42',
+        'attempt' => 2,
+        'retry' => false,
+        'optional' => null,
+    ];
+    $correlationFirst = TrackingContext::forCategory('domain.reminder')
+        ->withCorrelation($correlation)
+        ->withMetadata(['request_id' => 'request-1'])
+        ->forNotifiable(new TestTrackable('account-1'));
+    $correlationLast = TrackingContext::forCategory('domain.reminder')
+        ->forNotifiable(new TestTrackable('account-1'))
+        ->withMetadata(['request_id' => 'request-1'])
+        ->withCorrelation($correlation);
+
+    expect($correlationFirst->correlation)->toBe($correlation)
+        ->and($correlationLast->correlation)->toBe($correlation)
+        ->and($correlationFirst->metadata)->toBe($correlationLast->metadata)
+        ->and($correlationFirst->notifiable?->identifier)->toBe('account-1')
+        ->and($correlationLast->notifiable?->identifier)->toBe('account-1');
+});
+
+it('rejects unsafe correlation maps', function (Closure $correlation): void {
+    expect(fn () => TrackingContext::forCategory('domain.reminder')
+        ->withCorrelation($correlation()))
+        ->toThrow(InvalidArgumentException::class);
+})->with([
+    'more than twenty keys' => fn (): array => array_fill_keys(
+        array_map(static fn (int $index): string => "key_{$index}", range(1, 21)),
+        'value',
+    ),
+    'invalid key syntax' => fn (): array => ['Invalid-Key' => 'value'],
+    'email key' => fn (): array => ['recipient_email' => 'account-1'],
+    'token key' => fn (): array => ['access_token_id' => 'token-1'],
+    'secret key' => fn (): array => ['secret_reference' => 'secret-1'],
+    'password key' => fn (): array => ['password_reset_id' => 'reset-1'],
+    'payload key' => fn (): array => ['provider_payload_id' => 'payload-1'],
+    'nested value' => fn (): array => ['reference' => ['nested']],
+    'object value' => fn (): array => ['reference' => (object) ['id' => 1]],
+    'resource value' => fn (): array => ['reference' => fopen('php://memory', 'rb')],
+    'float value' => fn (): array => ['reference' => 1.5],
+    'oversized string' => fn (): array => ['reference' => str_repeat('x', 256)],
+    'invalid utf8' => fn (): array => ['reference' => "\xB1\x31"],
 ]);
