@@ -1,7 +1,7 @@
 # Security Policy
 
-Security fixes are provided for the current `1.x` release line on PHP 8.3+
-and Laravel 12–13.
+Security fixes are provided for the current `2.x` release line on PHP 8.3+
+and Laravel 13.
 
 Report vulnerabilities privately through the repository host's
 security-advisory feature. Do not include credentials, signatures, raw mail

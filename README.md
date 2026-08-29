@@ -6,7 +6,7 @@
 
 | Item | Value |
 |---|---|
-| Installed through | `composer require nvl/laravel-suite:^1.0` |
+| Installed through | `composer require nvl/laravel-suite:^2.0` |
 | Module identifier | `nvl/mail-notifications` |
 | PHP namespace | `Nvl\MailNotifications` |
 | Service provider | `Nvl\MailNotifications\Providers\MailNotificationsServiceProvider` |
@@ -38,7 +38,7 @@ the host wants editable copies at Laravel's conventional override path.
 ## Requirements and installation
 
 - PHP 8.4 or newer
-- Laravel 12 or 13
+- Laravel 13
 - SQLite
 - PostgreSQL supported by the installed Laravel version
 - MySQL 8.0.16 or newer
@@ -46,7 +46,7 @@ the host wants editable copies at Laravel's conventional override path.
   variable `check_constraint_checks` enabled
 
 ```bash
-composer require nvl/laravel-suite:^1.0
+composer require nvl/laravel-suite:^2.0
 php artisan vendor:publish --tag=mail-notifications-config
 php artisan vendor:publish --tag=mail-notifications-skills
 php artisan vendor:publish --tag=mail-notifications-mail-views

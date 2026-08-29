@@ -1,6 +1,6 @@
 ---
 name: nvl-mail-notifications
-description: Implement, integrate, test, or review nvl/mail-notifications in Laravel 12–13. Use for opt-in mail tracking, lifecycle transitions, provider adapters, webhook normalization, protected storage, legacy adoption, authorized administrative reads, scheduled delivery, bounded retention, database invariants, and schema diagnostics.
+description: Implement, integrate, test, or review nvl/mail-notifications in Laravel 13. Use for opt-in mail tracking, lifecycle transitions, provider adapters, webhook normalization, protected storage, legacy adoption, authorized administrative reads, scheduled delivery, bounded retention, database invariants, and schema diagnostics.
 ---
 
 # NVL Mail Notifications
