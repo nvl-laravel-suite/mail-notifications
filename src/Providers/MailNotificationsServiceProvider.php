@@ -69,18 +69,21 @@ use Nvl\MailNotifications\Services\TrackingRuntime;
 use Nvl\MailNotifications\Services\WebhookProcessor;
 use Nvl\MailNotifications\Support\SensitiveStorageBridge;
 use Nvl\MailNotifications\Support\TrackingRuntimeBridge;
+use Nvl\Support\Traits\MergesPackageConfiguration;
 
 /**
  * Registers provider-neutral tracking and a configurable Laravel mail presentation.
  */
 final class MailNotificationsServiceProvider extends ServiceProvider
 {
+    use MergesPackageConfiguration;
+
     /**
      * Register package configuration and tracking services.
      */
     public function register(): void
     {
-        $this->replaceConfigRecursivelyFrom(
+        $this->mergePackageConfiguration(
             dirname(__DIR__, 2).'/config/mail-notifications.php',
             'mail-notifications',
         );
