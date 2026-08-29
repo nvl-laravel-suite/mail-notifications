@@ -146,5 +146,5 @@ it('dispatches only approved correlation without reloading persisted metadata', 
             'recipient_email',
             'api_token',
         ])
-        ->and($notification->metadata['correlation'] ?? null)->toBe($received[0]->correlation);
+        ->and($notification->metadata['correlation'] ?? null)->toEqual($received[0]->correlation);
 });

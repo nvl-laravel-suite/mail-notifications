@@ -102,21 +102,15 @@ final readonly class GetMailNotificationStatisticsAction
      */
     private function aggregateDimension(Builder $query, string $column): array
     {
-        [$selection, $grouping] = match ($column) {
-            'mailer' => [
-                "COALESCE(NULLIF(TRIM(mailer), ''), 'unknown') as aggregate_key",
-                "COALESCE(NULLIF(TRIM(mailer), ''), 'unknown')",
-            ],
-            'message_category' => [
-                "COALESCE(NULLIF(TRIM(message_category), ''), 'unknown') as aggregate_key",
-                "COALESCE(NULLIF(TRIM(message_category), ''), 'unknown')",
-            ],
+        $selection = match ($column) {
+            'mailer' => "COALESCE(NULLIF(TRIM(mailer), ''), 'unknown') as aggregate_key",
+            'message_category' => "COALESCE(NULLIF(TRIM(message_category), ''), 'unknown') as aggregate_key",
         };
         $rows = (clone $query)
             ->toBase()
             ->select(DB::raw($selection))
             ->selectRaw('count(*) as aggregate_count')
-            ->groupByRaw($grouping)
+            ->groupBy('aggregate_key')
             ->orderByDesc('aggregate_count')
             ->orderBy('aggregate_key')
             ->limit(10)

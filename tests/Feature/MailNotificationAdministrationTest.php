@@ -298,6 +298,14 @@ it('returns bounded normalized mailer and category statistics with constant quer
     );
     $queries = DB::getQueryLog();
     DB::disableQueryLog();
+    $aggregateQueries = collect($queries)
+        ->pluck('query')
+        ->filter(static fn (string $query): bool => str_contains($query, 'aggregate_key'))
+        ->values()
+        ->all();
+    $aggregateGrouping = 'group by '.DB::connection()
+        ->getQueryGrammar()
+        ->wrap('aggregate_key');
 
     expect($statistics->mailers)->toHaveCount(10)
         ->and($statistics->categories)->toHaveCount(10)
@@ -312,6 +320,7 @@ it('returns bounded normalized mailer and category statistics with constant quer
             'key' => 'smtp',
             'count' => 2,
         ])
+        ->and($aggregateQueries)->each->toContain($aggregateGrouping)
         ->and($queries)->toHaveCount(6);
 });
 
