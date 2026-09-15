@@ -18,6 +18,7 @@ use Illuminate\Support\Str;
 use Nvl\MailNotifications\Contracts\MailTrackable;
 use Nvl\MailNotifications\Contracts\TrackableMessage;
 use Nvl\MailNotifications\Exceptions\MailDeliveryCancelled;
+use Nvl\MailNotifications\Laravel\ScheduledRecipientMailer;
 use Nvl\MailNotifications\Support\TrackingHeaders;
 use Nvl\MailNotifications\Support\TrackingRuntimeBridge;
 use Nvl\MailNotifications\ValueObjects\TrackingContext;
@@ -193,14 +194,17 @@ trait TracksMailDelivery
     public function send($mailer): ?SentMessage
     {
         $this->mailTrackingDeliveryInProgress = true;
-        $resolvedMailer = null;
+        $transportMailer = null;
         $originalTransport = null;
 
         try {
             $resolvedMailer = $this->resolveMailer($mailer);
+            $transportMailer = $resolvedMailer instanceof ScheduledRecipientMailer
+                ? $resolvedMailer->mailer
+                : $resolvedMailer;
 
             if ($this->shouldStageMailTracking()) {
-                if (! $resolvedMailer instanceof Mailer) {
+                if (! $transportMailer instanceof Mailer) {
                     TrackingRuntimeBridge::unsupportedMailer();
                 } else {
                     $this->stageMailTracking();
@@ -208,9 +212,9 @@ trait TracksMailDelivery
             }
 
             if ($this->mailTrackingCorrelationId !== null
-                && $resolvedMailer instanceof Mailer) {
-                $originalTransport = $resolvedMailer->getSymfonyTransport();
-                $resolvedMailer->setSymfonyTransport(
+                && $transportMailer instanceof Mailer) {
+                $originalTransport = $transportMailer->getSymfonyTransport();
+                $transportMailer->setSymfonyTransport(
                     TrackingRuntimeBridge::wrapTransport(
                         $this->mailTrackingCorrelationId,
                         $originalTransport,
@@ -238,9 +242,9 @@ trait TracksMailDelivery
 
             throw $exception;
         } finally {
-            if ($resolvedMailer instanceof Mailer
+            if ($transportMailer instanceof Mailer
                 && $originalTransport instanceof TransportInterface) {
-                $resolvedMailer->setSymfonyTransport($originalTransport);
+                $transportMailer->setSymfonyTransport($originalTransport);
             }
 
             $this->removeMailTrackingHeaderCallback();

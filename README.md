@@ -349,7 +349,9 @@ Factories must not choose TO, CC, or BCC recipients. Immediately before send,
 the processor clears factory recipient state and replaces the final Symfony
 message envelope with the normalized recipients persisted on the scheduled
 row. This prevents normal Mailable `Envelope` declarations, fluent recipient
-calls, or callbacks registered by `make()` from appending another recipient.
+calls, callbacks registered by `make()` or `build()`, and `Envelope::using`
+callbacks from changing the persisted recipient envelope. Enforcement is
+scoped to this delivery and keeps the selected host mailer.
 Laravel applies its global `alwaysTo` / `mail.to` interception afterward, so a
 host test-inbox safety override remains authoritative and removes CC/BCC.
 

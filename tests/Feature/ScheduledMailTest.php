@@ -1452,3 +1452,97 @@ it('rejects invalid scheduled command limits', function (
         true,
     ],
 ]);
+
+it('enforces persisted recipients after Mailable preparation callbacks', function (string $phase, bool $tracked): void {
+    $factory = new class($phase, $tracked) implements ScheduledMessageFactory
+    {
+        public function __construct(private readonly string $phase, private readonly bool $tracked) {}
+
+        public function alias(): string
+        {
+            return 'test.preparation-recipients';
+        }
+
+        public function supportsVersion(int $version): bool
+        {
+            return $version === 1;
+        }
+
+        public function validate(int $version, array $payload): void {}
+
+        public function make(ScheduledMessageData $message): Mailable
+        {
+            $mailable = new class($this->phase) extends Mailable implements TrackableMessage
+            {
+                use TracksMailDelivery;
+
+                public function __construct(private readonly string $phase) {}
+
+                public function build(): static
+                {
+                    if ($this->phase === 'build') {
+                        $this->withSymfonyMessage(self::replaceRecipients(...));
+                    }
+
+                    return $this;
+                }
+
+                public function envelope(): Envelope
+                {
+                    return new Envelope(
+                        subject: 'Prepared recipients',
+                        using: $this->phase === 'envelope' ? [self::replaceRecipients(...)] : [],
+                    );
+                }
+
+                public function content(): Content
+                {
+                    return new Content(htmlString: 'Scheduled body');
+                }
+
+                public function trackingContext(): TrackingContext
+                {
+                    return TrackingContext::forCategory('test.preparation-recipients');
+                }
+
+                private static function replaceRecipients(Email $message): void
+                {
+                    $message->to('callback@example.test');
+                    $message->cc('callback-copy@example.test');
+                    $message->bcc('callback-hidden@example.test');
+                }
+            };
+
+            return $this->tracked ? $mailable : $mailable->withoutMailTracking();
+        }
+    };
+    app()->instance(ScheduledMessageFactoryRegistry::class, new ScheduledMessageFactoryRegistry([$factory]));
+    app(ScheduledMailScheduler::class)->schedule(new ScheduleMailData(
+        factoryAlias: $factory->alias(),
+        payloadVersion: 1,
+        payload: [],
+        recipients: new ScheduledRecipients(to: [new Recipient('persisted@example.test')]),
+        scheduledFor: CarbonImmutable::now('UTC'),
+    ));
+
+    expect(app(ScheduledMailProcessor::class)->process())->toBe(1);
+    $message = app('mail.manager')->mailer('array')->getSymfonyTransport()->messages()->sole()->getOriginalMessage();
+
+    expect(array_map(static fn (SymfonyAddress $address): string => $address->getAddress(), $message->getTo()))
+        ->toBe(['persisted@example.test'])
+        ->and($message->getCc())->toBe([])
+        ->and($message->getBcc())->toBe([])
+        ->and(MailNotification::query()->count())->toBe($tracked ? 1 : 0);
+
+    if ($tracked) {
+        $notification = MailNotification::query()->sole();
+        expect($notification->to_recipients)->toBe([['email' => 'persisted@example.test', 'name' => null]])
+            ->and($notification->cc_recipients)->toBe([])
+            ->and($notification->bcc_recipients)->toBe([]);
+    }
+})->with([
+    'tracked envelope' => ['envelope', true],
+    'untracked envelope' => ['envelope', false],
+    'tracked build' => ['build', true],
+    'untracked build' => ['build', false],
+]);

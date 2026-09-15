@@ -8,12 +8,10 @@ use Illuminate\Contracts\Mail\Factory as MailFactory;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\SentMessage;
 use Nvl\MailNotifications\Exceptions\MailDeliveryCancelled;
+use Nvl\MailNotifications\Laravel\ScheduledMailFactory;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
-use Nvl\MailNotifications\ValueObjects\Recipient;
 use Nvl\MailNotifications\ValueObjects\ScheduledMessageData;
 use Nvl\MailNotifications\ValueObjects\ScheduledRecipients;
-use Symfony\Component\Mime\Address;
-use Symfony\Component\Mime\Email;
 use Throwable;
 
 /**
@@ -101,7 +99,7 @@ final readonly class ScheduledMailProcessor
         }
 
         try {
-            $sentMessage = $mailable->send($this->mail);
+            $sentMessage = $mailable->send(new ScheduledMailFactory($this->mail, $data->recipients));
         } catch (Throwable $exception) {
             $this->finalizer->markFailure(
                 messageId: $message->id,
@@ -129,7 +127,7 @@ final readonly class ScheduledMailProcessor
     }
 
     /**
-     * Replace every factory-defined recipient at Laravel's final message boundary.
+     * Seed the Mailable with persisted recipients before its preparation hooks.
      */
     private function enforcePersistedRecipients(
         Mailable $mailable,
@@ -142,43 +140,5 @@ final readonly class ScheduledMailProcessor
         $mailable->cc($recipients->ccPayload());
         $mailable->bcc($recipients->bccPayload());
 
-        $to = $this->addresses($recipients->to);
-        $cc = $this->addresses($recipients->cc);
-        $bcc = $this->addresses($recipients->bcc);
-
-        $mailable->withSymfonyMessage(
-            static function (Email $message) use ($to, $cc, $bcc): void {
-                $message->to(...$to);
-
-                if ($cc === []) {
-                    $message->getHeaders()->remove('Cc');
-                } else {
-                    $message->cc(...$cc);
-                }
-
-                if ($bcc === []) {
-                    $message->getHeaders()->remove('Bcc');
-                } else {
-                    $message->bcc(...$bcc);
-                }
-            },
-        );
-    }
-
-    /**
-     * Convert normalized scheduled recipients into Symfony addresses.
-     *
-     * @param  list<Recipient>  $recipients
-     * @return list<Address>
-     */
-    private function addresses(array $recipients): array
-    {
-        return array_map(
-            static fn (Recipient $recipient): Address => new Address(
-                address: $recipient->email,
-                name: $recipient->name ?? '',
-            ),
-            $recipients,
-        );
     }
 }

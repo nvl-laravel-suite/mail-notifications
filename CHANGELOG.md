@@ -4,6 +4,12 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- Enforce scheduled recipients after all Mailable build and envelope callbacks,
+  while preserving host mailer selection, global recipient interception, and
+  tracking of the final delivery envelope.
+
 ## [2.0.0] - 2026-08-29
 
 ### Changed

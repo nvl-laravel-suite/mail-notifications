@@ -300,6 +300,10 @@ Neither method adds values to the event-safe correlation map; use
 
 ## Separate provider submission from delivery
 
+- Keep scheduled TO/CC/BCC authoritative after Mailable preparation, including
+  `build()` and `Envelope::using` callbacks. Laravel global recipient interception
+  still runs afterward, and tracking observes that final effective envelope.
+
 - Treat `ScheduleMailData::$scheduledFor` as the intended recipient delivery
   instant and optional `availableAt` as package claim/submission eligibility.
 - Keep both caller inputs in UTC and reject initial availability later than
