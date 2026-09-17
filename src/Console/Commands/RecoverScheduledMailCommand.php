@@ -7,6 +7,7 @@ namespace Nvl\MailNotifications\Console\Commands;
 use Illuminate\Console\Command;
 use Nvl\MailNotifications\Services\ScheduledMailConfiguration;
 use Nvl\MailNotifications\Services\ScheduledMailRecovery;
+use Nvl\MailNotifications\Services\MailTenantOperations;
 
 /**
  * Recovers one bounded batch of expired scheduled-mail claims.
@@ -24,6 +25,7 @@ final class RecoverScheduledMailCommand extends Command
     public function handle(
         ScheduledMailConfiguration $configuration,
         ScheduledMailRecovery $recovery,
+        MailTenantOperations $tenants,
     ): int {
         if (! $configuration->enabled()) {
             $this->components->info('Scheduled mail is disabled.');
@@ -37,7 +39,7 @@ final class RecoverScheduledMailCommand extends Command
             return self::INVALID;
         }
 
-        $recovered = $recovery->recover($limit);
+        $recovered = array_sum($tenants->run(fn (): int => $recovery->recover($limit)));
         $this->components->info(sprintf(
             'Recovered %d scheduled mail claim(s).',
             $recovered,

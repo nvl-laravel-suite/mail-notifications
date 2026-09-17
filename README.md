@@ -1165,4 +1165,12 @@ styles, authenticated webhook normalization, and payload/runtime guards.
 
 ## License
 
+## Tenant delivery lifecycle
+
+Scheduled records and tracking rows persist canonical ownership; provider
+events inherit their notification owner. Workers claim/finalize only inside one
+tenant context, factories resolve by class after restoration, and verified
+webhooks recover context only from stored provider identity. Tenant Settings
+may select an approved named mailer, while credentials remain deployment-owned.
+
 NVL Mail Notifications is open-sourced software licensed under the MIT license.

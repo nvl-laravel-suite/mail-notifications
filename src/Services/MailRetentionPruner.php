@@ -14,6 +14,7 @@ use Nvl\MailNotifications\Models\MailNotificationEvent;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
 use Nvl\MailNotifications\ValueObjects\MailRetentionResult;
+use Nvl\Tenancy\Services\TenantBoundary;
 
 /**
  * Prunes bounded, allowlisted database history without provider side effects.
@@ -25,6 +26,7 @@ final readonly class MailRetentionPruner
      */
     public function __construct(
         private MailRetentionConfiguration $configuration,
+        private TenantBoundary $boundary,
     ) {}
 
     /**
@@ -127,7 +129,7 @@ final readonly class MailRetentionPruner
         bool $lock,
     ): array {
         $databaseCutoff = DatabaseTimestamp::format($cutoff);
-        $query = MailNotification::query()
+        $query = $this->boundary->query(MailNotification::query(), 'mail.notifications')
             ->whereIn('status', $statuses)
             ->where(static function (EloquentBuilder $query) use (
                 $databaseCutoff,
@@ -170,7 +172,7 @@ final readonly class MailRetentionPruner
         bool $lock,
     ): array {
         $databaseCutoff = DatabaseTimestamp::format($cutoff);
-        $query = ScheduledMailMessage::query()
+        $query = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
             ->where(static function (EloquentBuilder $query) use (
                 $databaseCutoff,
                 $statuses,
@@ -282,7 +284,7 @@ final readonly class MailRetentionPruner
                 ->whereIn('mail_notification_id', $ids)
                 ->delete();
 
-            $deleted = MailNotification::query()->whereKey($ids)->delete();
+            $deleted = $this->boundary->query(MailNotification::query(), 'mail.notifications')->whereKey($ids)->delete();
 
             if ($deleted !== count($ids)) {
                 throw new MailRetentionException(
@@ -303,7 +305,7 @@ final readonly class MailRetentionPruner
         int $batchSize,
     ): void {
         foreach (array_chunk($scheduledMessageIds, $batchSize) as $ids) {
-            $deleted = ScheduledMailMessage::query()
+            $deleted = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
                 ->whereKey($ids)
                 ->delete();
 

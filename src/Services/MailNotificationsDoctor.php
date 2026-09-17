@@ -262,8 +262,39 @@ final readonly class MailNotificationsDoctor
             $this->migrationOwnershipCheck(),
             $this->migrationHistoryCheck(),
             ...$this->schemaChecks(),
+            $this->tenantOwnershipCheck(),
             ...$this->scheduledMail->inspect(),
         ];
+    }
+
+    /** Report tenant ownership schema and explicit worker enumeration readiness. */
+    private function tenantOwnershipCheck(): MailNotificationsDoctorCheck
+    {
+        if (config('tenancy.enabled') !== true) {
+            return new MailNotificationsDoctorCheck(
+                key: 'tenancy.ownership', severity: 'error', passed: true,
+                message: 'Tenancy is disabled; legacy mail schema compatibility remains active.',
+            );
+        }
+        $notification = new MailNotification;
+        $event = new MailNotificationEvent;
+        $scheduled = new ScheduledMailMessage;
+        $schema = Schema::connection($notification->getConnectionName());
+        $ready = $schema->hasColumn($notification->getTable(), 'tenant_id')
+            && $schema->hasColumn($notification->getTable(), 'ownership_key')
+            && $schema->hasColumn($event->getTable(), 'tenant_id')
+            && $schema->hasColumn($scheduled->getTable(), 'tenant_id')
+            && $schema->hasColumn($scheduled->getTable(), 'ownership_key')
+            && $schema->hasColumn($scheduled->getTable(), 'tenant_envelope');
+        $worklist = config('mail-notifications.tenancy.active_tenant_worklist');
+        $ready = $ready && is_array($worklist) && array_is_list($worklist);
+
+        return new MailNotificationsDoctorCheck(
+            key: 'tenancy.ownership', severity: 'error', passed: $ready,
+            message: $ready
+                ? 'Mail ownership columns, persisted schedule envelopes, and bounded tenant worklist are configured.'
+                : 'Mail tenancy requires adopted ownership columns, schedule envelopes, and an explicit tenant worklist.',
+        );
     }
 
     /**

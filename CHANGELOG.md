@@ -4,6 +4,12 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Added persisted tenant envelopes for scheduled mail, tenant-scoped tracking
+  and retention, stored-identity webhook restoration, fresh factory resolution,
+  approved Settings-selected delivery profiles, adoption, and diagnostics.
+
 ### Fixed
 
 - Enforce scheduled recipients after all Mailable build and envelope callbacks,

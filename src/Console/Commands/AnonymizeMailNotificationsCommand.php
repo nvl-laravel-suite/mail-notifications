@@ -11,6 +11,8 @@ use Illuminate\Console\Command;
 use Nvl\MailNotifications\Exceptions\MailRetentionException;
 use Nvl\MailNotifications\Services\MailAnonymizationConfiguration;
 use Nvl\MailNotifications\Services\MailHistoryAnonymizer;
+use Nvl\MailNotifications\Services\MailTenantOperations;
+use Nvl\MailNotifications\ValueObjects\MailAnonymizationResult;
 use Throwable;
 
 /**
@@ -28,7 +30,7 @@ final class AnonymizeMailNotificationsCommand extends Command
     /**
      * Run one explicitly host-invoked anonymization stage.
      */
-    public function handle(MailHistoryAnonymizer $anonymizer): int
+    public function handle(MailHistoryAnonymizer $anonymizer, MailTenantOperations $tenants): int
     {
         $limit = $this->limitOption();
         $cutoff = $this->cutoffOption();
@@ -38,10 +40,22 @@ final class AnonymizeMailNotificationsCommand extends Command
         }
 
         try {
-            $result = $anonymizer->anonymize(
-                dryRun: (bool) $this->option('dry-run'),
-                limit: $limit,
-                cutoff: $cutoff,
+            $results = $tenants->run(fn (): MailAnonymizationResult => $anonymizer->anonymize(
+                dryRun: (bool) $this->option('dry-run'), limit: $limit, cutoff: $cutoff,
+            ));
+            if ($results === []) {
+                $this->components->info('No active tenant mail partitions were configured.');
+
+                return self::SUCCESS;
+            }
+            $first = $results[0];
+            $result = new MailAnonymizationResult(
+                $first->notificationCutoff,
+                $first->scheduledMessageCutoff,
+                array_sum(array_map(static fn (MailAnonymizationResult $item): int => $item->notificationCount, $results)),
+                array_sum(array_map(static fn (MailAnonymizationResult $item): int => $item->providerEventCount, $results)),
+                array_sum(array_map(static fn (MailAnonymizationResult $item): int => $item->scheduledMessageCount, $results)),
+                $first->dryRun,
             );
         } catch (MailRetentionException $exception) {
             $this->components->error($exception->getMessage());

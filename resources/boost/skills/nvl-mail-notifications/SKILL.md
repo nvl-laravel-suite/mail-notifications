@@ -8,6 +8,12 @@ description: Implement, integrate, test, or review nvl/mail-notifications in Lar
 Use this package to observe selected Laravel Mailables. Do not use it to replace
 Laravel Mail or rewrite business recipients.
 
+In tenant deployments, schedule and track only inside an admitted context.
+Preserve the persisted tenant envelope across claims/retries, resolve factories
+after restoration, bootstrap signed webhooks from stored identity, and use
+explicit tenant worklists for maintenance. Never store provider credentials in
+tenant Settings; only allow approved named delivery profiles.
+
 ## Opt in deliberately
 
 - Require `TrackableMessage` and use `TracksMailDelivery` only on Mailables that

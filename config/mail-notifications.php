@@ -11,6 +11,10 @@ use Nvl\MailNotifications\Services\DefaultSensitiveDataRedactor;
 return [
     'enabled' => env('MAIL_NOTIFICATIONS_ENABLED', true),
 
+    'tenancy' => [
+        'active_tenant_worklist' => [],
+    ],
+
     'tracking' => [
         'enabled' => env('MAIL_NOTIFICATIONS_TRACKING_ENABLED', true),
         'failure_policy' => env('MAIL_NOTIFICATIONS_FAILURE_POLICY', 'fail_closed'),

@@ -1,5 +1,12 @@
 # Upgrading NVL Mail Notifications
 
+## Tenant adoption
+
+Install the mail ownership expansion and map notification and scheduled roots
+explicitly; provider events derive from their notification. Drain old workers
+before activation. Configure the bounded active-tenant worklist for scheduler,
+recovery, anonymization, and retention commands. Provider IDs stay global.
+
 ## Canonical configuration namespace
 
 Package webhook and MailerSend readiness reads only:

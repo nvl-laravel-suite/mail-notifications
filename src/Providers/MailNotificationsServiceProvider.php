@@ -26,6 +26,7 @@ use Nvl\MailNotifications\Console\Commands\RecoverScheduledMailCommand;
 use Nvl\MailNotifications\Console\Commands\RemoveRemoteWebhooksCommand;
 use Nvl\MailNotifications\Console\Commands\SyncRemoteWebhooksCommand;
 use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
+use Nvl\MailNotifications\Contracts\MailTenantWorklist;
 use Nvl\MailNotifications\Contracts\ProviderAdapter;
 use Nvl\MailNotifications\Contracts\ProviderMessageIdResolver;
 use Nvl\MailNotifications\Contracts\ProvidesNotifiableTypes;
@@ -38,6 +39,7 @@ use Nvl\MailNotifications\Contracts\TrackingLifecycle;
 use Nvl\MailNotifications\Laravel\Listeners\TrackMessageAfterSending;
 use Nvl\MailNotifications\Laravel\Listeners\TrackMessageBeforeSending;
 use Nvl\MailNotifications\Services\ConfiguredMailNotificationReadAuthorization;
+use Nvl\MailNotifications\Services\ConfiguredMailTenantWorklist;
 use Nvl\MailNotifications\Services\ConfiguredScheduledMailReadAuthorization;
 use Nvl\MailNotifications\Services\DatabaseTrackingLifecycle;
 use Nvl\MailNotifications\Services\DefaultSensitiveDataRedactor;
@@ -132,6 +134,7 @@ final class MailNotificationsServiceProvider extends ServiceProvider
             ScheduledMailReadAuthorization::class,
             $scheduledReadAuthorization,
         );
+        $this->app->bindIf(MailTenantWorklist::class, ConfiguredMailTenantWorklist::class);
         $this->registerConfiguredExtensions(
             'mail-notifications.extensions.provider_adapters',
             ProviderAdapter::class,

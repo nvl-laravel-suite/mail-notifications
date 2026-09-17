@@ -14,6 +14,7 @@ use Nvl\MailNotifications\Models\MailNotificationEvent;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
 use Nvl\MailNotifications\ValueObjects\MailAnonymizationResult;
+use Nvl\Tenancy\Services\TenantBoundary;
 
 /**
  * Anonymizes bounded retained history without deleting lifecycle rows.
@@ -28,6 +29,7 @@ final readonly class MailHistoryAnonymizer
      */
     public function __construct(
         private MailAnonymizationConfiguration $configuration,
+        private TenantBoundary $boundary,
     ) {}
 
     /**
@@ -172,7 +174,7 @@ final readonly class MailHistoryAnonymizer
     ): Builder {
         $databaseCutoff = DatabaseTimestamp::format($cutoff);
 
-        return MailNotification::query()
+        return $this->boundary->query(MailNotification::query(), 'mail.notifications')
             ->whereIn('status', $statuses)
             ->where(static function (Builder $query) use (
                 $databaseCutoff,
@@ -234,7 +236,7 @@ final readonly class MailHistoryAnonymizer
         bool $lock,
     ): array {
         $databaseCutoff = DatabaseTimestamp::format($cutoff);
-        $query = ScheduledMailMessage::query()
+        $query = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
             ->whereNull('redacted_at')
             ->where(static function (Builder $query) use (
                 $databaseCutoff,
@@ -340,7 +342,7 @@ final readonly class MailHistoryAnonymizer
         CarbonImmutable $redactedAt,
     ): void {
         foreach (array_chunk($ids, $batchSize) as $batch) {
-            $models = MailNotification::query()->whereKey($batch)->get();
+            $models = $this->boundary->query(MailNotification::query(), 'mail.notifications')->whereKey($batch)->get();
 
             if ($models->count() !== count($batch)) {
                 throw $this->candidateSetChanged('notification');
@@ -413,7 +415,7 @@ final readonly class MailHistoryAnonymizer
         CarbonImmutable $redactedAt,
     ): void {
         foreach (array_chunk($ids, $batchSize) as $batch) {
-            $models = ScheduledMailMessage::query()
+            $models = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
                 ->whereKey($batch)
                 ->get();
 
