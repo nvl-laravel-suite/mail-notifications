@@ -20,6 +20,9 @@ use Nvl\MailNotifications\Support\DatabaseTimestamp;
  * Persists one provider-neutral scheduled outbound mail message.
  *
  * @property string $id
+ * @property string|null $tenant_id
+ * @property string|null $ownership_key
+ * @property array{mode: string, tenant_id: string|null, version: int}|null $tenant_envelope
  * @property string $factory_alias
  * @property int $payload_version
  * @property array<string, mixed> $payload
@@ -88,6 +91,9 @@ final class ScheduledMailMessage extends Model
      */
     protected $fillable = [
         'id',
+        'tenant_id',
+        'ownership_key',
+        'tenant_envelope',
         'factory_alias',
         'payload_version',
         'payload',
@@ -157,6 +163,7 @@ final class ScheduledMailMessage extends Model
     {
         return [
             'payload_version' => 'integer',
+            'tenant_envelope' => 'array',
             'payload' => SensitiveArrayCast::class
                 .':scheduled_message.payload',
             'to_recipients' => SensitiveArrayCast::class

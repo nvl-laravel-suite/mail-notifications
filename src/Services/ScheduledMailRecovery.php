@@ -11,6 +11,7 @@ use Nvl\MailNotifications\Events\ScheduledMailRecovered;
 use Nvl\MailNotifications\Events\ScheduledMailRetrying;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
+use Nvl\Tenancy\Services\TenantBoundary;
 
 /**
  * Recovers expired claims without incrementing their attempt count.
@@ -28,6 +29,8 @@ final readonly class ScheduledMailRecovery
     public function __construct(
         private ScheduledMailConfiguration $configuration,
         private MailTrackingEventDispatcher $events,
+        private TenantBoundary $boundary,
+        private MailTenantEnvelope $tenantEnvelope,
     ) {}
 
     /**
@@ -47,7 +50,7 @@ final readonly class ScheduledMailRecovery
         ): int {
             $now = CarbonImmutable::now('UTC');
             $databaseNow = DatabaseTimestamp::format($now);
-            $expired = ScheduledMailMessage::query()
+            $expired = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
                 ->where('status', ScheduledMailStatus::Processing->value)
                 ->whereNotNull('claim_token')
                 ->where('locked_until', '<=', $databaseNow)
@@ -89,7 +92,8 @@ final readonly class ScheduledMailRecovery
                     $updates['failed_at'] = $databaseNow;
                 }
 
-                $updated = ScheduledMailMessage::query()
+                $this->tenantEnvelope->assertScheduled($message);
+                $updated = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
                     ->whereKey($message->id)
                     ->where('status', ScheduledMailStatus::Processing->value)
                     ->where('claim_token', $token)

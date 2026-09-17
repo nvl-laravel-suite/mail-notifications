@@ -21,6 +21,7 @@ final readonly class ScheduledMailFactory implements Factory
     public function __construct(
         private Factory $factory,
         private ScheduledRecipients $recipients,
+        private ?string $deliveryProfile = null,
     ) {}
 
     /**
@@ -29,7 +30,7 @@ final readonly class ScheduledMailFactory implements Factory
     public function mailer(mixed $name = null): Mailer
     {
         return new ScheduledRecipientMailer(
-            $this->factory->mailer($name),
+            $this->factory->mailer($this->deliveryProfile ?? $name),
             $this->recipients,
         );
     }

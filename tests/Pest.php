@@ -11,6 +11,7 @@ use Nvl\MailNotifications\Tests\TestCase;
 pest()->extend(TestCase::class)->in(
     __DIR__.'/Feature',
     __DIR__.'/Unit',
+    __DIR__.'/Tenancy',
 );
 pest()->extend(PluggedTestCase::class)->in(__DIR__.'/Plugged');
 pest()->extend(SensitiveStorageTestCase::class)->in(

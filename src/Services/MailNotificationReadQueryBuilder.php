@@ -9,18 +9,23 @@ use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadData;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadQuery;
+use Nvl\Tenancy\Services\TenantBoundary;
 
 /**
  * Applies the fixed administrative filter allowlist to tracking reads.
  */
-final class MailNotificationReadQueryBuilder
+final readonly class MailNotificationReadQueryBuilder
 {
+    /** Create the tenant-bounded read builder. */
+    public function __construct(private TenantBoundary $boundary) {}
+
     /**
      * @return Builder<MailNotification>
      */
     public function build(MailNotificationReadQuery $filters): Builder
     {
-        $query = MailNotification::query()->select(MailNotificationReadData::COLUMNS);
+        $query = $this->boundary->query(MailNotification::query(), 'mail.notifications')
+            ->select(MailNotificationReadData::COLUMNS);
 
         if ($filters->search !== null) {
             $term = "%{$filters->search}%";

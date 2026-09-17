@@ -21,6 +21,7 @@ use Nvl\MailNotifications\Support\DatabaseTimestamp;
  * Persists one authenticated provider event for durable idempotency.
  *
  * @property string $id
+ * @property string|null $tenant_id
  * @property string $mail_notification_id
  * @property string $provider
  * @property string $provider_event_id
@@ -56,6 +57,7 @@ final class MailNotificationEvent extends Model
      */
     protected $fillable = [
         'id',
+        'tenant_id',
         'mail_notification_id',
         'provider',
         'provider_event_id',

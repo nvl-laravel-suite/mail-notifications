@@ -9,6 +9,7 @@ use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Services\ProviderRegistry;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadData;
 use Nvl\MailNotifications\ValueObjects\ProviderMessageId;
+use Nvl\Tenancy\Services\TenantBoundary;
 
 /**
  * Resolves one authorized delivery by its exact registered provider identity.
@@ -21,6 +22,7 @@ final readonly class ShowMailNotificationByProviderMessageAction
     public function __construct(
         private ProviderRegistry $providers,
         private ShowMailNotificationAction $show,
+        private TenantBoundary $boundary,
     ) {}
 
     public function execute(
@@ -28,7 +30,7 @@ final readonly class ShowMailNotificationByProviderMessageAction
         ProviderMessageId $messageId,
     ): MailNotificationReadData {
         $this->providers->resolve($messageId->provider);
-        $notification = MailNotification::query()
+        $notification = $this->boundary->query(MailNotification::query(), 'mail.notifications')
             ->select('id')
             ->where('provider', $messageId->provider)
             ->where('provider_message_id', $messageId->value)

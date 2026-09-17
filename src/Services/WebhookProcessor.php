@@ -21,6 +21,10 @@ use Nvl\MailNotifications\ValueObjects\TransitionResult;
 use Nvl\MailNotifications\ValueObjects\VerifiedDeliveryEvent;
 use Nvl\MailNotifications\ValueObjects\WebhookAcknowledgement;
 use Nvl\MailNotifications\ValueObjects\WebhookRequest;
+use Nvl\Tenancy\Contracts\TenantContext;
+use Nvl\Tenancy\Enums\TenantContextMode;
+use Nvl\Tenancy\Exceptions\TenantBoundaryViolation;
+use Nvl\Tenancy\Services\TenantRunner;
 
 /**
  * Verifies, normalizes, and persists one provider webhook through a registered adapter.
@@ -34,6 +38,9 @@ final readonly class WebhookProcessor
         private ProviderRegistry $providers,
         private TrackingLifecycle $lifecycle,
         private Repository $config,
+        private VerifiedDeliveryTenantLocator $tenantLocator,
+        private TenantRunner $tenants,
+        private TenantContext $tenantContext,
         private ?MailTrackingEventDispatcher $events = null,
     ) {}
 
@@ -102,6 +109,18 @@ final readonly class WebhookProcessor
         }
 
         try {
+            $stored = $this->tenantLocator->locate($event);
+            if ($stored->mode === TenantContextMode::Tenant) {
+                return $this->tenants->run(
+                    $stored->tenantId ?? throw new TenantBoundaryViolation('Stored tenant delivery identity is incomplete.'),
+                    fn (): TransitionResult => $this->lifecycle->apply($event),
+                );
+            }
+            if ($stored->mode === TenantContextMode::Platform
+                && $this->tenantContext->snapshot()->mode !== TenantContextMode::Platform) {
+                throw new TenantBoundaryViolation('Platform mail callbacks require an explicitly authorized platform context.');
+            }
+
             return $this->lifecycle->apply($event);
         } catch (AmbiguousDeliveryEventException) {
             return $this->handleAmbiguousEvent($event);

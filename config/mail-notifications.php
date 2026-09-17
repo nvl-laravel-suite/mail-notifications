@@ -214,6 +214,8 @@ return [
 
     'scheduling' => [
         'enabled' => env('MAIL_NOTIFICATIONS_SCHEDULING_ENABLED', false),
+        'delivery_profile_setting' => null,
+        'allowed_delivery_profiles' => [],
         'batch_size' => (int) env(
             'MAIL_NOTIFICATIONS_SCHEDULING_BATCH_SIZE',
             50,

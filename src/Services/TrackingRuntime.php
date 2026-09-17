@@ -388,6 +388,13 @@ final class TrackingRuntime
         unset($this->staged[$correlationId]);
     }
 
+    /** Clear all request/worker-local correlations at a tenant scope boundary. */
+    public function clear(): void
+    {
+        $this->staged = [];
+        $this->messages = new WeakMap;
+    }
+
     /**
      * Emit a content-free operational tracking failure.
      */

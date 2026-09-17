@@ -21,6 +21,8 @@ use Nvl\MailNotifications\Support\DatabaseTimestamp;
  * Persists the provider-neutral lifecycle of one outbound mail delivery.
  *
  * @property string $id
+ * @property string|null $tenant_id
+ * @property string|null $ownership_key
  * @property string $correlation_id
  * @property string|null $queue_reference
  * @property string $mailer
@@ -79,6 +81,8 @@ final class MailNotification extends Model
      */
     protected $fillable = [
         'id',
+        'tenant_id',
+        'ownership_key',
         'correlation_id',
         'queue_reference',
         'mailer',

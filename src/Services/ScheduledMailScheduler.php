@@ -15,6 +15,7 @@ use Nvl\MailNotifications\Exceptions\ScheduledMailException;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
 use Nvl\MailNotifications\ValueObjects\ScheduleMailData;
+use Nvl\Tenancy\Services\TenantBoundary;
 
 /**
  * Owns scheduling, cancellation, and rescheduling write transactions.
@@ -35,6 +36,9 @@ final readonly class ScheduledMailScheduler
         private MailTrackingEventDispatcher $events,
         private ScheduledMailInputGuard $input,
         private SensitiveStorageCodec $sensitiveStorage,
+        private TenantBoundary $boundary,
+        private MailTenantEnvelope $tenantEnvelope,
+        private MailNotifiableTenantAccess $notifiableAccess,
     ) {}
 
     /**
@@ -49,6 +53,7 @@ final readonly class ScheduledMailScheduler
         return $message->getConnection()->transaction(
             function () use ($attributes): ScheduledMailMessage {
                 $message = ScheduledMailMessage::query()->create([
+                    ...$this->tenantEnvelope->scheduledAttributes(),
                     ...$attributes,
                     'status' => ScheduledMailStatus::Pending,
                 ]);
@@ -77,7 +82,7 @@ final readonly class ScheduledMailScheduler
             $messageId,
         ): ScheduledMailMessage {
             $cancelledAt = CarbonImmutable::now('UTC');
-            $updated = ScheduledMailMessage::query()
+            $updated = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
                 ->whereKey($messageId)
                 ->where('status', ScheduledMailStatus::Pending->value)
                 ->update([
@@ -96,7 +101,7 @@ final readonly class ScheduledMailScheduler
                 cancelledAt: $cancelledAt,
             ));
 
-            return ScheduledMailMessage::query()->findOrFail($messageId);
+            return $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')->findOrFail($messageId);
         });
     }
 
@@ -116,7 +121,7 @@ final readonly class ScheduledMailScheduler
             $messageId,
             $timing,
         ): ScheduledMailMessage {
-            $message = ScheduledMailMessage::query()
+            $message = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
                 ->whereKey($messageId)
                 ->where('status', ScheduledMailStatus::Pending->value)
                 ->lockForUpdate()
@@ -128,7 +133,7 @@ final readonly class ScheduledMailScheduler
                 );
             }
 
-            $updated = ScheduledMailMessage::query()
+            $updated = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
                 ->whereKey($messageId)
                 ->where('status', ScheduledMailStatus::Pending->value)
                 ->where('attempts', $message->attempts)
@@ -156,7 +161,7 @@ final readonly class ScheduledMailScheduler
                 availableAt: $timing['available_at'],
             ));
 
-            return ScheduledMailMessage::query()->findOrFail($messageId);
+            return $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')->findOrFail($messageId);
         });
     }
 
@@ -175,7 +180,7 @@ final readonly class ScheduledMailScheduler
             $messageId,
             $attributes,
         ): ScheduledMailMessage {
-            $message = ScheduledMailMessage::query()
+            $message = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
                 ->whereKey($messageId)
                 ->where('status', ScheduledMailStatus::Pending->value)
                 ->lockForUpdate()
@@ -222,7 +227,7 @@ final readonly class ScheduledMailScheduler
                     $attributes['metadata'],
                 ),
             ];
-            $updated = ScheduledMailMessage::query()
+            $updated = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
                 ->whereKey($messageId)
                 ->where('status', ScheduledMailStatus::Pending->value)
                 ->where('attempts', $message->attempts)
@@ -254,7 +259,7 @@ final readonly class ScheduledMailScheduler
                 availableAt: $attributes['available_at'],
             ));
 
-            return ScheduledMailMessage::query()->findOrFail($messageId);
+            return $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')->findOrFail($messageId);
         });
     }
 
@@ -299,12 +304,15 @@ final readonly class ScheduledMailScheduler
         );
         $factory->validate($data->payloadVersion, $data->payload);
 
-        if ($data->notifiable !== null
-            && $this->notifiableTypes->resolve($data->notifiable->type) === null) {
-            throw new ScheduledMailException(sprintf(
-                'Scheduled mail notifiable type [%s] is not registered.',
-                $data->notifiable->type,
-            ));
+        if ($data->notifiable !== null) {
+            $class = $this->notifiableTypes->resolve($data->notifiable->type);
+            if ($class === null) {
+                throw new ScheduledMailException(sprintf(
+                    'Scheduled mail notifiable type [%s] is not registered.',
+                    $data->notifiable->type,
+                ));
+            }
+            $this->notifiableAccess->assert($class, $data->notifiable->identifier);
         }
 
         return [

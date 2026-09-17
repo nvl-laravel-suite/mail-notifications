@@ -12,6 +12,7 @@ use Nvl\MailNotifications\Events\ScheduledMailRetrying;
 use Nvl\MailNotifications\Events\ScheduledMailSent;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
+use Nvl\Tenancy\Services\TenantBoundary;
 use Throwable;
 
 /**
@@ -28,6 +29,8 @@ final readonly class ScheduledMailFinalizer
     public function __construct(
         private ScheduledMailConfiguration $configuration,
         private MailTrackingEventDispatcher $events,
+        private TenantBoundary $boundary,
+        private MailTenantEnvelope $tenantEnvelope,
     ) {}
 
     /**
@@ -154,12 +157,17 @@ final readonly class ScheduledMailFinalizer
         string $messageId,
         string $claimToken,
     ): ?ScheduledMailMessage {
-        return ScheduledMailMessage::query()
+        $message = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
             ->whereKey($messageId)
             ->where('status', ScheduledMailStatus::Processing->value)
             ->where('claim_token', $claimToken)
             ->lockForUpdate()
             ->first();
+        if ($message instanceof ScheduledMailMessage) {
+            $this->tenantEnvelope->assertScheduled($message);
+        }
+
+        return $message;
     }
 
     /**
@@ -171,7 +179,7 @@ final readonly class ScheduledMailFinalizer
         string $messageId,
         string $claimToken,
     ): Builder {
-        return ScheduledMailMessage::query()
+        return $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
             ->whereKey($messageId)
             ->where('status', ScheduledMailStatus::Processing->value)
             ->where('claim_token', $claimToken);

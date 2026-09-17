@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Services;
 
+use Illuminate\Container\Container;
 use Nvl\MailNotifications\Contracts\ScheduledMessageFactory;
 use Nvl\MailNotifications\Exceptions\ScheduledMailException;
 
@@ -12,10 +13,12 @@ use Nvl\MailNotifications\Exceptions\ScheduledMailException;
  */
 final class ScheduledMessageFactoryRegistry
 {
+    private readonly Container $container;
+
     /**
      * Registered factories keyed by stable alias.
      *
-     * @var array<string, ScheduledMessageFactory>
+     * @var array<string, class-string<ScheduledMessageFactory>>
      */
     private array $factories = [];
 
@@ -24,16 +27,22 @@ final class ScheduledMessageFactoryRegistry
      *
      * @param  iterable<mixed>  $factories
      */
-    public function __construct(iterable $factories = [])
+    public function __construct(iterable $factories = [], ?Container $container = null)
     {
+        $this->container = $container ?? Container::getInstance();
         foreach ($factories as $factory) {
-            if (! $factory instanceof ScheduledMessageFactory) {
+            $class = is_string($factory) ? $factory : (is_object($factory) ? $factory::class : null);
+            if (! is_string($class) || ! is_a($class, ScheduledMessageFactory::class, true)) {
                 throw new ScheduledMailException(
                     'Scheduled message factories must implement ScheduledMessageFactory.',
                 );
             }
 
-            $alias = trim($factory->alias());
+            $probe = $this->container->build($class);
+            if (! $probe instanceof ScheduledMessageFactory) {
+                throw new ScheduledMailException('Scheduled message factory bindings must resolve their declared contract.');
+            }
+            $alias = trim($probe->alias());
 
             if ($alias === '' || mb_strlen($alias) > 128) {
                 throw new ScheduledMailException(
@@ -43,14 +52,13 @@ final class ScheduledMessageFactoryRegistry
 
             $existing = $this->factories[$alias] ?? null;
 
-            if ($existing instanceof ScheduledMessageFactory
-                && $existing !== $factory) {
+            if (is_string($existing) && $existing !== $class) {
                 throw new ScheduledMailException(
                     "Scheduled message factory [{$alias}] is already registered.",
                 );
             }
 
-            $this->factories[$alias] = $factory;
+            $this->factories[$alias] = $class;
         }
     }
 
@@ -60,12 +68,16 @@ final class ScheduledMessageFactoryRegistry
     public function resolve(string $alias, int $version): ScheduledMessageFactory
     {
         $normalizedAlias = trim($alias);
-        $factory = $this->factories[$normalizedAlias] ?? null;
+        $class = $this->factories[$normalizedAlias] ?? null;
 
-        if (! $factory instanceof ScheduledMessageFactory) {
+        if (! is_string($class)) {
             throw new ScheduledMailException(
                 "Scheduled message factory [{$normalizedAlias}] is not registered.",
             );
+        }
+        $factory = $this->container->build($class);
+        if (! $factory instanceof ScheduledMessageFactory) {
+            throw new ScheduledMailException("Scheduled message factory [{$normalizedAlias}] did not resolve its contract.");
         }
 
         if ($version < 1 || ! $factory->supportsVersion($version)) {
@@ -86,6 +98,15 @@ final class ScheduledMessageFactoryRegistry
      */
     public function all(): array
     {
-        return $this->factories;
+        $resolved = [];
+        foreach ($this->factories as $alias => $class) {
+            $factory = $this->container->build($class);
+            if (! $factory instanceof ScheduledMessageFactory) {
+                throw new ScheduledMailException("Scheduled message factory [{$alias}] did not resolve its contract.");
+            }
+            $resolved[$alias] = $factory;
+        }
+
+        return $resolved;
     }
 }

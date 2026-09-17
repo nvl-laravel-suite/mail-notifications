@@ -11,6 +11,7 @@ use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
 use Nvl\MailNotifications\ValueObjects\ScheduledMailReadQuery;
+use Nvl\Tenancy\Services\TenantBoundary;
 
 /**
  * Applies the fixed administrative filter allowlist to scheduled-mail reads.
@@ -19,6 +20,7 @@ final readonly class ScheduledMailReadQueryBuilder
 {
     public function __construct(
         private MailNotificationNotifiableTypeRegistry $notifiableTypes,
+        private TenantBoundary $boundary,
     ) {}
 
     /**
@@ -26,7 +28,7 @@ final readonly class ScheduledMailReadQueryBuilder
      */
     public function build(ScheduledMailReadQuery $filters): Builder
     {
-        $query = ScheduledMailMessage::query();
+        $query = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled');
 
         if ($filters->status instanceof ScheduledMailStatus) {
             $query->where('status', $filters->status->value);

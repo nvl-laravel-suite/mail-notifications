@@ -29,6 +29,8 @@ final readonly class ScheduledMailProcessor
         private ScheduledMailFinalizer $finalizer,
         private MailFactory $mail,
         private ScheduledMailInputGuard $input,
+        private MailTenantEnvelope $tenantEnvelope,
+        private TenantDeliveryProfileResolver $deliveryProfiles,
     ) {}
 
     /**
@@ -67,6 +69,7 @@ final readonly class ScheduledMailProcessor
      */
     private function deliver(ScheduledMailMessage $message): void
     {
+        $this->tenantEnvelope->assertScheduled($message);
         $claimToken = $message->claim_token;
 
         if (! is_string($claimToken) || $claimToken === '') {
@@ -99,7 +102,11 @@ final readonly class ScheduledMailProcessor
         }
 
         try {
-            $sentMessage = $mailable->send(new ScheduledMailFactory($this->mail, $data->recipients));
+            $sentMessage = $mailable->send(new ScheduledMailFactory(
+                $this->mail,
+                $data->recipients,
+                $this->deliveryProfiles->resolve(),
+            ));
         } catch (Throwable $exception) {
             $this->finalizer->markFailure(
                 messageId: $message->id,

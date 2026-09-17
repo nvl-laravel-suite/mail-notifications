@@ -12,13 +12,14 @@ use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Enums\MailNotificationReadAbility;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\ValueObjects\MailNotificationSuggestion;
+use Nvl\Tenancy\Services\TenantBoundary;
 
 /**
  * Returns minimal, bounded autocomplete results for authorized administrators.
  */
 final readonly class SuggestMailNotificationsAction
 {
-    public function __construct(private MailNotificationReadAuthorization $authorization) {}
+    public function __construct(private MailNotificationReadAuthorization $authorization, private TenantBoundary $boundary) {}
 
     /**
      * @return list<MailNotificationSuggestion>
@@ -53,7 +54,7 @@ final readonly class SuggestMailNotificationsAction
 
         $term = "%{$search}%";
 
-        $query = MailNotification::query()
+        $query = $this->boundary->query(MailNotification::query(), 'mail.notifications')
             ->select([
                 'id',
                 'subject',

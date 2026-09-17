@@ -27,6 +27,7 @@ use Nvl\MailNotifications\ValueObjects\Recipient;
 use Nvl\MailNotifications\ValueObjects\TrackingAttempt;
 use Nvl\MailNotifications\ValueObjects\TransitionResult;
 use Nvl\MailNotifications\ValueObjects\VerifiedDeliveryEvent;
+use Nvl\Tenancy\Services\TenantBoundary;
 use Throwable;
 
 /**
@@ -50,6 +51,9 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         private MailTrackingEventDispatcher $events,
         private MailNotificationNotifiableTypeRegistry $notifiableTypes,
         private SensitiveStorageCodec $sensitiveStorage,
+        private TenantBoundary $boundary,
+        private MailTenantEnvelope $tenantEnvelope,
+        private MailNotifiableTenantAccess $notifiableAccess,
     ) {}
 
     /**
@@ -62,7 +66,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
 
         return $model->getConnection()->transaction(function () use ($message): TrackingAttempt {
             $now = CarbonImmutable::now('UTC');
-            $notification = MailNotification::query()->create(
+            $notification = $this->boundary->query(MailNotification::query(), 'mail.notifications')->create(
                 $this->notificationAttributes($message, $now),
             );
             $attempt = $this->attempt($notification);
@@ -85,7 +89,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         $model = new MailNotification;
 
         $model->getConnection()->transaction(function () use ($attempt, $acceptance): void {
-            $notification = MailNotification::query()
+            $notification = $this->boundary->query(MailNotification::query(), 'mail.notifications')
                 ->whereKey($attempt->id)
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -140,7 +144,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         $model = new MailNotification;
 
         $model->getConnection()->transaction(function () use ($attempt, $exception): void {
-            $notification = MailNotification::query()
+            $notification = $this->boundary->query(MailNotification::query(), 'mail.notifications')
                 ->whereKey($attempt->id)
                 ->lockForUpdate()
                 ->first();
@@ -230,6 +234,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         $eventValues = [
             'id' => (string) Str::uuid(),
             'mail_notification_id' => $notification->id,
+            'tenant_id' => $notification->tenant_id,
             'provider' => $event->provider,
             'provider_event_id' => $event->eventId,
             'provider_message_id' => $event->providerMessageId,
@@ -447,6 +452,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         }
 
         return [
+            ...$this->tenantEnvelope->notificationAttributes(),
             'id' => $message->correlationId,
             'correlation_id' => $message->correlationId,
             'queue_reference' => $message->queueReference,
@@ -496,7 +502,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             return;
         }
 
-        $completedAttemptExists = MailNotification::query()
+        $completedAttemptExists = $this->boundary->query(MailNotification::query(), 'mail.notifications')
             ->where('queue_reference', $queueReference)
             ->where('status', '!=', MailDeliveryStatus::Pending->value)
             ->exists();
@@ -513,7 +519,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
 
         $this->assertNotifiableTypeIsRegistered($message);
         $now = CarbonImmutable::now('UTC');
-        $notification = MailNotification::query()->create(
+        $notification = $this->boundary->query(MailNotification::query(), 'mail.notifications')->create(
             $this->notificationAttributes($message, $now),
         );
 
@@ -531,7 +537,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
     private function lockedQueuedFailureFallback(
         string $queueReference,
     ): ?MailNotification {
-        $fallback = MailNotification::query()
+        $fallback = $this->boundary->query(MailNotification::query(), 'mail.notifications')
             ->where('correlation_id', $queueReference)
             ->where('queue_reference', $queueReference)
             ->first();
@@ -540,7 +546,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             return null;
         }
 
-        $fallback = MailNotification::query()
+        $fallback = $this->boundary->query(MailNotification::query(), 'mail.notifications')
             ->whereKey($fallback->id)
             ->lockForUpdate()
             ->first();
@@ -564,7 +570,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         string $queueReference,
         Throwable $exception,
     ): bool {
-        $collisions = MailNotification::query()
+        $collisions = $this->boundary->query(MailNotification::query(), 'mail.notifications')
             ->where(
                 static function (Builder $query) use ($queueReference): void {
                     $query
@@ -663,7 +669,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
      */
     private function notificationForEvent(VerifiedDeliveryEvent $event): MailNotification
     {
-        $query = MailNotification::query()->lockForUpdate();
+        $query = $this->boundary->query(MailNotification::query(), 'mail.notifications')->lockForUpdate();
 
         if ($event->correlationId !== null) {
             $query->where('correlation_id', $event->correlationId);
@@ -750,12 +756,15 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
     ): void {
         $notifiable = $message->context->notifiable;
 
-        if ($notifiable !== null
-            && $this->notifiableTypes->resolve($notifiable->type) === null) {
-            throw new DomainException(sprintf(
-                'Mail notification notifiable type [%s] is not registered.',
-                $notifiable->type,
-            ));
+        if ($notifiable !== null) {
+            $class = $this->notifiableTypes->resolve($notifiable->type);
+            if ($class === null) {
+                throw new DomainException(sprintf(
+                    'Mail notification notifiable type [%s] is not registered.',
+                    $notifiable->type,
+                ));
+            }
+            $this->notifiableAccess->assert($class, $notifiable->identifier);
         }
     }
 

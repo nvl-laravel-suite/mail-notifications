@@ -9,19 +9,20 @@ use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
 use Nvl\MailNotifications\Enums\MailNotificationReadAbility;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadData;
+use Nvl\Tenancy\Services\TenantBoundary;
 
 /**
  * Resolves one authorized delivery and its metadata-free provider events.
  */
 final readonly class ShowMailNotificationAction
 {
-    public function __construct(private MailNotificationReadAuthorization $authorization) {}
+    public function __construct(private MailNotificationReadAuthorization $authorization, private TenantBoundary $boundary) {}
 
     public function execute(
         Authenticatable $actor,
         string $id,
     ): MailNotificationReadData {
-        $notification = MailNotification::query()
+        $notification = $this->boundary->query(MailNotification::query(), 'mail.notifications')
             ->select(MailNotificationReadData::COLUMNS)
             ->findOrFail($id);
         $this->authorization->authorize(

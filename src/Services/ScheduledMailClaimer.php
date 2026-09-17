@@ -10,6 +10,7 @@ use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Events\ScheduledMailClaimed;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
+use Nvl\Tenancy\Services\TenantBoundary;
 
 /**
  * Atomically fences due scheduled messages and increments attempts once.
@@ -25,6 +26,8 @@ final readonly class ScheduledMailClaimer
     public function __construct(
         private ScheduledMailConfiguration $configuration,
         private MailTrackingEventDispatcher $events,
+        private TenantBoundary $boundary,
+        private MailTenantEnvelope $tenantEnvelope,
     ) {}
 
     /**
@@ -52,7 +55,7 @@ final readonly class ScheduledMailClaimer
         ): array {
             $now = CarbonImmutable::now('UTC');
             $databaseNow = DatabaseTimestamp::format($now);
-            $query = ScheduledMailMessage::query()
+            $query = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
                 ->where('status', ScheduledMailStatus::Pending->value)
                 ->where('available_at', '<=', $databaseNow)
                 ->whereColumn('attempts', '<', 'max_attempts')
@@ -72,7 +75,8 @@ final readonly class ScheduledMailClaimer
             foreach ($candidates as $candidate) {
                 $token = (string) Str::uuid();
                 $attempt = $candidate->attempts + 1;
-                $updated = ScheduledMailMessage::query()
+                $this->tenantEnvelope->assertScheduled($candidate);
+                $updated = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
                     ->whereKey($candidate->id)
                     ->where('status', ScheduledMailStatus::Pending->value)
                     ->where('attempts', $candidate->attempts)
@@ -91,7 +95,7 @@ final readonly class ScheduledMailClaimer
                     continue;
                 }
 
-                $message = ScheduledMailMessage::query()
+                $message = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
                     ->findOrFail($candidate->id);
                 $claimed[] = $message;
                 $this->events->dispatch(new ScheduledMailClaimed(
