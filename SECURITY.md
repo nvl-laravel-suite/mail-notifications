@@ -17,3 +17,6 @@ profile available while protected history is retained. Treat
 `UnreadableSensitiveDataException` as an operational incident; never bypass
 the versioned envelope or reinterpret ciphertext as plaintext. Preview bounded
 anonymization before mutation and keep its scheduling separate from deletion.
+
+<!-- tenancy-program-p2 -->
+The configurable-tenancy implementation is present; its consolidated verification matrix remains pending and no release-readiness claim is made.

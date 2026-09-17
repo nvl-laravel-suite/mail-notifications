@@ -168,3 +168,6 @@ All notable changes to `nvl/mail-notifications` are documented here.
 ## [1.0.0] - 2026-08-08
 
 - Initial standalone package implementation.
+
+<!-- tenancy-program-p2 -->
+Configurable-tenancy implementation and adoption documentation are present. The final consolidated verification matrix is pending; do not treat this package as release-ready until that gate passes.

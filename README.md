@@ -1174,3 +1174,6 @@ webhooks recover context only from stored provider identity. Tenant Settings
 may select an approved named mailer, while credentials remain deployment-owned.
 
 NVL Mail Notifications is open-sourced software licensed under the MIT license.
+
+<!-- tenancy-program-p2 -->
+Configurable-tenancy implementation and adoption documentation are present. The final consolidated verification matrix is pending; do not treat this package as release-ready until that gate passes.
