@@ -73,11 +73,12 @@ use Nvl\MailNotifications\Support\SensitiveStorageBridge;
 use Nvl\MailNotifications\Support\TrackingRuntimeBridge;
 use Nvl\MailNotifications\Tenancy\MailNotificationsResourceRegistrar;
 use Nvl\MailNotifications\Tenancy\MailTrackingContextParticipant;
+use Nvl\Settings\Providers\SettingsServiceProvider;
 use Nvl\Support\Traits\MergesPackageConfiguration;
 use Nvl\Tenancy\Providers\TenancyServiceProvider;
 use Nvl\Tenancy\Services\TenantAdoptionRegistry;
-use Nvl\Tenancy\Services\TenantResourceRegistry;
 use Nvl\Tenancy\Services\TenantContextParticipants;
+use Nvl\Tenancy\Services\TenantResourceRegistry;
 
 /**
  * Registers provider-neutral tracking and a configurable Laravel mail presentation.
@@ -92,6 +93,7 @@ final class MailNotificationsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->register(TenancyServiceProvider::class);
+        $this->app->register(SettingsServiceProvider::class);
         $this->mergePackageConfiguration(
             dirname(__DIR__, 2).'/config/mail-notifications.php',
             'mail-notifications',
@@ -154,6 +156,11 @@ final class MailNotificationsServiceProvider extends ServiceProvider
             'mail-notifications.extensions.webhook_managers',
             RemoteWebhookManager::class,
             RemoteWebhookManager::TAG,
+        );
+        $this->registerConfiguredExtensions(
+            'mail-notifications.extensions.scheduled_message_factories',
+            ScheduledMessageFactory::class,
+            ScheduledMessageFactory::TAG,
         );
 
         $this->app->singleton(TrackingEligibility::class);
@@ -259,20 +266,10 @@ final class MailNotificationsServiceProvider extends ServiceProvider
         $this->app->singleton(ScheduledMailConfiguration::class);
         $this->app->singleton(
             ScheduledMessageFactoryRegistry::class,
-            static function (Application $app): ScheduledMessageFactoryRegistry {
-                $factories = $app->make(Repository::class)->get(
-                    'mail-notifications.extensions.scheduled_message_factories',
-                    [],
-                );
-                if (! is_array($factories)) {
-                    throw new LogicException('Configured scheduled message factories must be an array of classes.');
-                }
-
-                return new ScheduledMessageFactoryRegistry([
-                    ...$factories,
-                    ...iterator_to_array($app->tagged(ScheduledMessageFactory::TAG)),
-                ], $app);
-            },
+            static fn (Application $app): ScheduledMessageFactoryRegistry => new ScheduledMessageFactoryRegistry(
+                $app->tagged(ScheduledMessageFactory::TAG),
+                $app,
+            ),
         );
         $this->app->singleton(ScheduledMailScheduler::class);
         $this->app->singleton(ScheduledMailClaimer::class);

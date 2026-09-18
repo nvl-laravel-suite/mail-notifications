@@ -234,7 +234,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         $eventValues = [
             'id' => (string) Str::uuid(),
             'mail_notification_id' => $notification->id,
-            'tenant_id' => $notification->tenant_id,
+            ...(config('tenancy.enabled') === true ? ['tenant_id' => $notification->tenant_id] : []),
             'provider' => $event->provider,
             'provider_event_id' => $event->eventId,
             'provider_message_id' => $event->providerMessageId,

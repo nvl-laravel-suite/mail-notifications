@@ -6,6 +6,7 @@ namespace Nvl\MailNotifications\Tenancy;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Migrations\Migrator;
+use Illuminate\Database\Query\Builder;
 use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\Tenancy\Contracts\TenantAdoptionAdapter;
@@ -40,10 +41,20 @@ final readonly class MailNotificationsAdoptionAdapter implements TenantAdoptionA
     public function backfill(TenantAdoptionPlan $plan, ?string $cursor, int $limit): TenantBackfillResult
     {
         $connection = $this->connection($plan);
-        [$resource, $after] = str_contains((string) $cursor, '|')
-            ? explode('|', (string) $cursor, 2)
-            : ['mail.notifications', $cursor];
+        $resource = 'mail.notifications';
+        $after = $cursor;
+        if ($cursor !== null && str_contains($cursor, '|')) {
+            [$candidate, $after] = explode('|', $cursor, 2);
+            if (! in_array($candidate, ['mail.notifications', 'mail.scheduled'], true)) {
+                throw new TenantBoundaryViolation('Mail adoption cursor names an unknown resource.');
+            }
+            $resource = $candidate;
+        }
         $assignments = $this->mappings->assignments($plan, $resource, $after, $limit);
+        if ($assignments === [] && $resource === 'mail.notifications') {
+            $resource = 'mail.scheduled';
+            $assignments = $this->mappings->assignments($plan, $resource, null, $limit);
+        }
         $connection->transaction(function () use ($assignments, $connection, $resource): void {
             foreach ($assignments as $assignment) {
                 $values = [
@@ -72,14 +83,15 @@ final readonly class MailNotificationsAdoptionAdapter implements TenantAdoptionA
         if ($assignments !== []) {
             return new TenantBackfillResult($resource.'|'.$assignments[array_key_last($assignments)]->recordId, count($assignments));
         }
-        if ($resource === 'mail.notifications') {
-            return new TenantBackfillResult('mail.scheduled|', 0);
-        }
 
         return new TenantBackfillResult(null, 0);
     }
 
-    /** Verify discriminator and inherited event consistency. */
+    /**
+     * Verify discriminator and inherited event consistency.
+     *
+     * @phpstan-impure
+     */
     public function verify(TenantAdoptionPlan $plan): TenantVerification
     {
         $connection = $this->connection($plan);
@@ -89,17 +101,18 @@ final readonly class MailNotificationsAdoptionAdapter implements TenantAdoptionA
                 $tenant = is_string($row->tenant_id) ? $row->tenant_id : null;
                 $expected = $tenant === null ? 'platform' : 'tenant:'.$tenant;
                 if (! is_string($row->ownership_key) || ! hash_equals($expected, $row->ownership_key)) {
-                    $errors[] = $table.'.ownership:'.(string) $row->id;
+                    $id = is_string($row->id) || is_int($row->id) ? (string) $row->id : 'unknown';
+                    $errors[] = $table.'.ownership:'.$id;
                 }
             }
         }
         if ($connection->table(MailNotificationsTables::Events.' as event')
             ->join(MailNotificationsTables::Notifications.' as notification', 'notification.id', '=', 'event.mail_notification_id')
-            ->where(function ($query): void {
+            ->where(function (Builder $query): void {
                 $query->whereColumn('event.tenant_id', '!=', 'notification.tenant_id')
-                    ->orWhere(function ($query): void {
+                    ->orWhere(function (Builder $query): void {
                         $query->whereNull('event.tenant_id')->whereNotNull('notification.tenant_id');
-                    })->orWhere(function ($query): void {
+                    })->orWhere(function (Builder $query): void {
                         $query->whereNotNull('event.tenant_id')->whereNull('notification.tenant_id');
                     });
             })->exists()) {

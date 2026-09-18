@@ -109,6 +109,10 @@ final readonly class WebhookProcessor
         }
 
         try {
+            if ($this->config->get('tenancy.enabled') !== true
+                && ! $this->lifecycle instanceof DatabaseTrackingLifecycle) {
+                return $this->lifecycle->apply($event);
+            }
             $stored = $this->tenantLocator->locate($event);
             if ($stored->mode === TenantContextMode::Tenant) {
                 return $this->tenants->run(

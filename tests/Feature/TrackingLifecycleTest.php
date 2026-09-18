@@ -18,7 +18,9 @@ use Nvl\MailNotifications\Exceptions\AmbiguousDeliveryEventException;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
 use Nvl\MailNotifications\Services\DatabaseTrackingLifecycle;
+use Nvl\MailNotifications\Services\MailNotifiableTenantAccess;
 use Nvl\MailNotifications\Services\MailNotificationNotifiableTypeRegistry;
+use Nvl\MailNotifications\Services\MailTenantEnvelope;
 use Nvl\MailNotifications\Services\MailTrackingEventDispatcher;
 use Nvl\MailNotifications\Services\SensitiveStorageCodec;
 use Nvl\MailNotifications\Tests\Fixtures\TestTrackable;
@@ -30,6 +32,7 @@ use Nvl\MailNotifications\ValueObjects\Recipient;
 use Nvl\MailNotifications\ValueObjects\TrackingContext;
 use Nvl\MailNotifications\ValueObjects\VerifiedDeliveryEvent;
 use Nvl\MailNotifications\ValueObjects\VerifiedWebhook;
+use Nvl\Tenancy\Services\TenantBoundary;
 
 function beginAcceptedAttempt(TrackingLifecycle $lifecycle): array
 {
@@ -59,6 +62,9 @@ it('persists only registered host notifiable aliases', function () {
             configuredTypes: ['test-account' => TestTrackable::class],
         ),
         sensitiveStorage: app(SensitiveStorageCodec::class),
+        boundary: app(TenantBoundary::class),
+        tenantEnvelope: app(MailTenantEnvelope::class),
+        notifiableAccess: app(MailNotifiableTenantAccess::class),
     );
     $attempt = $lifecycle->begin(new PreparedMessage(
         correlationId: '3f24aa4b-f85c-46df-9486-f23390050ac1',
@@ -81,6 +87,9 @@ it('rejects an unregistered notifiable alias before persistence', function () {
         events: app(MailTrackingEventDispatcher::class),
         notifiableTypes: new MailNotificationNotifiableTypeRegistry,
         sensitiveStorage: app(SensitiveStorageCodec::class),
+        boundary: app(TenantBoundary::class),
+        tenantEnvelope: app(MailTenantEnvelope::class),
+        notifiableAccess: app(MailNotifiableTenantAccess::class),
     );
     $message = new PreparedMessage(
         correlationId: '6d8422e1-9d5e-49af-8e29-20584ddb15e7',

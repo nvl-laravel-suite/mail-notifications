@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Console\Commands;
 
 use Illuminate\Console\Command;
+use Nvl\MailNotifications\Services\MailTenantOperations;
 use Nvl\MailNotifications\Services\ScheduledMailConfiguration;
 use Nvl\MailNotifications\Services\ScheduledMailRecovery;
-use Nvl\MailNotifications\Services\MailTenantOperations;
 
 /**
  * Recovers one bounded batch of expired scheduled-mail claims.

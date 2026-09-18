@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Console\Commands;
 
 use Illuminate\Console\Command;
+use Nvl\MailNotifications\Services\MailTenantOperations;
 use Nvl\MailNotifications\Services\ScheduledMailConfiguration;
 use Nvl\MailNotifications\Services\ScheduledMailProcessor;
-use Nvl\MailNotifications\Services\MailTenantOperations;
 
 /**
  * Processes one bounded batch of due scheduled mail.

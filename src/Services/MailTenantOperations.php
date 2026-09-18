@@ -26,7 +26,8 @@ final readonly class MailTenantOperations
 
     /**
      * @template T
-     * @param Closure(): T $operation
+     *
+     * @param  Closure(): T  $operation
      * @return list<T>
      */
     public function run(Closure $operation): array

@@ -23,6 +23,7 @@ use Nvl\MailNotifications\ValueObjects\MailNotificationAggregate;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadQuery;
 use Nvl\MailNotifications\ValueObjects\NotifiableReference;
 use Nvl\MailNotifications\ValueObjects\ProviderMessageId;
+use Nvl\Tenancy\Services\TenantInstallationState;
 
 function mailNotificationAdministrator(): GenericUser
 {
@@ -194,6 +195,7 @@ it('rejects unauthorized exact provider reads', function (): void {
 });
 
 it('keeps administrative list queries independent of result size', function (): void {
+    app(TenantInstallationState::class)->assertUsable('mail.notifications');
     $measure = static function (): int {
         DB::flushQueryLog();
         DB::enableQueryLog();
@@ -290,6 +292,7 @@ it('returns bounded normalized mailer and category statistics with constant quer
         ]);
     }
 
+    app(TenantInstallationState::class)->assertUsable('mail.notifications');
     DB::flushQueryLog();
     DB::enableQueryLog();
     $statistics = app(GetMailNotificationStatisticsAction::class)->execute(

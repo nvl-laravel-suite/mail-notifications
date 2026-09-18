@@ -24,7 +24,11 @@ final readonly class VerifiedDeliveryTenantLocator
     /** Resolve the exact stored notification partition without exposing message contents. */
     public function locate(VerifiedDeliveryEvent $event): TenantContextSnapshot
     {
-        $query = MailNotification::query()->select(['id', 'tenant_id', 'provider', 'provider_message_id']);
+        $columns = ['id', 'provider', 'provider_message_id'];
+        if ($this->config->get('tenancy.enabled') === true) {
+            $columns[] = 'tenant_id';
+        }
+        $query = MailNotification::query()->select($columns);
         if ($event->correlationId !== null) {
             $query->where('correlation_id', $event->correlationId);
         } elseif ($event->providerMessageId !== null) {

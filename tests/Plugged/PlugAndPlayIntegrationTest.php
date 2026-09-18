@@ -13,6 +13,7 @@ use Nvl\MailNotifications\Exceptions\MailTrackingException;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Services\MailNotificationNotifiableTypeRegistry;
 use Nvl\MailNotifications\Services\ProviderRegistry;
+use Nvl\MailNotifications\Services\VerifiedDeliveryTenantLocator;
 use Nvl\MailNotifications\Services\WebhookProcessor;
 use Nvl\MailNotifications\Tests\Fixtures\PluggedProviderAdapter;
 use Nvl\MailNotifications\Tests\Fixtures\PluggedSensitiveDataRedactor;
@@ -20,6 +21,8 @@ use Nvl\MailNotifications\Tests\Fixtures\PluggedTrackingLifecycle;
 use Nvl\MailNotifications\Tests\Fixtures\TestTrackable;
 use Nvl\MailNotifications\Tests\Fixtures\TrackedMail;
 use Nvl\MailNotifications\ValueObjects\WebhookRequest;
+use Nvl\Tenancy\Contracts\TenantContext;
+use Nvl\Tenancy\Services\TenantRunner;
 
 it('resolves configured services, provider adapters, and notifiable aliases', function () {
     $notifiableTypes = app(MailNotificationNotifiableTypeRegistry::class);
@@ -185,6 +188,9 @@ it('requires registered adapters to provide both webhook contracts', function ()
         providers: new ProviderRegistry([$adapter]),
         lifecycle: app(TrackingLifecycle::class),
         config: app(Repository::class),
+        tenantLocator: app(VerifiedDeliveryTenantLocator::class),
+        tenants: app(TenantRunner::class),
+        tenantContext: app(TenantContext::class),
     );
 
     expect(fn () => $processor->process(

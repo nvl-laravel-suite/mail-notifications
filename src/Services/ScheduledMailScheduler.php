@@ -52,11 +52,13 @@ final readonly class ScheduledMailScheduler
 
         return $message->getConnection()->transaction(
             function () use ($attributes): ScheduledMailMessage {
-                $message = ScheduledMailMessage::query()->create([
+                $message = new ScheduledMailMessage;
+                $message->forceFill([
                     ...$this->tenantEnvelope->scheduledAttributes(),
                     ...$attributes,
                     'status' => ScheduledMailStatus::Pending,
                 ]);
+                $message->save();
                 $this->events->dispatch(new ScheduledMailScheduled(
                     messageId: $message->id,
                     factoryAlias: $message->factory_alias,
