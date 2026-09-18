@@ -9,7 +9,7 @@ use Illuminate\Database\Query\Builder;
 use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\Tenancy\Contracts\TenantAdoptionAdapter;
 use Nvl\Tenancy\Exceptions\TenantBoundaryViolation;
-use Nvl\Tenancy\Services\TenantAdoptionSupport;
+use Nvl\Tenancy\Services\TenantAdoptionBoundary;
 use Nvl\Tenancy\ValueObjects\TenantAdoptionPlan;
 use Nvl\Tenancy\ValueObjects\TenantBackfillResult;
 use Nvl\Tenancy\ValueObjects\TenantVerification;
@@ -18,7 +18,7 @@ use Nvl\Tenancy\ValueObjects\TenantVerification;
 final readonly class MailNotificationsAdoptionAdapter implements TenantAdoptionAdapter
 {
     /** Create the package adopter. */
-    public function __construct(private Migrator $migrator, private TenantAdoptionSupport $adoption) {}
+    public function __construct(private Migrator $migrator, private TenantAdoptionBoundary $adoption) {}
 
     /** @return list<string> */
     public function resources(): array
