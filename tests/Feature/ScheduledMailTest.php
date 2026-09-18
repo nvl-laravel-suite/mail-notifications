@@ -1536,7 +1536,7 @@ it('enforces persisted recipients after Mailable preparation callbacks', functio
 
     if ($tracked) {
         $notification = MailNotification::query()->sole();
-        expect($notification->to_recipients)->toBe([['email' => 'persisted@example.test', 'name' => null]])
+        expect($notification->to_recipients)->toEqual([['email' => 'persisted@example.test', 'name' => null]])
             ->and($notification->cc_recipients)->toBe([])
             ->and($notification->bcc_recipients)->toBe([]);
     }
