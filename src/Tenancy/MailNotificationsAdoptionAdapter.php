@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Tenancy;
 
-use Illuminate\Database\Connection;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Database\Query\Builder;
 use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
-use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\Tenancy\Contracts\TenantAdoptionAdapter;
 use Nvl\Tenancy\Exceptions\TenantBoundaryViolation;
-use Nvl\Tenancy\Services\TenantAdoptionMappings;
+use Nvl\Tenancy\Services\TenantAdoptionSupport;
 use Nvl\Tenancy\ValueObjects\TenantAdoptionPlan;
 use Nvl\Tenancy\ValueObjects\TenantBackfillResult;
 use Nvl\Tenancy\ValueObjects\TenantVerification;
@@ -20,7 +18,7 @@ use Nvl\Tenancy\ValueObjects\TenantVerification;
 final readonly class MailNotificationsAdoptionAdapter implements TenantAdoptionAdapter
 {
     /** Create the package adopter. */
-    public function __construct(private Migrator $migrator, private TenantAdoptionMappings $mappings) {}
+    public function __construct(private Migrator $migrator, private TenantAdoptionSupport $adoption) {}
 
     /** @return list<string> */
     public function resources(): array
@@ -31,7 +29,7 @@ final readonly class MailNotificationsAdoptionAdapter implements TenantAdoptionA
     /** Install ownership expansion separately from activation. */
     public function prepare(TenantAdoptionPlan $plan): void
     {
-        $this->connection($plan);
+        $this->adoption->connection($plan, 'mail.notifications');
         $this->migrator->usingConnection($plan->connection, fn () => $this->migrator->run([
             dirname(__DIR__, 2).'/database/tenancy-migrations',
         ], ['force' => true]));
@@ -40,7 +38,7 @@ final readonly class MailNotificationsAdoptionAdapter implements TenantAdoptionA
     /** Assign reviewed notification and schedule roots, then derive each provider event. */
     public function backfill(TenantAdoptionPlan $plan, ?string $cursor, int $limit): TenantBackfillResult
     {
-        $connection = $this->connection($plan);
+        $connection = $this->adoption->connection($plan, 'mail.notifications');
         $resource = 'mail.notifications';
         $after = $cursor;
         if ($cursor !== null && str_contains($cursor, '|')) {
@@ -50,24 +48,21 @@ final readonly class MailNotificationsAdoptionAdapter implements TenantAdoptionA
             }
             $resource = $candidate;
         }
-        $assignments = $this->mappings->assignments($plan, $resource, $after, $limit);
+        $assignments = $this->adoption->assignments($plan, $resource, $after, $limit);
         if ($assignments === [] && $resource === 'mail.notifications') {
             $resource = 'mail.scheduled';
-            $assignments = $this->mappings->assignments($plan, $resource, null, $limit);
+            $assignments = $this->adoption->assignments($plan, $resource, null, $limit);
         }
         $connection->transaction(function () use ($assignments, $connection, $resource): void {
             foreach ($assignments as $assignment) {
-                $values = [
-                    'tenant_id' => $assignment->tenantId->value,
-                    'ownership_key' => 'tenant:'.$assignment->tenantId->value,
-                ];
+                $values = $this->adoption->ownership($assignment, $resource);
                 $table = $resource === 'mail.notifications'
                     ? MailNotificationsTables::Notifications
                     : MailNotificationsTables::ScheduledMessages;
                 if ($resource === 'mail.scheduled') {
                     $values['tenant_envelope'] = json_encode([
                         'mode' => 'tenant',
-                        'tenant_id' => $assignment->tenantId->value,
+                        'tenant_id' => $values['tenant_id'],
                         'version' => 1,
                     ], JSON_THROW_ON_ERROR);
                 }
@@ -75,7 +70,7 @@ final readonly class MailNotificationsAdoptionAdapter implements TenantAdoptionA
                 if ($resource === 'mail.notifications') {
                     $connection->table(MailNotificationsTables::Events)
                         ->where('mail_notification_id', $assignment->recordId)
-                        ->update(['tenant_id' => $assignment->tenantId->value]);
+                        ->update(['tenant_id' => $values['tenant_id']]);
                 }
             }
         });
@@ -94,7 +89,7 @@ final readonly class MailNotificationsAdoptionAdapter implements TenantAdoptionA
      */
     public function verify(TenantAdoptionPlan $plan): TenantVerification
     {
-        $connection = $this->connection($plan);
+        $connection = $this->adoption->connection($plan, 'mail.notifications');
         $errors = [];
         foreach ([MailNotificationsTables::Notifications, MailNotificationsTables::ScheduledMessages] as $table) {
             foreach ($connection->table($table)->select(['id', 'tenant_id', 'ownership_key'])->orderBy('id')->cursor() as $row) {
@@ -128,16 +123,5 @@ final readonly class MailNotificationsAdoptionAdapter implements TenantAdoptionA
         if (! $this->verify($plan)->passed()) {
             throw new TenantBoundaryViolation('Mail notification tenant ownership did not verify.');
         }
-    }
-
-    /** Resolve canonical package storage. */
-    private function connection(TenantAdoptionPlan $plan): Connection
-    {
-        $connection = (new MailNotification)->setConnection($plan->connection)->getConnection();
-        if ($connection->getName() !== $plan->connection) {
-            throw new TenantBoundaryViolation('Mail adoption requires canonical package storage.');
-        }
-
-        return $connection;
     }
 }
