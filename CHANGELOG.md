@@ -4,6 +4,8 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+## [2.1.0] - 2026-09-21
+
 ### Added
 
 - Added persisted tenant envelopes for scheduled mail, tenant-scoped tracking
