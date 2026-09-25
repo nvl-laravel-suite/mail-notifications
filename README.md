@@ -52,11 +52,21 @@ the host wants editable copies at Laravel's conventional override path.
 
 ```bash
 composer require nvl/mail-notifications:^2.0
+php artisan migrate
+```
+
+Before migrating an existing schema, review configuration and the migration
+ownership choice below. Publish only the resources the application needs;
+config changes must be in place before migration:
+
+```bash
 php artisan vendor:publish --tag=mail-notifications-config
 php artisan vendor:publish --tag=mail-notifications-skills
 php artisan vendor:publish --tag=mail-notifications-mail-views
-php artisan migrate
 ```
+
+The skills are agent guidance. Mail views are editable overrides; package views
+work without publishing them.
 
 For a legacy-schema cutover, publish the versioned manifest template and keep
 tracking and scheduling disabled until the import and strict doctor pass:
