@@ -4,6 +4,10 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- Prepare `nvl/mail-notifications` for independent Composer and Git publication; require `nvl/core` for shared Support and Data services.
+
 ## [2.0.1] - 2026-09-22
 
 ### Added

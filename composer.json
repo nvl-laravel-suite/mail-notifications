@@ -12,7 +12,7 @@
         "laravel/framework": "^13.0",
         "nesbot/carbon": "^2.72 || ^3.0",
         "nvl/settings": "^2.0",
-        "nvl/support": "^2.0",
+        "nvl/core": "^2.0",
         "nvl/tenancy": "^2.0",
         "symfony/mailer": "^7.0 || ^8.0",
         "symfony/mime": "^7.0 || ^8.0"

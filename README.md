@@ -1,12 +1,12 @@
 # NVL Mail Notifications — API and usage
 
-[← NVL Laravel Suite](../../../README.md)
+[← NVL Laravel Suite](https://github.com/nvl-laravel-suite)
 
 ## Quick reference
 
 | Item | Value |
 |---|---|
-| Installed through | `composer require nvl/laravel-suite:^2.0` |
+| Installed through | `composer require nvl/mail-notifications:^2.0` |
 | Module identifier | `nvl/mail-notifications` |
 | PHP namespace | `Nvl\MailNotifications` |
 | Service provider | `Nvl\MailNotifications\Providers\MailNotificationsServiceProvider` |
@@ -46,7 +46,7 @@ the host wants editable copies at Laravel's conventional override path.
   variable `check_constraint_checks` enabled
 
 ```bash
-composer require nvl/laravel-suite:^2.0
+composer require nvl/mail-notifications:^2.0
 php artisan vendor:publish --tag=mail-notifications-config
 php artisan vendor:publish --tag=mail-notifications-skills
 php artisan vendor:publish --tag=mail-notifications-mail-views
@@ -1091,7 +1091,7 @@ published view customizations, controllers, and UI composition.
 After changing environment-backed settings or configured extension classes in
 production, rebuild Laravel's configuration cache and restart queue workers.
 
-When installed through `nvl/laravel-suite` with NVL Data enabled, the provider
+When `nvl/core` is installed and its Data provider is loaded, the provider
 registers its public backed enums as TypeScript sources. Strict generation can
 therefore resolve contracts such as
 `Nvl.MailNotifications.Enums.MailDeliveryStatus` without a host
