@@ -11,11 +11,18 @@ use Illuminate\Support\Facades\Schema;
 use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Support\StatusConstraintDatabase;
+use Nvl\Support\Config\PackageStorage;
 
 return new class extends Migration
 {
+    /** Use the effective package connection for Laravel's migration transaction. */
+    public function getConnection(): ?string
+    {
+        return PackageStorage::connection('mail-notifications');
+    }
+
     private const string MIGRATION_NAME =
-        '2026_07_29_000000_create_mail_notification_tables';
+        '2026_07_29_000000_nvl_mail_notifications_create_mail_notification_tables';
 
     private const string NOTIFICATION_STATUS_CONSTRAINT =
         'mail_notifications_status_check';
@@ -28,25 +35,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $configuredConnection = config('mail-notifications.storage.connection');
-        $connection = is_string($configuredConnection) && $configuredConnection !== ''
-            ? $configuredConnection
-            : null;
+        $connection = PackageStorage::connection('mail-notifications');
         $configuredNotificationTable = config(
             'mail-notifications.storage.tables.notifications',
-            MailNotificationsTables::Notifications,
+            MailNotificationsTables::get(MailNotificationsTables::Notifications),
         );
         $notificationTable = is_string($configuredNotificationTable)
             && $configuredNotificationTable !== ''
                 ? $configuredNotificationTable
-                : MailNotificationsTables::Notifications;
+                : MailNotificationsTables::get(MailNotificationsTables::Notifications);
         $configuredEventTable = config(
             'mail-notifications.storage.tables.events',
-            MailNotificationsTables::Events,
+            MailNotificationsTables::get(MailNotificationsTables::Events),
         );
         $eventTable = is_string($configuredEventTable) && $configuredEventTable !== ''
             ? $configuredEventTable
-            : MailNotificationsTables::Events;
+            : MailNotificationsTables::get(MailNotificationsTables::Events);
         $schema = Schema::connection($connection);
         $this->assertCreatorMayProceed(
             schema: $schema,

@@ -9,7 +9,7 @@ use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Services\ProviderRegistry;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadData;
 use Nvl\MailNotifications\ValueObjects\ProviderMessageId;
-use Nvl\Tenancy\Services\TenantBoundary;
+use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 
 /**
  * Resolves one authorized delivery by its exact registered provider identity.

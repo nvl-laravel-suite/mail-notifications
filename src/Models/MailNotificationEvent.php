@@ -16,6 +16,7 @@ use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Laravel\Casts\SensitiveArrayCast;
 use Nvl\MailNotifications\Laravel\Casts\UtcImmutableDateTimeCast;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
+use Nvl\Support\Config\PackageStorage;
 
 /**
  * Persists one authenticated provider event for durable idempotency.
@@ -82,11 +83,7 @@ final class MailNotificationEvent extends Model
      */
     public function getConnectionName(): ?string
     {
-        $configuredConnection = config('mail-notifications.storage.connection');
-
-        return is_string($configuredConnection) && $configuredConnection !== ''
-            ? $configuredConnection
-            : parent::getConnectionName();
+        return PackageStorage::connectionName($this->connection ?? PackageStorage::connection('mail-notifications') ?? parent::getConnectionName());
     }
 
     /**
@@ -94,14 +91,7 @@ final class MailNotificationEvent extends Model
      */
     public function getTable(): string
     {
-        $table = config(
-            'mail-notifications.storage.tables.events',
-            MailNotificationsTables::Events,
-        );
-
-        return is_string($table) && $table !== ''
-            ? $table
-            : MailNotificationsTables::Events;
+        return MailNotificationsTables::get(MailNotificationsTables::Events);
     }
 
     /**

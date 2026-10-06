@@ -11,7 +11,7 @@ use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
 use Nvl\MailNotifications\ValueObjects\ScheduledMailReadQuery;
-use Nvl\Tenancy\Services\TenantBoundary;
+use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 
 /**
  * Applies the fixed administrative filter allowlist to scheduled-mail reads.

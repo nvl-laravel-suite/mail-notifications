@@ -19,11 +19,11 @@ const MAIL_NOTIFICATION_GUARD_SCHEDULED = 'guarded_scheduled_mail_messages';
 const MAIL_NOTIFICATION_GUARD_DRIFTED_NOTIFICATIONS =
     'drifted_mail_notifications';
 const MAIL_NOTIFICATION_COMPATIBILITY_PREFLIGHT =
-    '2026_07_28_000000_assert_mail_notification_schema_compatibility';
+    '2026_07_28_000000_nvl_mail_notifications_assert_mail_notification_schema_compatibility';
 const MAIL_NOTIFICATION_SCHEMA_CREATOR =
-    '2026_07_29_000000_create_mail_notification_tables';
+    '2026_07_29_000000_nvl_mail_notifications_create_mail_notification_tables';
 const MAIL_NOTIFICATION_SCHEDULED_CREATOR =
-    '2026_07_30_000100_create_scheduled_mail_messages_table';
+    '2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table';
 
 /**
  * Load a fresh compatibility preflight migration instance.
@@ -31,7 +31,7 @@ const MAIL_NOTIFICATION_SCHEDULED_CREATOR =
 function mailNotificationCompatibilityGuard(): Migration
 {
     return require dirname(__DIR__, 2)
-        .'/database/migrations/2026_07_28_000000_assert_mail_notification_schema_compatibility.php';
+        .'/database/migrations/2026_07_28_000000_nvl_mail_notifications_assert_mail_notification_schema_compatibility.php';
 }
 
 /**
@@ -40,7 +40,7 @@ function mailNotificationCompatibilityGuard(): Migration
 function mailNotificationSchemaCreator(): Migration
 {
     return require dirname(__DIR__, 2)
-        .'/database/migrations/2026_07_29_000000_create_mail_notification_tables.php';
+        .'/database/migrations/2026_07_29_000000_nvl_mail_notifications_create_mail_notification_tables.php';
 }
 
 /**
@@ -49,7 +49,7 @@ function mailNotificationSchemaCreator(): Migration
 function mailNotificationScheduledSchemaCreator(): Migration
 {
     return require dirname(__DIR__, 2)
-        .'/database/migrations/2026_07_30_000100_create_scheduled_mail_messages_table.php';
+        .'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
 }
 
 /**

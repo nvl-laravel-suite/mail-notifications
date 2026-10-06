@@ -12,10 +12,17 @@ use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Support\StatusConstraintDatabase;
 use Nvl\MailNotifications\Support\StatusConstraintInspector;
+use Nvl\Support\Config\PackageStorage;
 
 return new class extends Migration
 {
-    private const string MIGRATION_NAME = '2026_07_30_000100_create_scheduled_mail_messages_table';
+    /** Use the effective package connection for Laravel's migration transaction. */
+    public function getConnection(): ?string
+    {
+        return PackageStorage::connection('mail-notifications');
+    }
+
+    private const string MIGRATION_NAME = '2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table';
 
     private const string STATUS_CONSTRAINT =
         'scheduled_mail_messages_status_check';
@@ -124,11 +131,7 @@ return new class extends Migration
      */
     private function connectionName(): ?string
     {
-        $configured = config('mail-notifications.storage.connection');
-
-        return is_string($configured) && trim($configured) !== ''
-            ? trim($configured)
-            : null;
+        return PackageStorage::connection('mail-notifications');
     }
 
     /**
@@ -138,12 +141,12 @@ return new class extends Migration
     {
         $configured = config(
             'mail-notifications.storage.tables.scheduled_messages',
-            MailNotificationsTables::ScheduledMessages,
+            MailNotificationsTables::get(MailNotificationsTables::ScheduledMessages),
         );
 
         return is_string($configured) && trim($configured) !== ''
             ? trim($configured)
-            : MailNotificationsTables::ScheduledMessages;
+            : MailNotificationsTables::get(MailNotificationsTables::ScheduledMessages);
     }
 
     /**

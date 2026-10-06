@@ -11,9 +11,9 @@ use Nvl\MailNotifications\Exceptions\AmbiguousDeliveryEventException;
 use Nvl\MailNotifications\Exceptions\UnmatchedDeliveryEventException;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\ValueObjects\VerifiedDeliveryEvent;
-use Nvl\Tenancy\Enums\TenantContextMode;
-use Nvl\Tenancy\ValueObjects\TenantContextSnapshot;
-use Nvl\Tenancy\ValueObjects\TenantId;
+use Nvl\Support\Tenancy\Enums\TenantContextMode;
+use Nvl\Support\Tenancy\ValueObjects\TenantContextSnapshot;
+use Nvl\Support\Tenancy\ValueObjects\TenantId;
 
 /** Bootstraps only stored ownership after provider verification, never from webhook input. */
 final readonly class VerifiedDeliveryTenantLocator

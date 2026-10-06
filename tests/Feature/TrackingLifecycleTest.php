@@ -32,7 +32,7 @@ use Nvl\MailNotifications\ValueObjects\Recipient;
 use Nvl\MailNotifications\ValueObjects\TrackingContext;
 use Nvl\MailNotifications\ValueObjects\VerifiedDeliveryEvent;
 use Nvl\MailNotifications\ValueObjects\VerifiedWebhook;
-use Nvl\Tenancy\Services\TenantBoundary;
+use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 
 function beginAcceptedAttempt(TrackingLifecycle $lifecycle): array
 {
@@ -544,7 +544,7 @@ it('detects multiple provider identity candidates in a broken schema', function 
     DB::purge($connectionName);
     config()->set('mail-notifications.storage.connection', $connectionName);
     $migration = require dirname(__DIR__, 2)
-        .'/database/migrations/2026_07_29_000000_create_mail_notification_tables.php';
+        .'/database/migrations/2026_07_29_000000_nvl_mail_notifications_create_mail_notification_tables.php';
     $migration->up();
     Schema::connection($connectionName)->table(
         MailNotificationsTables::Notifications,

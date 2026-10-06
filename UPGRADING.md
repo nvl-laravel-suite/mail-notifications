@@ -492,3 +492,27 @@ If provider acceptance succeeds but its tracking update fails, the emitted
 `MailTrackingFailed` includes the resolved `ProviderMessageId` when available.
 Queue an idempotent repair of that existing `TrackingAttempt`; never resend the
 Mailable to repair local state.
+
+## Shared Doctor integration
+
+The loaded package provider now contributes its existing inspection checks to Core's `nvl:doctor --strict --format=json`. The package command remains available. The shared gate fails errors and, in strict mode, warnings; no data upgrade is required for diagnostics.
+
+## Optional Settings dependency
+
+Settings moves from a runtime requirement to a suggestion. Set `scheduling.delivery_profile` for a deployment-wide configured mailer, or retain `delivery_profile_setting` with the Settings provider loaded for tenant selection. `integrations.settings` is nullable automatic activation; `false` disables and `true` requires Settings. Resolve `TenantDeliveryProfileResolver` through Laravel's container, or inject the new `DeliveryProfileResolver` contract; its constructor now receives that contract.
+
+## Next major: isolated schema identities
+
+This is a breaking schema identity change. Back up storage and migration history, pause writes/workers, install this code with automatic package migrations disabled, and select one owner for migrations (vendor or published).
+
+```sh
+php artisan nvl:doctor --strict --format=json
+php artisan nvl:schema:upgrade --package=mail-notifications --claim-legacy --dry-run --format=json
+php artisan nvl:schema:upgrade --package=mail-notifications --claim-legacy --format=json
+```
+
+The command validates released columns and relational keys plus creating migration history, renames owned legacy tables to the effective `tables.*` targets and rewrites exact package migration identities while retaining batches and unrelated host records. It refuses foreign/incomplete shapes and conflicting targets. Explicit old table mappings retain those names; remove them when choosing new defaults. A second run is empty.
+
+Unmodified published files, including changed timestamps, map by verified checksum to the exact vendor migration identity and current package migration implementation. Modified host copies remain host-owned. Disable vendor loading when retaining a published owner; duplicate ownership fails before migration. No migration files or stored morph types are rewritten.
+
+DDL transactions are driver dependent and per connection. Inspect dry-run warnings for MySQL/MariaDB or split storage; after a failure, inspect completed steps before resuming. Schema-qualified rename targets require an explicit host schema move first. Re-enable your selected migration owner, migrate remaining package changes and rerun Doctor before resuming writes. See the suite upgrade guide for shared owner/locale inputs, Core option defaults and one-major deprecation rules.

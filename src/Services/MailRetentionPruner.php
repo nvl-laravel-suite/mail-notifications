@@ -14,7 +14,7 @@ use Nvl\MailNotifications\Models\MailNotificationEvent;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
 use Nvl\MailNotifications\ValueObjects\MailRetentionResult;
-use Nvl\Tenancy\Services\TenantBoundary;
+use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 
 /**
  * Prunes bounded, allowlisted database history without provider side effects.

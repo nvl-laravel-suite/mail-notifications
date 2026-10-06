@@ -523,7 +523,7 @@ it('reports healthy package configuration and schema', function () {
 
 it('warns when automatic migrations overlap a published host copy', function () {
     $published = database_path(
-        'migrations/2099_01_01_000000_create_mail_notification_tables.php',
+        'migrations/2099_01_01_000000_nvl_mail_notifications_create_mail_notification_tables.php',
     );
     file_put_contents($published, "<?php\n");
 
@@ -561,7 +561,7 @@ it('reports exact package migration ownership as healthy', function () {
 
 it('allows a missing read-only compatibility preflight to run again', function () {
     $migrationName =
-        '2026_07_28_000000_assert_mail_notification_schema_compatibility';
+        '2026_07_28_000000_nvl_mail_notifications_assert_mail_notification_schema_compatibility';
     app(Migrator::class)->getRepository()->delete((object) [
         'migration' => $migrationName,
     ]);
@@ -584,7 +584,7 @@ it('allows a missing read-only compatibility preflight to run again', function (
 
 it('detects no-op rollback history before migration ownership is refused', function () {
     $migrationName =
-        '2026_07_30_000100_create_scheduled_mail_messages_table';
+        '2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table';
     /** @var Migration $migration */
     $migration = require dirname(__DIR__, 2)
         .'/database/migrations/'.$migrationName.'.php';
@@ -625,7 +625,7 @@ it('detects no-op rollback history before migration ownership is refused', funct
 
 it('allows a missing creator to complete when only its owned table is absent', function () {
     $migrationName =
-        '2026_07_30_000100_create_scheduled_mail_messages_table';
+        '2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table';
     app(Migrator::class)->getRepository()->delete((object) [
         'migration' => $migrationName,
     ]);
@@ -654,7 +654,7 @@ it('allows a missing creator to complete when only its owned table is absent', f
 
 it('accepts host-owned migration history when package migrations are disabled', function () {
     $migrationName =
-        '2026_07_30_000100_create_scheduled_mail_messages_table';
+        '2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table';
     app(Migrator::class)->getRepository()->delete((object) [
         'migration' => $migrationName,
     ]);
@@ -992,8 +992,8 @@ it('reports incompatible lifecycle column definitions as unhealthy', function ()
     expect($schema)
         ->not->toBeNull()
         ->passed->toBeFalse()
-        ->message->toContain('mail_notifications.mailer type')
-        ->toContain('mail_notifications.status default');
+        ->message->toContain(MailNotificationsTables::get(MailNotificationsTables::Notifications).'.mailer type')
+        ->toContain(MailNotificationsTables::get(MailNotificationsTables::Notifications).'.status default');
 });
 
 it('reports missing idempotency constraints as unhealthy', function () {

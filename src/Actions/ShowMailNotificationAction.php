@@ -9,7 +9,7 @@ use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
 use Nvl\MailNotifications\Enums\MailNotificationReadAbility;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadData;
-use Nvl\Tenancy\Services\TenantBoundary;
+use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 
 /**
  * Resolves one authorized delivery and its metadata-free provider events.

@@ -10,7 +10,7 @@ use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Events\ScheduledMailClaimed;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
-use Nvl\Tenancy\Services\TenantBoundary;
+use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 
 /**
  * Atomically fences due scheduled messages and increments attempts once.

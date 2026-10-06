@@ -15,7 +15,7 @@ use Nvl\MailNotifications\Exceptions\ScheduledMailException;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
 use Nvl\MailNotifications\ValueObjects\ScheduleMailData;
-use Nvl\Tenancy\Services\TenantBoundary;
+use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 
 /**
  * Owns scheduling, cancellation, and rescheduling write transactions.

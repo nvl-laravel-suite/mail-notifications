@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Nvl\MailNotifications\Tests\MailTenancyTestCase;
 use Nvl\MailNotifications\Tests\MySqlConcurrencyTestCase;
 use Nvl\MailNotifications\Tests\PluggedTestCase;
 use Nvl\MailNotifications\Tests\PostgreSqlConcurrencyTestCase;
@@ -11,7 +12,8 @@ use Nvl\MailNotifications\Tests\TestCase;
 pest()->extend(TestCase::class)->in(
     __DIR__.'/Feature',
     __DIR__.'/Unit',
-    __DIR__.'/Tenancy',
+    __DIR__.'/Tenancy/MailTenantTest.php',
+    __DIR__.'/Tenancy/MailTenantWorkerTest.php',
 );
 pest()->extend(PluggedTestCase::class)->in(__DIR__.'/Plugged');
 pest()->extend(SensitiveStorageTestCase::class)->in(
@@ -23,3 +25,5 @@ pest()->extend(PostgreSqlConcurrencyTestCase::class)->in(
 pest()->extend(MySqlConcurrencyTestCase::class)->in(
     __DIR__.'/MySqlConcurrency',
 );
+
+pest()->extend(MailTenancyTestCase::class)->in(__DIR__.'/Tenancy/AdoptionTest.php');

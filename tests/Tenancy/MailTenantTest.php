@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
-use Nvl\Tenancy\Enums\TenantResourceKind;
-use Nvl\Tenancy\Services\TenantResourceRegistry;
+use Nvl\Support\Tenancy\Enums\TenantResourceKind;
+use Nvl\Support\Tenancy\Services\TenantResourceRegistry;
 
 it('registers scheduled mail and tracking as mixed roots with inherited events', function (): void {
     $resources = app(TenantResourceRegistry::class);

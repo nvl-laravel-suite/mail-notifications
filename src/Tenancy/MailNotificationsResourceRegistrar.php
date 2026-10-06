@@ -7,16 +7,16 @@ namespace Nvl\MailNotifications\Tenancy;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
-use Nvl\Tenancy\Enums\TenantResourceKind;
+use Nvl\Support\Tenancy\Enums\TenantResourceKind;
+use Nvl\Support\Tenancy\Services\TenantResourceRegistry;
+use Nvl\Support\Tenancy\ValueObjects\TenantResourceDefinition;
 use Nvl\Tenancy\Services\TenantAdoptionRegistry;
-use Nvl\Tenancy\Services\TenantResourceRegistry;
-use Nvl\Tenancy\ValueObjects\TenantResourceDefinition;
 
 /** Registers persisted mail roots and provider events under canonical notification ownership. */
 final readonly class MailNotificationsResourceRegistrar
 {
     /** Register Mail ownership and its reviewed adoption adapter. */
-    public function register(TenantResourceRegistry $resources, TenantAdoptionRegistry $adapters): void
+    public function register(TenantResourceRegistry $resources, ?TenantAdoptionRegistry $adapters = null): void
     {
         $resources->register(new TenantResourceDefinition(
             key: 'mail.scheduled',
@@ -38,6 +38,6 @@ final readonly class MailNotificationsResourceRegistrar
             parentResource: 'mail.notifications',
             parentRelation: 'mailNotification',
         ));
-        $adapters->register('mail-notifications', MailNotificationsAdoptionAdapter::class);
+        $adapters?->register('mail-notifications', MailNotificationsAdoptionAdapter::class);
     }
 }

@@ -9,7 +9,7 @@ use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadData;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadQuery;
-use Nvl\Tenancy\Services\TenantBoundary;
+use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 
 /**
  * Applies the fixed administrative filter allowlist to tracking reads.

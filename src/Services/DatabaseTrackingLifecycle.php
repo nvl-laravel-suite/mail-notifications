@@ -27,7 +27,7 @@ use Nvl\MailNotifications\ValueObjects\Recipient;
 use Nvl\MailNotifications\ValueObjects\TrackingAttempt;
 use Nvl\MailNotifications\ValueObjects\TransitionResult;
 use Nvl\MailNotifications\ValueObjects\VerifiedDeliveryEvent;
-use Nvl\Tenancy\Services\TenantBoundary;
+use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 use Throwable;
 
 /**

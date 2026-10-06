@@ -1189,3 +1189,27 @@ webhooks recover context only from stored provider identity. Tenant Settings
 may select an approved named mailer, while credentials remain deployment-owned.
 
 NVL Mail Notifications is open-sourced software licensed under the MIT license.
+
+## Shared consumer diagnostics
+
+Run `php artisan nvl:doctor --strict --format=json` to combine the read-only checks from loaded NVL package providers. Errors fail the gate, and strict mode also fails warnings. This package's existing Doctor command remains available and uses the same package-owned inspection service.
+
+## Optional Settings delivery profiles
+
+Mail Notifications installs without `nvl/settings`. The default `DeliveryProfileResolver` uses Laravel configuration: `mail-notifications.scheduling.delivery_profile=null` preserves the default Laravel mailer, and an explicit profile must appear in `allowed_delivery_profiles`. This supports scheduled delivery in applications with no tenant Settings provider.
+
+`mail-notifications.integrations.settings` accepts `null` (automatic activation from a loaded Settings provider), `false` (disabled), or `true` (required). Tenant-specific selection through `scheduling.delivery_profile_setting` requires that loaded provider and retains the existing Settings authorization and profile allowlist. An explicit unavailable selection is a configuration error. Core Doctor reports automatic inactivity as information.
+
+Bind `Nvl\MailNotifications\Contracts\DeliveryProfileResolver` to provide a host-specific profile source. `TenantDeliveryProfileResolver` remains a container-resolved compatibility facade over that contract.
+
+## Next major: isolated schema identities
+
+Use `mail-notifications.tables.<logical-key>` for every table and `mail-notifications.connection` for its database connection. Null connection inherits `nvl-core.connection`, then Laravel's default. Tables are resolved at runtime by the package table definition helper.
+
+| Logical key | New default | Previous name |
+| --- | --- | --- |
+| `notifications` | `nvl_mail_notifications_notifications` | `mail_notifications` |
+| `events` | `nvl_mail_notifications_events` | `mail_notification_events` |
+| `scheduled_messages` | `nvl_mail_notifications_scheduled_messages` | `scheduled_mail_messages` |
+
+Migration filenames contain `nvl_mail_notifications_`. Existing installations must complete the upgrade in `UPGRADING.md` before running new migrations. A pending creator rejects an existing target before any migration in the batch runs; legacy storage with old history needs an ownership decision.

@@ -23,6 +23,8 @@ use Nvl\MailNotifications\Support\ForeignKeyInspector;
 use Nvl\MailNotifications\Support\StatusConstraintDatabase;
 use Nvl\MailNotifications\Support\StatusConstraintInspector;
 use Nvl\MailNotifications\ValueObjects\MailNotificationsDoctorCheck;
+use Nvl\Settings\Providers\SettingsServiceProvider;
+use Nvl\Support\Integrations\OptionalIntegration;
 use Throwable;
 
 /**
@@ -36,8 +38,8 @@ final readonly class MailNotificationsDoctor
      * @var list<string>
      */
     private const array SCHEMA_CREATOR_MIGRATIONS = [
-        '2026_07_29_000000_create_mail_notification_tables',
-        '2026_07_30_000100_create_scheduled_mail_messages_table',
+        '2026_07_29_000000_nvl_mail_notifications_create_mail_notification_tables',
+        '2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table',
     ];
 
     /**
@@ -241,6 +243,7 @@ final readonly class MailNotificationsDoctor
         private MailAnonymizationConfiguration $anonymization,
         private SensitiveStorageCodec $sensitiveStorage,
         private Migrator $migrator,
+        private OptionalIntegration $integrations,
         private ?MailNotificationReadAuthorization $readAuthorization = null,
         private ?ScheduledMailReadAuthorization $scheduledReadAuthorization = null,
     ) {}
@@ -253,6 +256,10 @@ final readonly class MailNotificationsDoctor
     public function inspect(): array
     {
         return [
+            new MailNotificationsDoctorCheck(...$this->integrations->check(
+                'mail-notifications.integrations.settings', SettingsServiceProvider::class,
+                config('mail-notifications.scheduling.delivery_profile_setting') !== null,
+            )),
             $this->configurationCheck(),
             ...$this->managementAuthorizationChecks(),
             $this->sensitiveStorageConfigurationCheck(),
@@ -572,10 +579,10 @@ final readonly class MailNotificationsDoctor
         $schema = Schema::connection($notification->getConnectionName());
 
         return match ($migration) {
-            '2026_07_29_000000_create_mail_notification_tables' => $schema
+            '2026_07_29_000000_nvl_mail_notifications_create_mail_notification_tables' => $schema
                 ->hasTable($notification->getTable())
                 || $schema->hasTable($event->getTable()),
-            '2026_07_30_000100_create_scheduled_mail_messages_table' => $schema
+            '2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table' => $schema
                 ->hasTable($scheduled->getTable()),
             default => false,
         };

@@ -15,6 +15,7 @@ use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Laravel\Casts\SensitiveArrayCast;
 use Nvl\MailNotifications\Laravel\Casts\UtcImmutableDateTimeCast;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
+use Nvl\Support\Config\PackageStorage;
 
 /**
  * Persists one provider-neutral scheduled outbound mail message.
@@ -131,12 +132,7 @@ final class ScheduledMailMessage extends Model
      */
     public function getConnectionName(): ?string
     {
-        $configuredConnection = config('mail-notifications.storage.connection');
-
-        return is_string($configuredConnection)
-            && trim($configuredConnection) !== ''
-                ? trim($configuredConnection)
-                : parent::getConnectionName();
+        return PackageStorage::connectionName($this->connection ?? PackageStorage::connection('mail-notifications') ?? parent::getConnectionName());
     }
 
     /**
@@ -144,14 +140,7 @@ final class ScheduledMailMessage extends Model
      */
     public function getTable(): string
     {
-        $table = config(
-            'mail-notifications.storage.tables.scheduled_messages',
-            MailNotificationsTables::ScheduledMessages,
-        );
-
-        return is_string($table) && trim($table) !== ''
-            ? trim($table)
-            : MailNotificationsTables::ScheduledMessages;
+        return MailNotificationsTables::get(MailNotificationsTables::ScheduledMessages);
     }
 
     /**

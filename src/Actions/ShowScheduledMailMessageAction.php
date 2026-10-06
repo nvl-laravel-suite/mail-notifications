@@ -9,7 +9,7 @@ use Nvl\MailNotifications\Contracts\ScheduledMailReadAuthorization;
 use Nvl\MailNotifications\Enums\ScheduledMailReadAbility;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\ValueObjects\ScheduledMailDetailData;
-use Nvl\Tenancy\Services\TenantBoundary;
+use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 
 /**
  * Resolves one authorized, privacy-bounded scheduled-mail detail projection.

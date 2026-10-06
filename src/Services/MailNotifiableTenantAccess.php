@@ -7,9 +7,9 @@ namespace Nvl\MailNotifications\Services;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Model;
 use Nvl\MailNotifications\Contracts\MailTrackable;
-use Nvl\Tenancy\Exceptions\TenantBoundaryViolation;
-use Nvl\Tenancy\Services\TenantBoundary;
-use Nvl\Tenancy\Services\TenantResourceRegistry;
+use Nvl\Support\Tenancy\Contracts\TenantBoundary;
+use Nvl\Support\Tenancy\Exceptions\TenantBoundaryViolation;
+use Nvl\Support\Tenancy\Services\TenantResourceRegistry;
 
 /** Validates a registered notifiable through its owning package resource declaration. */
 final readonly class MailNotifiableTenantAccess

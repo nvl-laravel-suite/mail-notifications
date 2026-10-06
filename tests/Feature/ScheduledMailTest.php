@@ -357,7 +357,7 @@ it('detects a missing scheduled retention index', function () {
 
 it('rejects a recorded scheduled schema missing a retention index', function () {
     $migrationName =
-        '2026_07_30_000100_create_scheduled_mail_messages_table';
+        '2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table';
     $table = (new ScheduledMailMessage)->getTable();
 
     expect(DB::table('migrations')
@@ -398,7 +398,7 @@ it('refuses to adopt a partially matching scheduled-mail table', function () {
         },
     );
     $migration = require dirname(__DIR__, 2)
-        .'/database/migrations/2026_07_30_000100_create_scheduled_mail_messages_table.php';
+        .'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
 
     expect(static fn () => $migration->up())
         ->toThrow(
@@ -425,13 +425,13 @@ it('refuses to adopt even a compatible unowned scheduled-mail table', function (
         'host_owned_scheduled_mail_messages',
     );
     $migrationPath = dirname(__DIR__, 2)
-        .'/database/migrations/2026_07_30_000100_create_scheduled_mail_messages_table.php';
+        .'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
     $migration = require $migrationPath;
     $migration->up();
     DB::table('migrations')
         ->where(
             'migration',
-            '2026_07_30_000100_create_scheduled_mail_messages_table',
+            '2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table',
         )
         ->delete();
 
@@ -843,7 +843,7 @@ it('dispatches scheduling events only after the owning transaction commits', fun
     DB::purge($connectionName);
     config()->set('mail-notifications.storage.connection', $connectionName);
     $migration = require dirname(__DIR__, 2)
-        .'/database/migrations/2026_07_30_000100_create_scheduled_mail_messages_table.php';
+        .'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
     $migration->up();
     $observed = [];
     Event::listen(

@@ -11,11 +11,18 @@ use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Support\ForeignKeyInspector;
 use Nvl\MailNotifications\Support\StatusConstraintDatabase;
 use Nvl\MailNotifications\Support\StatusConstraintInspector;
+use Nvl\Support\Config\PackageStorage;
 
 return new class extends Migration
 {
+    /** Use the effective package connection for Laravel's migration transaction. */
+    public function getConnection(): ?string
+    {
+        return PackageStorage::connection('mail-notifications');
+    }
+
     private const string CREATOR_MIGRATION =
-        '2026_07_29_000000_create_mail_notification_tables';
+        '2026_07_29_000000_nvl_mail_notifications_create_mail_notification_tables';
 
     /**
      * Columns required by the notification lifecycle.
@@ -205,11 +212,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $configuredConnection = config('mail-notifications.storage.connection');
-        $connection = is_string($configuredConnection)
-            && $configuredConnection !== ''
-                ? $configuredConnection
-                : null;
+        $connection = PackageStorage::connection('mail-notifications');
         $schema = Schema::connection($connection);
         StatusConstraintDatabase::assertSupported(
             $schema->getConnection(),
@@ -217,11 +220,11 @@ return new class extends Migration
 
         $notificationTable = $this->configuredTable(
             'mail-notifications.storage.tables.notifications',
-            MailNotificationsTables::Notifications,
+            MailNotificationsTables::get(MailNotificationsTables::Notifications),
         );
         $eventTable = $this->configuredTable(
             'mail-notifications.storage.tables.events',
-            MailNotificationsTables::Events,
+            MailNotificationsTables::get(MailNotificationsTables::Events),
         );
 
         $notificationExists = $schema->hasTable($notificationTable);

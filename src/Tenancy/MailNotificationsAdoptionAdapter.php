@@ -7,8 +7,8 @@ namespace Nvl\MailNotifications\Tenancy;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Database\Query\Builder;
 use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
+use Nvl\Support\Tenancy\Exceptions\TenantBoundaryViolation;
 use Nvl\Tenancy\Contracts\TenantAdoptionAdapter;
-use Nvl\Tenancy\Exceptions\TenantBoundaryViolation;
 use Nvl\Tenancy\Services\TenantAdoptionBoundary;
 use Nvl\Tenancy\ValueObjects\TenantAdoptionPlan;
 use Nvl\Tenancy\ValueObjects\TenantBackfillResult;
@@ -57,8 +57,8 @@ final readonly class MailNotificationsAdoptionAdapter implements TenantAdoptionA
             foreach ($assignments as $assignment) {
                 $values = $this->adoption->ownership($assignment, $resource);
                 $table = $resource === 'mail.notifications'
-                    ? MailNotificationsTables::Notifications
-                    : MailNotificationsTables::ScheduledMessages;
+                    ? MailNotificationsTables::get(MailNotificationsTables::Notifications)
+                    : MailNotificationsTables::get(MailNotificationsTables::ScheduledMessages);
                 if ($resource === 'mail.scheduled') {
                     $values['tenant_envelope'] = json_encode([
                         'mode' => 'tenant',
@@ -68,7 +68,7 @@ final readonly class MailNotificationsAdoptionAdapter implements TenantAdoptionA
                 }
                 $connection->table($table)->where('id', $assignment->recordId)->update($values);
                 if ($resource === 'mail.notifications') {
-                    $connection->table(MailNotificationsTables::Events)
+                    $connection->table(MailNotificationsTables::get(MailNotificationsTables::Events))
                         ->where('mail_notification_id', $assignment->recordId)
                         ->update(['tenant_id' => $values['tenant_id']]);
                 }
@@ -91,7 +91,7 @@ final readonly class MailNotificationsAdoptionAdapter implements TenantAdoptionA
     {
         $connection = $this->adoption->connection($plan, 'mail.notifications');
         $errors = [];
-        foreach ([MailNotificationsTables::Notifications, MailNotificationsTables::ScheduledMessages] as $table) {
+        foreach ([MailNotificationsTables::get(MailNotificationsTables::Notifications), MailNotificationsTables::get(MailNotificationsTables::ScheduledMessages)] as $table) {
             foreach ($connection->table($table)->select(['id', 'tenant_id', 'ownership_key'])->orderBy('id')->cursor() as $row) {
                 $tenant = is_string($row->tenant_id) ? $row->tenant_id : null;
                 $expected = $tenant === null ? 'platform' : 'tenant:'.$tenant;
@@ -101,8 +101,8 @@ final readonly class MailNotificationsAdoptionAdapter implements TenantAdoptionA
                 }
             }
         }
-        if ($connection->table(MailNotificationsTables::Events.' as event')
-            ->join(MailNotificationsTables::Notifications.' as notification', 'notification.id', '=', 'event.mail_notification_id')
+        if ($connection->table(MailNotificationsTables::get(MailNotificationsTables::Events).' as event')
+            ->join(MailNotificationsTables::get(MailNotificationsTables::Notifications).' as notification', 'notification.id', '=', 'event.mail_notification_id')
             ->where(function (Builder $query): void {
                 $query->whereColumn('event.tenant_id', '!=', 'notification.tenant_id')
                     ->orWhere(function (Builder $query): void {

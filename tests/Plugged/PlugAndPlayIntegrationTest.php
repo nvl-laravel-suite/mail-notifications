@@ -21,8 +21,8 @@ use Nvl\MailNotifications\Tests\Fixtures\PluggedTrackingLifecycle;
 use Nvl\MailNotifications\Tests\Fixtures\TestTrackable;
 use Nvl\MailNotifications\Tests\Fixtures\TrackedMail;
 use Nvl\MailNotifications\ValueObjects\WebhookRequest;
-use Nvl\Tenancy\Contracts\TenantContext;
-use Nvl\Tenancy\Services\TenantRunner;
+use Nvl\Support\Tenancy\Contracts\TenantContext;
+use Nvl\Support\Tenancy\Contracts\TenantRunner;
 
 it('resolves configured services, provider adapters, and notifiable aliases', function () {
     $notifiableTypes = app(MailNotificationNotifiableTypeRegistry::class);

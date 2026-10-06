@@ -216,8 +216,11 @@ return [
         ),
     ],
 
+    'integrations' => ['settings' => null],
+
     'scheduling' => [
         'enabled' => env('MAIL_NOTIFICATIONS_SCHEDULING_ENABLED', false),
+        'delivery_profile' => null,
         'delivery_profile_setting' => null,
         'allowed_delivery_profiles' => [],
         'batch_size' => (int) env(

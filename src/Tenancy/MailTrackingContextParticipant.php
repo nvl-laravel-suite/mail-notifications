@@ -6,8 +6,8 @@ namespace Nvl\MailNotifications\Tenancy;
 
 use Closure;
 use Nvl\MailNotifications\Services\TrackingRuntime;
-use Nvl\Tenancy\Contracts\TenantContextParticipant;
-use Nvl\Tenancy\ValueObjects\TenantContextSnapshot;
+use Nvl\Support\Tenancy\Contracts\TenantContextParticipant;
+use Nvl\Support\Tenancy\ValueObjects\TenantContextSnapshot;
 
 /** Prevents transient tracking objects from crossing sequential tenant operations. */
 final readonly class MailTrackingContextParticipant implements TenantContextParticipant

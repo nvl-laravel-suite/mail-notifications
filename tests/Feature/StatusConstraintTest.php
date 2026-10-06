@@ -32,7 +32,7 @@ const MAIL_STATUS_TEST_SCHEDULED = 'status_upgrade_scheduled_mail_messages';
 function mailStatusTrackingCreator(): Migration
 {
     return require dirname(__DIR__, 2)
-        .'/database/migrations/2026_07_29_000000_create_mail_notification_tables.php';
+        .'/database/migrations/2026_07_29_000000_nvl_mail_notifications_create_mail_notification_tables.php';
 }
 
 /**
@@ -41,7 +41,7 @@ function mailStatusTrackingCreator(): Migration
 function mailStatusScheduledCreator(): Migration
 {
     return require dirname(__DIR__, 2)
-        .'/database/migrations/2026_07_30_000100_create_scheduled_mail_messages_table.php';
+        .'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
 }
 
 /**

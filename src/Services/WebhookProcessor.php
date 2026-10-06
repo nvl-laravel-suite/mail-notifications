@@ -21,10 +21,10 @@ use Nvl\MailNotifications\ValueObjects\TransitionResult;
 use Nvl\MailNotifications\ValueObjects\VerifiedDeliveryEvent;
 use Nvl\MailNotifications\ValueObjects\WebhookAcknowledgement;
 use Nvl\MailNotifications\ValueObjects\WebhookRequest;
-use Nvl\Tenancy\Contracts\TenantContext;
-use Nvl\Tenancy\Enums\TenantContextMode;
-use Nvl\Tenancy\Exceptions\TenantBoundaryViolation;
-use Nvl\Tenancy\Services\TenantRunner;
+use Nvl\Support\Tenancy\Contracts\TenantContext;
+use Nvl\Support\Tenancy\Contracts\TenantRunner;
+use Nvl\Support\Tenancy\Enums\TenantContextMode;
+use Nvl\Support\Tenancy\Exceptions\TenantBoundaryViolation;
 
 /**
  * Verifies, normalizes, and persists one provider webhook through a registered adapter.

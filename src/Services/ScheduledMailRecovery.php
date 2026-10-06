@@ -11,7 +11,7 @@ use Nvl\MailNotifications\Events\ScheduledMailRecovered;
 use Nvl\MailNotifications\Events\ScheduledMailRetrying;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
-use Nvl\Tenancy\Services\TenantBoundary;
+use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 
 /**
  * Recovers expired claims without incrementing their attempt count.

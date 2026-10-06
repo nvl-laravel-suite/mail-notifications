@@ -7,7 +7,7 @@ namespace Nvl\MailNotifications\Services;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Support\Str;
 use Nvl\MailNotifications\Contracts\MailTenantWorklist;
-use Nvl\Tenancy\Exceptions\TenantConfigurationInvalid;
+use Nvl\Support\Tenancy\Exceptions\TenantConfigurationInvalid;
 
 /** Conservative worklist populated only by reviewed deployment configuration. */
 final readonly class ConfiguredMailTenantWorklist implements MailTenantWorklist

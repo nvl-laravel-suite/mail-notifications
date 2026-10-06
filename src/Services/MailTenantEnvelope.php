@@ -7,13 +7,13 @@ namespace Nvl\MailNotifications\Services;
 use Illuminate\Contracts\Config\Repository;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
-use Nvl\Tenancy\Contracts\TenantContext;
-use Nvl\Tenancy\Enums\TenantContextMode;
-use Nvl\Tenancy\Exceptions\TenantBoundaryViolation;
-use Nvl\Tenancy\Services\TenantBoundary;
-use Nvl\Tenancy\ValueObjects\TenantContextSnapshot;
-use Nvl\Tenancy\ValueObjects\TenantId;
-use Nvl\Tenancy\ValueObjects\TenantJobEnvelope;
+use Nvl\Support\Tenancy\Contracts\TenantBoundary;
+use Nvl\Support\Tenancy\Contracts\TenantContext;
+use Nvl\Support\Tenancy\Enums\TenantContextMode;
+use Nvl\Support\Tenancy\Exceptions\TenantBoundaryViolation;
+use Nvl\Support\Tenancy\ValueObjects\TenantContextSnapshot;
+use Nvl\Support\Tenancy\ValueObjects\TenantId;
+use Nvl\Support\Tenancy\ValueObjects\TenantJobEnvelope;
 
 /** Encodes and validates scalar persisted mail ownership without serializing scoped services. */
 final readonly class MailTenantEnvelope

@@ -23,7 +23,7 @@ use Nvl\MailNotifications\ValueObjects\MailNotificationAggregate;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadQuery;
 use Nvl\MailNotifications\ValueObjects\NotifiableReference;
 use Nvl\MailNotifications\ValueObjects\ProviderMessageId;
-use Nvl\Tenancy\Services\TenantInstallationState;
+use Nvl\Support\Tenancy\Contracts\TenantInstallationState;
 
 function mailNotificationAdministrator(): GenericUser
 {
@@ -214,6 +214,7 @@ it('keeps administrative list queries independent of result size', function (): 
     };
 
     MailNotification::factory()->delivered()->create();
+    app(TenantInstallationState::class)->assertUsable('mail.notifications');
     $singleQueryCount = $measure();
     MailNotification::factory()->delivered()->count(24)->create();
     $populatedQueryCount = $measure();

@@ -12,7 +12,7 @@ use Nvl\MailNotifications\Events\ScheduledMailRetrying;
 use Nvl\MailNotifications\Events\ScheduledMailSent;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
-use Nvl\Tenancy\Services\TenantBoundary;
+use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 use Throwable;
 
 /**

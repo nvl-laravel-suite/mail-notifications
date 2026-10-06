@@ -25,6 +25,7 @@ use Nvl\MailNotifications\Console\Commands\PruneMailNotificationsCommand;
 use Nvl\MailNotifications\Console\Commands\RecoverScheduledMailCommand;
 use Nvl\MailNotifications\Console\Commands\RemoveRemoteWebhooksCommand;
 use Nvl\MailNotifications\Console\Commands\SyncRemoteWebhooksCommand;
+use Nvl\MailNotifications\Contracts\DeliveryProfileResolver;
 use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
 use Nvl\MailNotifications\Contracts\MailTenantWorklist;
 use Nvl\MailNotifications\Contracts\ProviderAdapter;
@@ -38,6 +39,7 @@ use Nvl\MailNotifications\Contracts\SensitiveDataTransformer;
 use Nvl\MailNotifications\Contracts\TrackingLifecycle;
 use Nvl\MailNotifications\Laravel\Listeners\TrackMessageAfterSending;
 use Nvl\MailNotifications\Laravel\Listeners\TrackMessageBeforeSending;
+use Nvl\MailNotifications\Services\ConfiguredDeliveryProfileResolver;
 use Nvl\MailNotifications\Services\ConfiguredMailNotificationReadAuthorization;
 use Nvl\MailNotifications\Services\ConfiguredMailTenantWorklist;
 use Nvl\MailNotifications\Services\ConfiguredScheduledMailReadAuthorization;
@@ -46,6 +48,7 @@ use Nvl\MailNotifications\Services\DefaultSensitiveDataRedactor;
 use Nvl\MailNotifications\Services\MailAnonymizationConfiguration;
 use Nvl\MailNotifications\Services\MailHistoryAnonymizer;
 use Nvl\MailNotifications\Services\MailNotificationNotifiableTypeRegistry;
+use Nvl\MailNotifications\Services\MailNotificationsDoctor;
 use Nvl\MailNotifications\Services\MailRetentionConfiguration;
 use Nvl\MailNotifications\Services\MailRetentionPruner;
 use Nvl\MailNotifications\Services\MailTestingInterceptor;
@@ -65,6 +68,7 @@ use Nvl\MailNotifications\Services\ScheduledMailScheduler;
 use Nvl\MailNotifications\Services\ScheduledMessageFactoryRegistry;
 use Nvl\MailNotifications\Services\SensitiveStorageCodec;
 use Nvl\MailNotifications\Services\SensitiveStorageConfiguration;
+use Nvl\MailNotifications\Services\SettingsDeliveryProfileResolver;
 use Nvl\MailNotifications\Services\SymfonyMessageIdResolver;
 use Nvl\MailNotifications\Services\TrackingEligibility;
 use Nvl\MailNotifications\Services\TrackingRuntime;
@@ -74,11 +78,14 @@ use Nvl\MailNotifications\Support\TrackingRuntimeBridge;
 use Nvl\MailNotifications\Tenancy\MailNotificationsResourceRegistrar;
 use Nvl\MailNotifications\Tenancy\MailTrackingContextParticipant;
 use Nvl\Settings\Providers\SettingsServiceProvider;
+use Nvl\Support\Doctor\PackageDoctorContributor;
+use Nvl\Support\Integrations\OptionalIntegration;
+use Nvl\Support\Providers\SupportServiceProvider;
+use Nvl\Support\Providers\TenantServiceProvider;
+use Nvl\Support\Tenancy\Services\TenantContextParticipants;
+use Nvl\Support\Tenancy\Services\TenantResourceRegistry;
 use Nvl\Support\Traits\MergesPackageConfiguration;
-use Nvl\Tenancy\Providers\TenancyServiceProvider;
 use Nvl\Tenancy\Services\TenantAdoptionRegistry;
-use Nvl\Tenancy\Services\TenantContextParticipants;
-use Nvl\Tenancy\Services\TenantResourceRegistry;
 
 /**
  * Registers provider-neutral tracking and a configurable Laravel mail presentation.
@@ -92,16 +99,29 @@ final class MailNotificationsServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->register(TenancyServiceProvider::class);
-        $this->app->register(SettingsServiceProvider::class);
+        $this->app->register(SupportServiceProvider::class);
+        PackageDoctorContributor::register($this->app, 'nvl/mail-notifications', fn (): array => $this->app->make(MailNotificationsDoctor::class)->inspect());
+
+        $this->app->register(TenantServiceProvider::class);
+
         $this->mergePackageConfiguration(
             dirname(__DIR__, 2).'/config/mail-notifications.php',
             'mail-notifications',
         );
-        (new MailNotificationsResourceRegistrar)->register(
-            $this->app->make(TenantResourceRegistry::class),
-            $this->app->make(TenantAdoptionRegistry::class),
-        );
+        (new MailNotificationsResourceRegistrar)->register($this->app->make(TenantResourceRegistry::class));
+        $this->app->booted(function (): void {
+            if ($this->app->bound(TenantAdoptionRegistry::class)) {
+                (new MailNotificationsResourceRegistrar)->register($this->app->make(TenantResourceRegistry::class), $this->app->make(TenantAdoptionRegistry::class));
+            }
+        });
+        $this->app->bindIf(DeliveryProfileResolver::class, static function (Application $app): DeliveryProfileResolver {
+            $requested = $app->make(Repository::class)->get('mail-notifications.scheduling.delivery_profile_setting') !== null;
+            $enabled = $app->make(OptionalIntegration::class)->enabled(
+                'mail-notifications.integrations.settings', SettingsServiceProvider::class, $requested,
+            );
+
+            return $app->make($enabled ? SettingsDeliveryProfileResolver::class : ConfiguredDeliveryProfileResolver::class);
+        });
         $this->app->scoped(MailTrackingContextParticipant::class);
         $this->app->make(TenantContextParticipants::class)->register(MailTrackingContextParticipant::class);
         $readAuthorization = config(
