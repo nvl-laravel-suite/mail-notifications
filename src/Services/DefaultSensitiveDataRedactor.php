@@ -29,7 +29,7 @@ final readonly class DefaultSensitiveDataRedactor implements SensitiveDataRedact
      */
     public function redact(array $data): array
     {
-        $configuredKeys = $this->config->get('mail-notifications.privacy.redacted_keys', []);
+        $configuredKeys = $this->config->get('nvl-mail-notifications.privacy.redacted_keys', []);
 
         if (! is_array($configuredKeys)) {
             throw new MailTrackingException(
@@ -44,7 +44,7 @@ final readonly class DefaultSensitiveDataRedactor implements SensitiveDataRedact
             $configuredKeys,
         ))));
         $maximumDepth = $this->config->get(
-            'mail-notifications.privacy.max_depth',
+            'nvl-mail-notifications.privacy.max_depth',
             16,
         );
 
@@ -57,21 +57,21 @@ final readonly class DefaultSensitiveDataRedactor implements SensitiveDataRedact
         }
 
         $maximumItems = $this->boundedInteger(
-            key: 'mail-notifications.privacy.max_items',
+            key: 'nvl-mail-notifications.privacy.max_items',
             default: 1_000,
             minimum: 1,
             maximum: 100_000,
             label: 'metadata item limit',
         );
         $maximumStringBytes = $this->boundedInteger(
-            key: 'mail-notifications.privacy.max_string_bytes',
+            key: 'nvl-mail-notifications.privacy.max_string_bytes',
             default: 16_384,
             minimum: 1,
             maximum: 1_048_576,
             label: 'metadata string byte limit',
         );
         $maximumTotalBytes = $this->boundedInteger(
-            key: 'mail-notifications.privacy.max_total_bytes',
+            key: 'nvl-mail-notifications.privacy.max_total_bytes',
             default: 65_536,
             minimum: 1,
             maximum: 10_485_760,

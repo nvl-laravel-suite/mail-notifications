@@ -43,11 +43,11 @@ final class AdoptMailNotificationsCommand extends Command
         $path = str_starts_with($argument, DIRECTORY_SEPARATOR)
             ? $argument
             : base_path($argument);
-        $maximum = config('mail-notifications.adoption.maximum_manifest_bytes', 1_048_576);
+        $maximum = config('nvl-mail-notifications.adoption.maximum_manifest_bytes', 1_048_576);
 
         if (! is_int($maximum) || $maximum < 1) {
             throw new InvalidArgumentException(
-                'mail-notifications.adoption.maximum_manifest_bytes must be a positive integer.',
+                'nvl-mail-notifications.adoption.maximum_manifest_bytes must be a positive integer.',
             );
         }
 

@@ -7,36 +7,39 @@ use Nvl\MailNotifications\Services\ConfiguredMailNotificationReadAuthorization;
 use Nvl\MailNotifications\Services\ConfiguredScheduledMailReadAuthorization;
 use Nvl\MailNotifications\Services\DatabaseTrackingLifecycle;
 use Nvl\MailNotifications\Services\DefaultSensitiveDataRedactor;
+use Nvl\Support\Config\PackageEnvironment;
 
 return [
-    'enabled' => env('MAIL_NOTIFICATIONS_ENABLED', true),
+    'enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_ENABLED', true),
 
     'tenancy' => [
         'active_tenant_worklist' => [],
     ],
 
     'tracking' => [
-        'enabled' => env('MAIL_NOTIFICATIONS_TRACKING_ENABLED', true),
-        'failure_policy' => env('MAIL_NOTIFICATIONS_FAILURE_POLICY', 'fail_closed'),
+        'enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_TRACKING_ENABLED', true),
+        'failure_policy' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_FAILURE_POLICY', 'fail_closed'),
         'excluded_mailers' => array_values(array_filter(array_map(
             'trim',
-            explode(',', (string) env('MAIL_NOTIFICATIONS_EXCLUDED_MAILERS', '')),
+            explode(',', (string) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_EXCLUDED_MAILERS', '')),
         ))),
-        'store_subject' => env('MAIL_NOTIFICATIONS_STORE_SUBJECT', true),
+        'store_subject' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_STORE_SUBJECT', true),
     ],
 
     'presentation' => [
-        'enabled' => env('MAIL_NOTIFICATIONS_PRESENTATION_ENABLED', true),
-        'auto_load' => env('MAIL_NOTIFICATIONS_PRESENTATION_AUTO_LOAD', true),
+        'global_markdown' => false,
+        'global_view_data' => false,
+        'enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_PRESENTATION_ENABLED', true),
+        'auto_load' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_PRESENTATION_AUTO_LOAD', true),
         'brand' => [
-            'header_enabled' => env('MAIL_BRAND_HEADER_ENABLED', true),
-            'footer_enabled' => env('MAIL_BRAND_FOOTER_ENABLED', true),
-            'name' => env('MAIL_BRAND_NAME'),
-            'url' => env('MAIL_BRAND_URL'),
-            'logo_url' => env('MAIL_BRAND_LOGO_URL'),
-            'logo_alt' => env('MAIL_BRAND_LOGO_ALT'),
-            'support_text' => env('MAIL_BRAND_SUPPORT_TEXT'),
-            'footer_text' => env('MAIL_BRAND_FOOTER_TEXT'),
+            'header_enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_BRAND_HEADER_ENABLED', true),
+            'footer_enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_BRAND_FOOTER_ENABLED', true),
+            'name' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_BRAND_NAME'),
+            'url' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_BRAND_URL'),
+            'logo_url' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_BRAND_LOGO_URL'),
+            'logo_alt' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_BRAND_LOGO_ALT'),
+            'support_text' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_BRAND_SUPPORT_TEXT'),
+            'footer_text' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_BRAND_FOOTER_TEXT'),
         ],
         'tokens' => [
             'font_family' => "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
@@ -73,23 +76,22 @@ return [
     ],
 
     'testing' => [
-        'enabled' => env('MAIL_TESTING_ENABLED', false),
-        'to_address' => env('MAIL_TESTING_TO_ADDRESS'),
-        'to_name' => env('MAIL_TESTING_TO_NAME', 'Mail Test Inbox'),
-        'respect_environment' => env('MAIL_TESTING_RESPECT_ENV', true),
+        'enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_TESTING_ENABLED', false),
+        'to_address' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_TESTING_TO_ADDRESS'),
+        'to_name' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_TESTING_TO_NAME', 'Mail Test Inbox'),
+        'respect_environment' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_TESTING_RESPECT_ENV', true),
         'environments' => array_values(array_filter(array_map(
             'trim',
-            explode(',', (string) env('MAIL_TESTING_ENVIRONMENTS', 'local,testing,staging')),
+            explode(',', (string) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_TESTING_ENVIRONMENTS', 'local,testing,staging')),
         ))),
     ],
 
     'providers' => [
-        'default' => env('MAIL_NOTIFICATIONS_PROVIDER'),
+        'default' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_PROVIDER'),
         'mailers' => [],
         'mailersend' => [
             'mailers' => ['mailersend'],
-            'signing_secret' => env(
-                'MAIL_NOTIFICATIONS_MAILERSEND_SIGNING_SECRET',
+            'signing_secret' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_MAILERSEND_SIGNING_SECRET',
             ),
             'validation_secret' => 'test_Am3L1GuOIc4blLUuHqAPxxwkZaJyEk8G',
             'signature_headers' => ['signature'],
@@ -102,26 +104,20 @@ return [
                 'maximum_future_skew_seconds' => 300,
             ],
             'management' => [
-                'enabled' => env(
-                    'MAIL_NOTIFICATIONS_MAILERSEND_MANAGEMENT_ENABLED',
+                'enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_MAILERSEND_MANAGEMENT_ENABLED',
                     false,
                 ),
-                'token' => env(
-                    'MAIL_NOTIFICATIONS_MAILERSEND_API_TOKEN',
+                'token' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_MAILERSEND_API_TOKEN',
                 ),
-                'domain_id' => env(
-                    'MAIL_NOTIFICATIONS_MAILERSEND_DOMAIN_ID',
+                'domain_id' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_MAILERSEND_DOMAIN_ID',
                 ),
-                'api_url' => env(
-                    'MAIL_NOTIFICATIONS_MAILERSEND_API_URL',
+                'api_url' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_MAILERSEND_API_URL',
                     'https://api.mailersend.com/v1',
                 ),
-                'timeout_seconds' => (int) env(
-                    'MAIL_NOTIFICATIONS_MAILERSEND_TIMEOUT_SECONDS',
+                'timeout_seconds' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_MAILERSEND_TIMEOUT_SECONDS',
                     10,
                 ),
-                'connect_timeout_seconds' => (int) env(
-                    'MAIL_NOTIFICATIONS_MAILERSEND_CONNECT_TIMEOUT_SECONDS',
+                'connect_timeout_seconds' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_MAILERSEND_CONNECT_TIMEOUT_SECONDS',
                     3,
                 ),
                 'pagination' => [
@@ -129,12 +125,10 @@ return [
                     'max_pages' => 10,
                 ],
                 'webhook' => [
-                    'name' => env(
-                        'MAIL_NOTIFICATIONS_MAILERSEND_WEBHOOK_NAME',
+                    'name' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_MAILERSEND_WEBHOOK_NAME',
                         'Mail Notifications',
                     ),
-                    'url' => env(
-                        'MAIL_NOTIFICATIONS_MAILERSEND_WEBHOOK_URL',
+                    'url' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_MAILERSEND_WEBHOOK_URL',
                     ),
                     'events' => [
                         'activity.sent',
@@ -192,26 +186,22 @@ return [
     ],
 
     'webhooks' => [
-        'enabled' => env('MAIL_NOTIFICATIONS_WEBHOOKS_ENABLED', true),
+        'enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_WEBHOOKS_ENABLED', true),
         'allowed_content_types' => [
             'application/json',
         ],
-        'unknown_event_policy' => env(
-            'MAIL_NOTIFICATIONS_WEBHOOK_UNKNOWN_EVENT_POLICY',
+        'unknown_event_policy' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_WEBHOOK_UNKNOWN_EVENT_POLICY',
             'acknowledge',
         ),
         'unmatched_events' => [
-            'policy' => env(
-                'MAIL_NOTIFICATIONS_WEBHOOK_UNMATCHED_EVENT_POLICY',
+            'policy' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_WEBHOOK_UNMATCHED_EVENT_POLICY',
                 'retry_then_acknowledge',
             ),
-            'retry_grace_seconds' => (int) env(
-                'MAIL_NOTIFICATIONS_WEBHOOK_UNMATCHED_RETRY_GRACE_SECONDS',
+            'retry_grace_seconds' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_WEBHOOK_UNMATCHED_RETRY_GRACE_SECONDS',
                 300,
             ),
         ],
-        'max_payload_bytes' => (int) env(
-            'MAIL_NOTIFICATIONS_WEBHOOK_MAX_PAYLOAD_BYTES',
+        'max_payload_bytes' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_WEBHOOK_MAX_PAYLOAD_BYTES',
             1_048_576,
         ),
     ],
@@ -219,131 +209,108 @@ return [
     'integrations' => ['settings' => null],
 
     'scheduling' => [
-        'enabled' => env('MAIL_NOTIFICATIONS_SCHEDULING_ENABLED', false),
+        'enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_SCHEDULING_ENABLED', false),
         'delivery_profile' => null,
         'delivery_profile_setting' => null,
         'allowed_delivery_profiles' => [],
-        'batch_size' => (int) env(
-            'MAIL_NOTIFICATIONS_SCHEDULING_BATCH_SIZE',
+        'batch_size' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_SCHEDULING_BATCH_SIZE',
             50,
         ),
-        'claim_ttl_seconds' => (int) env(
-            'MAIL_NOTIFICATIONS_SCHEDULING_CLAIM_TTL_SECONDS',
+        'claim_ttl_seconds' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_SCHEDULING_CLAIM_TTL_SECONDS',
             300,
         ),
-        'max_attempts' => (int) env(
-            'MAIL_NOTIFICATIONS_SCHEDULING_MAX_ATTEMPTS',
+        'max_attempts' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_SCHEDULING_MAX_ATTEMPTS',
             3,
         ),
         'backoff_seconds' => [60, 300, 900],
-        'max_payload_bytes' => (int) env(
-            'MAIL_NOTIFICATIONS_SCHEDULING_MAX_PAYLOAD_BYTES',
+        'max_payload_bytes' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_SCHEDULING_MAX_PAYLOAD_BYTES',
             65_536,
         ),
-        'max_recipients' => (int) env(
-            'MAIL_NOTIFICATIONS_SCHEDULING_MAX_RECIPIENTS',
+        'max_recipients' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_SCHEDULING_MAX_RECIPIENTS',
             1_000,
         ),
     ],
 
     'retention' => [
         'notifications' => [
-            'days' => (int) env(
-                'MAIL_NOTIFICATIONS_RETENTION_DAYS',
+            'days' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_RETENTION_DAYS',
                 365,
             ),
             'statuses' => array_values(array_filter(array_map(
                 'trim',
-                explode(',', (string) env(
-                    'MAIL_NOTIFICATIONS_RETENTION_STATUSES',
+                explode(',', (string) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_RETENTION_STATUSES',
                     'delivered,opened,clicked,bounced,complained,rejected,failed,unsubscribed',
                 )),
             ))),
         ],
         'scheduled_messages' => [
-            'enabled' => env(
-                'MAIL_NOTIFICATIONS_SCHEDULED_RETENTION_ENABLED',
+            'enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_SCHEDULED_RETENTION_ENABLED',
                 false,
             ),
-            'days' => (int) env(
-                'MAIL_NOTIFICATIONS_SCHEDULED_RETENTION_DAYS',
+            'days' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_SCHEDULED_RETENTION_DAYS',
                 90,
             ),
             'statuses' => array_values(array_filter(array_map(
                 'trim',
-                explode(',', (string) env(
-                    'MAIL_NOTIFICATIONS_SCHEDULED_RETENTION_STATUSES',
+                explode(',', (string) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_SCHEDULED_RETENTION_STATUSES',
                     'sent,failed,cancelled',
                 )),
             ))),
         ],
-        'batch_size' => (int) env(
-            'MAIL_NOTIFICATIONS_PRUNE_BATCH_SIZE',
+        'batch_size' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_PRUNE_BATCH_SIZE',
             500,
         ),
-        'limit' => (int) env(
-            'MAIL_NOTIFICATIONS_PRUNE_LIMIT',
+        'limit' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_PRUNE_LIMIT',
             5_000,
         ),
         'anonymization' => [
-            'enabled' => env(
-                'MAIL_NOTIFICATIONS_ANONYMIZATION_ENABLED',
+            'enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_ANONYMIZATION_ENABLED',
                 false,
             ),
             'notifications' => [
-                'days' => (int) env(
-                    'MAIL_NOTIFICATIONS_ANONYMIZATION_DAYS',
+                'days' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_ANONYMIZATION_DAYS',
                     180,
                 ),
                 'statuses' => array_values(array_filter(array_map(
                     'trim',
-                    explode(',', (string) env(
-                        'MAIL_NOTIFICATIONS_ANONYMIZATION_STATUSES',
+                    explode(',', (string) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_ANONYMIZATION_STATUSES',
                         'delivered,opened,clicked,bounced,complained,rejected,failed,unsubscribed',
                     )),
                 ))),
             ],
             'scheduled_messages' => [
-                'enabled' => env(
-                    'MAIL_NOTIFICATIONS_SCHEDULED_ANONYMIZATION_ENABLED',
+                'enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_SCHEDULED_ANONYMIZATION_ENABLED',
                     false,
                 ),
-                'days' => (int) env(
-                    'MAIL_NOTIFICATIONS_SCHEDULED_ANONYMIZATION_DAYS',
+                'days' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_SCHEDULED_ANONYMIZATION_DAYS',
                     90,
                 ),
                 'statuses' => array_values(array_filter(array_map(
                     'trim',
-                    explode(',', (string) env(
-                        'MAIL_NOTIFICATIONS_SCHEDULED_ANONYMIZATION_STATUSES',
+                    explode(',', (string) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_SCHEDULED_ANONYMIZATION_STATUSES',
                         'sent,failed,cancelled',
                     )),
                 ))),
             ],
-            'batch_size' => (int) env(
-                'MAIL_NOTIFICATIONS_ANONYMIZATION_BATCH_SIZE',
+            'batch_size' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_ANONYMIZATION_BATCH_SIZE',
                 500,
             ),
-            'limit' => (int) env(
-                'MAIL_NOTIFICATIONS_ANONYMIZATION_LIMIT',
+            'limit' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_ANONYMIZATION_LIMIT',
                 5_000,
             ),
         ],
     ],
 
     'storage' => [
-        'connection' => env('MAIL_NOTIFICATIONS_DB_CONNECTION'),
+        'connection' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_DB_CONNECTION'),
         'tables' => [
-            'notifications' => env(
-                'MAIL_NOTIFICATIONS_TABLE',
+            'notifications' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_TABLE',
                 MailNotificationsTables::Notifications,
             ),
-            'events' => env(
-                'MAIL_NOTIFICATION_EVENTS_TABLE',
+            'events' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_EVENTS_TABLE',
                 MailNotificationsTables::Events,
             ),
-            'scheduled_messages' => env(
-                'MAIL_NOTIFICATIONS_SCHEDULED_MESSAGES_TABLE',
+            'scheduled_messages' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_SCHEDULED_MESSAGES_TABLE',
                 MailNotificationsTables::ScheduledMessages,
             ),
         ],
@@ -354,36 +321,29 @@ return [
     ],
 
     'privacy' => [
-        'max_depth' => (int) env(
-            'MAIL_NOTIFICATIONS_METADATA_MAX_DEPTH',
+        'max_depth' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_METADATA_MAX_DEPTH',
             16,
         ),
-        'max_items' => (int) env(
-            'MAIL_NOTIFICATIONS_METADATA_MAX_ITEMS',
+        'max_items' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_METADATA_MAX_ITEMS',
             1_000,
         ),
-        'max_string_bytes' => (int) env(
-            'MAIL_NOTIFICATIONS_METADATA_MAX_STRING_BYTES',
+        'max_string_bytes' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_METADATA_MAX_STRING_BYTES',
             16_384,
         ),
-        'max_total_bytes' => (int) env(
-            'MAIL_NOTIFICATIONS_METADATA_MAX_TOTAL_BYTES',
+        'max_total_bytes' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_METADATA_MAX_TOTAL_BYTES',
             65_536,
         ),
         'sensitive_storage' => [
-            'enabled' => env(
-                'MAIL_NOTIFICATIONS_SENSITIVE_STORAGE_ENABLED',
+            'enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_SENSITIVE_STORAGE_ENABLED',
                 false,
             ),
-            'max_transformed_bytes' => (int) env(
-                'MAIL_NOTIFICATIONS_SENSITIVE_STORAGE_MAX_TRANSFORMED_BYTES',
+            'max_transformed_bytes' => (int) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_SENSITIVE_STORAGE_MAX_TRANSFORMED_BYTES',
                 262_144,
             ),
         ],
         'redacted_keys' => array_values(array_filter(array_map(
             'trim',
-            explode(',', (string) env(
-                'MAIL_NOTIFICATIONS_REDACTED_KEYS',
+            explode(',', (string) PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_REDACTED_KEYS',
                 'authorization,cookie,password,token,secret,signature,api_key,two_factor_code,verification_code,magic_link,otp',
             )),
         ))),

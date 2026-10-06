@@ -8,7 +8,7 @@ use Nvl\MailNotifications\Tests\Fixtures\TestTrackable;
 use Nvl\MailNotifications\ValueObjects\TrackingContext;
 
 it('normalizes sensitive-key configuration without redacting unrelated metadata', function () {
-    config()->set('mail-notifications.privacy.redacted_keys', [
+    config()->set('nvl-mail-notifications.privacy.redacted_keys', [
         ' token ',
         '',
         'PASSWORD',
@@ -70,7 +70,7 @@ it('canonicalizes nested sensitive keys across common naming styles', function (
 });
 
 it('fails closed when sensitive-key configuration is invalid', function () {
-    config()->set('mail-notifications.privacy.redacted_keys', 'token');
+    config()->set('nvl-mail-notifications.privacy.redacted_keys', 'token');
 
     expect(fn () => app(SensitiveDataRedactor::class)->redact(['token' => 'secret']))
         ->toThrow(MailTrackingException::class, 'must be an array');
@@ -91,7 +91,7 @@ it('redacts non-scalar metadata values by default', function () {
 });
 
 it('bounds recursive metadata redaction depth', function () {
-    config()->set('mail-notifications.privacy.max_depth', 2);
+    config()->set('nvl-mail-notifications.privacy.max_depth', 2);
 
     $redacted = app(SensitiveDataRedactor::class)->redact([
         'level_one' => [
@@ -111,7 +111,7 @@ it('bounds recursive metadata redaction depth', function () {
 });
 
 it('handles cyclic metadata without exhausting the worker', function () {
-    config()->set('mail-notifications.privacy.max_depth', 3);
+    config()->set('nvl-mail-notifications.privacy.max_depth', 3);
     $metadata = [];
     $metadata['self'] = &$metadata;
 
@@ -124,7 +124,7 @@ it('handles cyclic metadata without exhausting the worker', function () {
 it('fails closed when metadata depth configuration is invalid', function (
     mixed $maximumDepth,
 ) {
-    config()->set('mail-notifications.privacy.max_depth', $maximumDepth);
+    config()->set('nvl-mail-notifications.privacy.max_depth', $maximumDepth);
 
     expect(fn () => app(SensitiveDataRedactor::class)->redact([]))
         ->toThrow(MailTrackingException::class, 'depth must be an integer');
@@ -136,7 +136,7 @@ it('fails closed when metadata depth configuration is invalid', function (
 ]);
 
 it('bounds flat metadata item counts before persistence', function () {
-    config()->set('mail-notifications.privacy.max_items', 2);
+    config()->set('nvl-mail-notifications.privacy.max_items', 2);
 
     expect(fn () => app(SensitiveDataRedactor::class)->redact([
         'one' => 1,
@@ -146,14 +146,14 @@ it('bounds flat metadata item counts before persistence', function () {
 });
 
 it('bounds individual strings and aggregate metadata bytes', function () {
-    config()->set('mail-notifications.privacy.max_string_bytes', 4);
+    config()->set('nvl-mail-notifications.privacy.max_string_bytes', 4);
 
     expect(fn () => app(SensitiveDataRedactor::class)->redact([
         'value' => '12345',
     ]))->toThrow(MailTrackingException::class, 'configured byte limit');
 
-    config()->set('mail-notifications.privacy.max_string_bytes', 10);
-    config()->set('mail-notifications.privacy.max_total_bytes', 10);
+    config()->set('nvl-mail-notifications.privacy.max_string_bytes', 10);
+    config()->set('nvl-mail-notifications.privacy.max_total_bytes', 10);
 
     expect(fn () => app(SensitiveDataRedactor::class)->redact([
         'first' => '1234',
@@ -166,7 +166,7 @@ it('fails closed when metadata budget configuration is invalid', function (
     mixed $value,
     string $expectedMessage,
 ) {
-    config()->set("mail-notifications.privacy.{$key}", $value);
+    config()->set("nvl-mail-notifications.privacy.{$key}", $value);
 
     expect(fn () => app(SensitiveDataRedactor::class)->redact([]))
         ->toThrow(MailTrackingException::class, $expectedMessage);

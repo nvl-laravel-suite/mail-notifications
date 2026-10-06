@@ -28,7 +28,7 @@ final readonly class SensitiveStorageConfiguration
     public function enabled(): bool
     {
         $enabled = $this->config->get(
-            'mail-notifications.privacy.sensitive_storage.enabled',
+            'nvl-mail-notifications.privacy.sensitive_storage.enabled',
             false,
         );
 
@@ -50,7 +50,7 @@ final readonly class SensitiveStorageConfiguration
     {
         $enabled = $this->enabled();
         $configured = $this->config->get(
-            'mail-notifications.services.sensitive_storage_transformer',
+            'nvl-mail-notifications.services.sensitive_storage_transformer',
         );
 
         if ($configured === null) {
@@ -82,7 +82,7 @@ final readonly class SensitiveStorageConfiguration
     public function maximumTransformedBytes(): int
     {
         $maximum = $this->config->get(
-            'mail-notifications.privacy.sensitive_storage.max_transformed_bytes',
+            'nvl-mail-notifications.privacy.sensitive_storage.max_transformed_bytes',
             262_144,
         );
 

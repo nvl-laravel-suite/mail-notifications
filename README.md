@@ -11,11 +11,11 @@ See the [installation and publishing guide](https://github.com/nvl-laravel-suite
 
 | Item | Value |
 |---|---|
-| Installed through | `composer require nvl/mail-notifications:^2.0` |
+| Installed through | `composer require nvl/mail-notifications:^5.0` |
 | Module identifier | `nvl/mail-notifications` |
 | PHP namespace | `Nvl\MailNotifications` |
 | Service provider | `Nvl\MailNotifications\Providers\MailNotificationsServiceProvider` |
-| Configuration | `config/mail-notifications.php` |
+| Configuration | `config/nvl-mail-notifications.php` |
 
 Provider-neutral, explicitly opt-in outbound mail tracking for Laravel.
 
@@ -40,6 +40,8 @@ The default theme loads after application-configured `mail.markdown.paths`, so
 an existing host override remains authoritative. Publish the package views when
 the host wants editable copies at Laravel's conventional override path.
 
+Global Markdown-path and shared view-variable adoption default to `false` through `nvl-mail-notifications.presentation.global_markdown` and `global_view_data`. Explicit mail views can use `<x-nvl-mail-notifications::message>` and the other namespaced components. For NVL's complete HTML and plain-text theme, render with `Nvl\MailNotifications\Services\MailPresentation::render()` / `renderText()`; nested presentation data stays within that render and the host Markdown namespace is restored afterward. Ordinary host mail retains its own paths, view data, and output.
+
 ## Requirements and installation
 
 - PHP 8.4 or newer
@@ -51,7 +53,7 @@ the host wants editable copies at Laravel's conventional override path.
   variable `check_constraint_checks` enabled
 
 ```bash
-composer require nvl/mail-notifications:^2.0
+composer require nvl/mail-notifications:^5.0
 php artisan migrate
 ```
 
@@ -60,9 +62,9 @@ ownership choice below. Publish only the resources the application needs;
 config changes must be in place before migration:
 
 ```bash
-php artisan vendor:publish --tag=mail-notifications-config
-php artisan vendor:publish --tag=mail-notifications-skills
-php artisan vendor:publish --tag=mail-notifications-mail-views
+php artisan vendor:publish --tag=nvl-mail-notifications-config
+php artisan vendor:publish --tag=nvl-mail-notifications-skills
+php artisan vendor:publish --tag=nvl-mail-notifications-mail-views
 ```
 
 The skills are agent guidance. Mail views are editable overrides; package views
@@ -72,12 +74,12 @@ For a legacy-schema cutover, publish the versioned manifest template and keep
 tracking and scheduling disabled until the import and strict doctor pass:
 
 ```bash
-php artisan vendor:publish --tag=mail-notifications-adoption
-php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json --stage
-php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json --stage --apply
+php artisan vendor:publish --tag=nvl-mail-notifications-adoption
+php artisan nvl:mail-notifications:adopt nvl-mail-notifications.adoption.json --stage
+php artisan nvl:mail-notifications:adopt nvl-mail-notifications.adoption.json --stage --apply
 php artisan migrate
-php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json
-php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json --apply
+php artisan nvl:mail-notifications:adopt nvl-mail-notifications.adoption.json
+php artisan nvl:mail-notifications:adopt nvl-mail-notifications.adoption.json --apply
 php artisan nvl:mail-notifications:doctor --strict --format=json
 ```
 
@@ -92,11 +94,11 @@ when `drop_sources` is explicitly true. Keep that option false through the
 rollback window.
 
 Package discovery registers `MailNotificationsServiceProvider`. Migrations
-load automatically unless `mail-notifications.migrations.enabled` is false.
+load automatically unless `nvl-mail-notifications.migrations.enabled` is false.
 Choose exactly one migration owner:
 
-1. **Automatic vendor loading (default):** leave `mail-notifications.migrations.enabled=true`, do not publish `mail-notifications-migrations`, and run `php artisan migrate`.
-2. **Host-owned published migrations:** publish `mail-notifications-migrations`, set `mail-notifications.migrations.enabled=false` before migrating, and maintain the published files as application migrations.
+1. **Automatic vendor loading (default):** leave `nvl-mail-notifications.migrations.enabled=true`, do not publish `nvl-mail-notifications-migrations`, and run `php artisan migrate`.
+2. **Host-owned published migrations:** publish `nvl-mail-notifications-migrations`, set `nvl-mail-notifications.migrations.enabled=false` before migrating, and maintain the published files as application migrations.
 
 Never run both sources. Laravel retimestamps files published through the migration tag. `php artisan nvl:mail-notifications:doctor` reports a warning when automatic loading remains enabled and `database/migrations` contains a timestamp-independent name matching a package migration; `--strict` promotes that warning to failure. Keep the configured storage connection and table names stable between forward migrations. The first-release creator migrations install queue-failure
 identity, privacy markers, retention indexes, and exact status invariants as one
@@ -142,7 +144,7 @@ safely distinguish an interrupted package creation from a host-owned table, so
 it will not let the creator complete that partial schema.
 
 ```bash
-php artisan vendor:publish --tag=mail-notifications-migrations
+php artisan vendor:publish --tag=nvl-mail-notifications-migrations
 php artisan migrate
 ```
 
@@ -206,7 +208,7 @@ cannot join the queued copy's lifecycle.
 Exclude whole Laravel mailers when tracking is not wanted for a transport:
 
 ```dotenv
-MAIL_NOTIFICATIONS_EXCLUDED_MAILERS=smtp,log
+NVL_MAIL_NOTIFICATIONS_EXCLUDED_MAILERS=smtp,log
 ```
 
 Mailer exclusions apply after the Mailable opts in. SMTP and every other
@@ -224,14 +226,14 @@ cannot expose that boundary safely; exclude it, move the decorator to the
 Symfony transport layer, or use `fail_open` to deliver without a tracking row.
 Excluded and opted-out custom mailers remain untouched.
 
-Set `MAIL_NOTIFICATIONS_ENABLED=false` for an environment-wide off switch.
+Set `NVL_MAIL_NOTIFICATIONS_ENABLED=false` for an environment-wide off switch.
 
 ## Configuration and host integration
 
 The published configuration contains only scalars, arrays, and class strings,
 so it is safe to cache with `php artisan config:cache`. A normal host can plug
 in its models and provider integration directly in
-`config/mail-notifications.php`; no additional service provider is required:
+`config/nvl-mail-notifications.php`; no additional service provider is required:
 
 ```php
 'notifiable_types' => [
@@ -308,10 +310,10 @@ Anonymization and protected sensitive-array storage use
 `MAIL_NOTIFICATIONS_ANONYMIZATION_*`,
 `MAIL_NOTIFICATIONS_SCHEDULED_ANONYMIZATION_*`, and
 `MAIL_NOTIFICATIONS_SENSITIVE_STORAGE_*`.
-`MAIL_NOTIFICATIONS_METADATA_MAX_DEPTH`,
-`MAIL_NOTIFICATIONS_METADATA_MAX_ITEMS`,
-`MAIL_NOTIFICATIONS_METADATA_MAX_STRING_BYTES`, and
-`MAIL_NOTIFICATIONS_METADATA_MAX_TOTAL_BYTES` bound metadata processing.
+`NVL_MAIL_NOTIFICATIONS_METADATA_MAX_DEPTH`,
+`NVL_MAIL_NOTIFICATIONS_METADATA_MAX_ITEMS`,
+`NVL_MAIL_NOTIFICATIONS_METADATA_MAX_STRING_BYTES`, and
+`NVL_MAIL_NOTIFICATIONS_METADATA_MAX_TOTAL_BYTES` bound metadata processing.
 Migration ownership, structured mappings, and class lists stay in the
 published PHP configuration.
 
@@ -322,7 +324,7 @@ arbitrary PHP class names. It is disabled by default. Enable it explicitly and
 register each host-owned factory through configuration:
 
 ```dotenv
-MAIL_NOTIFICATIONS_SCHEDULING_ENABLED=true
+NVL_MAIL_NOTIFICATIONS_SCHEDULING_ENABLED=true
 ```
 
 ```php
@@ -477,7 +479,7 @@ Schedule::command('nvl:mail-notifications:recover-scheduled')
     ->withoutOverlapping();
 ```
 
-Install these entries only while `mail-notifications.scheduling.enabled=true`.
+Install these entries only while `nvl-mail-notifications.scheduling.enabled=true`.
 The package never registers them or chooses their cadence, and scheduling
 readiness is skipped while the feature is disabled. While enabled, the strict
 Doctor requires at least one registered scheduled-message factory and both
@@ -530,7 +532,7 @@ lookup.
 Scheduled-message retention is separately opt-in:
 
 ```dotenv
-MAIL_NOTIFICATIONS_SCHEDULED_RETENTION_ENABLED=true
+NVL_MAIL_NOTIFICATIONS_SCHEDULED_RETENTION_ENABLED=true
 ```
 
 When disabled, pruning and the retention doctor check do not inspect the
@@ -604,10 +606,10 @@ Anonymization is a separate, disabled-by-default stage that removes identifying
 content without deleting lifecycle history:
 
 ```dotenv
-MAIL_NOTIFICATIONS_ANONYMIZATION_ENABLED=true
-MAIL_NOTIFICATIONS_ANONYMIZATION_DAYS=180
-MAIL_NOTIFICATIONS_SCHEDULED_ANONYMIZATION_ENABLED=true
-MAIL_NOTIFICATIONS_SCHEDULED_ANONYMIZATION_DAYS=90
+NVL_MAIL_NOTIFICATIONS_ANONYMIZATION_ENABLED=true
+NVL_MAIL_NOTIFICATIONS_ANONYMIZATION_DAYS=180
+NVL_MAIL_NOTIFICATIONS_SCHEDULED_ANONYMIZATION_ENABLED=true
+NVL_MAIL_NOTIFICATIONS_SCHEDULED_ANONYMIZATION_DAYS=90
 ```
 
 ```bash
@@ -650,34 +652,30 @@ translation keys, or brand copy. It respects `mail.markdown.theme`,
 Laravel mailer/from setting. It does not select or reconfigure a transport.
 
 Configure brand values and safe design tokens under
-`mail-notifications.presentation`. Tokens cover typography, canvas and surface
+`nvl-mail-notifications.presentation`. Tokens cover typography, canvas and surface
 colors, heading/body/muted colors, primary and semantic colors, borders,
 container and component radii, content and logo sizing, and text sizes. The
 values are validated before they are shared with the Blade theme. Use
-`MAIL_BRAND_HEADER_ENABLED=false` or `MAIL_BRAND_FOOTER_ENABLED=false` when an
+`NVL_MAIL_NOTIFICATIONS_BRAND_HEADER_ENABLED=false` or `NVL_MAIL_NOTIFICATIONS_BRAND_FOOTER_ENABLED=false` when an
 application wants body-only messages, and configure the remaining
-`MAIL_BRAND_*` values without changing package views.
+`NVL_MAIL_NOTIFICATIONS_BRAND_*` values without changing package views.
 
-Set `MAIL_NOTIFICATIONS_PRESENTATION_ENABLED=false` to avoid automatically
-loading package components, or
-`MAIL_NOTIFICATIONS_PRESENTATION_AUTO_LOAD=false` when presentation should be
-available only after publishing. Once views are published into
-`resources/views/vendor/mail`, they are application-owned Laravel overrides.
+Set `NVL_MAIL_NOTIFICATIONS_PRESENTATION_ENABLED=false` to disable the namespaced presentation, or `NVL_MAIL_NOTIFICATIONS_PRESENTATION_AUTO_LOAD=false` to load it only through published views. Published views belong under `resources/views/vendor/nvl-mail-notifications`. They do not replace Laravel's `mail` namespace unless the host explicitly opts into `presentation.global_markdown`; sharing presentation variables globally separately requires `presentation.global_view_data`. Both adoption switches default to false.
 
 ## Testing interception
 
 The package honors an existing `mail.testing` configuration first. When it is
-absent, `mail-notifications.testing` provides the same environment-aware
+absent, `nvl-mail-notifications.testing` provides the same environment-aware
 settings. Enabling test mode applies Laravel's global recipient override, so
 all outbound mail is redirected before tracking captures effective recipients.
 The package never bypasses Laravel's configured mailer, queue, or from address.
 
 ```dotenv
-MAIL_TESTING_ENABLED=true
-MAIL_TESTING_TO_ADDRESS=mail-preview@example.test
-MAIL_TESTING_TO_NAME="Mail Preview"
-MAIL_TESTING_RESPECT_ENV=true
-MAIL_TESTING_ENVIRONMENTS=local,testing,staging
+NVL_MAIL_NOTIFICATIONS_TESTING_ENABLED=true
+NVL_MAIL_NOTIFICATIONS_TESTING_TO_ADDRESS=mail-preview@example.test
+NVL_MAIL_NOTIFICATIONS_TESTING_TO_NAME="Mail Preview"
+NVL_MAIL_NOTIFICATIONS_TESTING_RESPECT_ENV=true
+NVL_MAIL_NOTIFICATIONS_TESTING_ENVIRONMENTS=local,testing,staging
 ```
 
 Keep environment enforcement enabled and exclude production. The strict doctor
@@ -747,7 +745,7 @@ use Nvl\MailNotifications\Adapters\MailerSend\MailerSendRemoteWebhookManager;
     'mailersend' => [
         'mailers' => ['mailersend'],
         'signing_secret' => env(
-            'MAIL_NOTIFICATIONS_MAILERSEND_SIGNING_SECRET',
+            'NVL_MAIL_NOTIFICATIONS_MAILERSEND_SIGNING_SECRET',
         ),
         // The package includes MailerSend's fixed webhook.test secret.
         'signature_headers' => ['signature'],
@@ -761,11 +759,11 @@ use Nvl\MailNotifications\Adapters\MailerSend\MailerSendRemoteWebhookManager;
         ],
         'management' => [
             'enabled' => env(
-                'MAIL_NOTIFICATIONS_MAILERSEND_MANAGEMENT_ENABLED',
+                'NVL_MAIL_NOTIFICATIONS_MAILERSEND_MANAGEMENT_ENABLED',
                 false,
             ),
-            'token' => env('MAIL_NOTIFICATIONS_MAILERSEND_API_TOKEN'),
-            'domain_id' => env('MAIL_NOTIFICATIONS_MAILERSEND_DOMAIN_ID'),
+            'token' => env('NVL_MAIL_NOTIFICATIONS_MAILERSEND_API_TOKEN'),
+            'domain_id' => env('NVL_MAIL_NOTIFICATIONS_MAILERSEND_DOMAIN_ID'),
             'api_url' => 'https://api.mailersend.com/v1',
             'timeout_seconds' => 10,
             'connect_timeout_seconds' => 3,
@@ -776,7 +774,7 @@ use Nvl\MailNotifications\Adapters\MailerSend\MailerSendRemoteWebhookManager;
             'webhook' => [
                 'name' => 'Mail Notifications',
                 'url' => env(
-                    'MAIL_NOTIFICATIONS_MAILERSEND_WEBHOOK_URL',
+                    'NVL_MAIL_NOTIFICATIONS_MAILERSEND_WEBHOOK_URL',
                 ),
                 'events' => [
                     'activity.sent',
@@ -902,7 +900,7 @@ php artisan nvl:mail-notifications:webhooks:remove --provider=mailersend --all -
 MailerSend generates an individual signing secret when the webhook is created.
 The commands deliberately never print or persist that secret—or any provider
 response body. Retrieve the generated secret securely from MailerSend, copy it
-to `MAIL_NOTIFICATIONS_MAILERSEND_SIGNING_SECRET`, reload cached configuration,
+to `NVL_MAIL_NOTIFICATIONS_MAILERSEND_SIGNING_SECRET`, reload cached configuration,
 and run `php artisan nvl:mail-notifications:doctor --strict`. The fixed
 `webhook.test` secret is only for URL validation and must never replace the
 individual activity signing secret. Activity signing secrets must contain
@@ -915,18 +913,18 @@ normalization, checks provider identity at every boundary, and applies the
 event through the configured lifecycle. Authenticated unsupported events are
 acknowledged without lifecycle mutation by default so provider event expansion
 does not create retries; set
-`MAIL_NOTIFICATIONS_WEBHOOK_UNKNOWN_EVENT_POLICY=reject` for strict rejection.
+`NVL_MAIL_NOTIFICATIONS_WEBHOOK_UNKNOWN_EVENT_POLICY=reject` for strict rejection.
 Acknowledgements dispatch `MailWebhookAcknowledged` as a safe observational
 after-commit event. Set
-`MAIL_NOTIFICATIONS_WEBHOOKS_ENABLED=false` to stop webhook processing without
+`NVL_MAIL_NOTIFICATIONS_WEBHOOKS_ENABLED=false` to stop webhook processing without
 changing Laravel mail delivery. When the MailerSend adapter is registered and
 webhooks are enabled, the strict package doctor validates its signing secret,
 header names, and allowed Laravel mailer names before traffic arrives.
 
 The canonical readiness namespaces are
-`mail-notifications.webhooks.enabled`,
-`mail-notifications.providers.mailersend.signing_secret`, and
-`mail-notifications.providers.mailersend.management.enabled`. Never configure
+`nvl-mail-notifications.webhooks.enabled`,
+`nvl-mail-notifications.providers.mailersend.signing_secret`, and
+`nvl-mail-notifications.providers.mailersend.management.enabled`. Never configure
 these package capabilities under the predecessor `mailnotifications.*`
 namespace.
 
@@ -936,7 +934,7 @@ Tracked-message lookup misses use a separate
 `retry_then_acknowledge` default retries recent events for five minutes so a
 tracking-row visibility race can recover, then acknowledges older misses as
 `unmatched_event` without persistence. Set
-`MAIL_NOTIFICATIONS_WEBHOOK_UNMATCHED_EVENT_POLICY=reject` for perpetual strict
+`NVL_MAIL_NOTIFICATIONS_WEBHOOK_UNMATCHED_EVENT_POLICY=reject` for perpetual strict
 rejection, or explicitly choose `acknowledge` only when immediate dropping of
 tracking races is acceptable. This policy is independent from unknown event
 types.
@@ -979,7 +977,7 @@ The package exposes `ListMailNotificationsAction`,
 `NotifiableReference`, and `ShowMailNotificationByProviderMessageAction` with a
 registered `ProviderMessageId`. Bind `MailNotificationReadAuthorization`, or
 configure a class implementing it under
-`mail-notifications.management.authorization.class`. The built-in adapter
+`nvl-mail-notifications.management.authorization.class`. The built-in adapter
 denies every read unless the host explicitly authorizes the distinct `list`,
 `view`, `statistics`, or `suggest` ability.
 
@@ -1004,7 +1002,7 @@ of grouping `MailNotification` directly.
 
 Scheduled queue administration is a separate fail-closed surface. Bind
 `ScheduledMailReadAuthorization`, or configure its implementation and callback
-under `mail-notifications.management.scheduled_authorization`. The
+under `nvl-mail-notifications.management.scheduled_authorization`. The
 `ListScheduledMailMessagesAction`, `ShowScheduledMailMessageAction`, and
 `GetScheduledMailStatisticsAction` authorize distinct `list`, `view`, and
 `statistics` abilities. `ScheduledMailReadQuery` accepts bounded status,
@@ -1020,7 +1018,7 @@ single primary recipient for display; redacted history returns no recipient.
 
 `fail_closed` is the default. A failure to create the pending record prevents
 the opted-in message from reaching transport. Set
-`MAIL_NOTIFICATIONS_FAILURE_POLICY=fail_open` when delivery must continue even
+`NVL_MAIL_NOTIFICATIONS_FAILURE_POLICY=fail_open` when delivery must continue even
 if pre-send tracking persistence is unavailable.
 
 The same policy applies when a custom mailer contract hides the transport:
@@ -1196,15 +1194,15 @@ Run `php artisan nvl:doctor --strict --format=json` to combine the read-only che
 
 ## Optional Settings delivery profiles
 
-Mail Notifications installs without `nvl/settings`. The default `DeliveryProfileResolver` uses Laravel configuration: `mail-notifications.scheduling.delivery_profile=null` preserves the default Laravel mailer, and an explicit profile must appear in `allowed_delivery_profiles`. This supports scheduled delivery in applications with no tenant Settings provider.
+Mail Notifications installs without `nvl/settings`. The default `DeliveryProfileResolver` uses Laravel configuration: `nvl-mail-notifications.scheduling.delivery_profile=null` preserves the default Laravel mailer, and an explicit profile must appear in `allowed_delivery_profiles`. This supports scheduled delivery in applications with no tenant Settings provider.
 
-`mail-notifications.integrations.settings` accepts `null` (automatic activation from a loaded Settings provider), `false` (disabled), or `true` (required). Tenant-specific selection through `scheduling.delivery_profile_setting` requires that loaded provider and retains the existing Settings authorization and profile allowlist. An explicit unavailable selection is a configuration error. Core Doctor reports automatic inactivity as information.
+`nvl-mail-notifications.integrations.settings` accepts `null` (automatic activation from a loaded Settings provider), `false` (disabled), or `true` (required). Tenant-specific selection through `scheduling.delivery_profile_setting` requires that loaded provider and retains the existing Settings authorization and profile allowlist. An explicit unavailable selection is a configuration error. Core Doctor reports automatic inactivity as information.
 
 Bind `Nvl\MailNotifications\Contracts\DeliveryProfileResolver` to provide a host-specific profile source. `TenantDeliveryProfileResolver` remains a container-resolved compatibility facade over that contract.
 
 ## Next major: isolated schema identities
 
-Use `mail-notifications.tables.<logical-key>` for every table and `mail-notifications.connection` for its database connection. Null connection inherits `nvl-core.connection`, then Laravel's default. Tables are resolved at runtime by the package table definition helper.
+Use `nvl-mail-notifications.tables.<logical-key>` for every table and `nvl-mail-notifications.connection` for its database connection. Null connection inherits `nvl-core.connection`, then Laravel's default. Tables are resolved at runtime by the package table definition helper.
 
 | Logical key | New default | Previous name |
 | --- | --- | --- |
@@ -1212,4 +1210,8 @@ Use `mail-notifications.tables.<logical-key>` for every table and `mail-notifica
 | `events` | `nvl_mail_notifications_events` | `mail_notification_events` |
 | `scheduled_messages` | `nvl_mail_notifications_scheduled_messages` | `scheduled_mail_messages` |
 
-Migration filenames contain `nvl_mail_notifications_`. Existing installations must complete the upgrade in `UPGRADING.md` before running new migrations. A pending creator rejects an existing target before any migration in the batch runs; legacy storage with old history needs an ownership decision.
+Migration filenames contain `nvl_mail_notifications_`. Existing installations must complete the upgrade in `UPGRADING.md` before running new migrations. A pending creator rejects an existing target before that owned migration runs; use `nvl:schema:preflight` for an explicit whole-batch check; legacy storage with old history needs an ownership decision.
+
+## Canonical configuration ownership
+
+Use `nvl-mail-notifications` settings in `config/nvl-mail-notifications.php` and canonical package environment names. Old generic roots are foreign unless an upgrading NVL host explicitly selects them in Core's default-off compatibility. Canonical false/null/empty values win; no old roots are populated or written back. Keep logical package/resource IDs unchanged. Review [Core's rename inventory and cache/worker cutover](https://github.com/nvl-laravel-suite/core/blob/main/UPGRADING.md#major-5-canonical-configuration-and-environment).

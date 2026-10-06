@@ -505,7 +505,7 @@ final readonly class MailerSendWebhookNormalizer
     {
         return UnknownWebhookEventPolicy::fromConfig(
             $this->config->get(
-                'mail-notifications.webhooks.unknown_event_policy',
+                'nvl-mail-notifications.webhooks.unknown_event_policy',
                 UnknownWebhookEventPolicy::Acknowledge->value,
             ),
         );
@@ -567,7 +567,7 @@ final readonly class MailerSendWebhookNormalizer
         int $maximum,
     ): int {
         $value = $this->config->get(
-            'mail-notifications.providers.mailersend.timestamp_bounds.'.$key,
+            'nvl-mail-notifications.providers.mailersend.timestamp_bounds.'.$key,
             $default,
         );
 

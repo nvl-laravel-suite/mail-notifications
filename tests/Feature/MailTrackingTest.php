@@ -81,7 +81,7 @@ it('tracks an explicitly opted-in mailable through transport acceptance', functi
 });
 
 it('supports fluent host context composition', function () {
-    config()->set('mail-notifications.notifiable_types', [
+    config()->set('nvl-mail-notifications.notifiable_types', [
         'test-account' => TestTrackable::class,
     ]);
     app()->forgetInstance(MailNotificationNotifiableTypeRegistry::class);
@@ -109,7 +109,7 @@ it('supports fluent host context composition', function () {
 });
 
 it('consumes fluent host context after one successful delivery', function () {
-    config()->set('mail-notifications.notifiable_types', [
+    config()->set('nvl-mail-notifications.notifiable_types', [
         'test-account' => TestTrackable::class,
     ]);
     app()->forgetInstance(MailNotificationNotifiableTypeRegistry::class);
@@ -141,7 +141,7 @@ it('consumes fluent host context after one successful delivery', function () {
 });
 
 it('consumes fluent host context after a failed delivery attempt', function () {
-    config()->set('mail-notifications.notifiable_types', [
+    config()->set('nvl-mail-notifications.notifiable_types', [
         'test-account' => TestTrackable::class,
     ]);
     app()->forgetInstance(MailNotificationNotifiableTypeRegistry::class);
@@ -189,7 +189,7 @@ it('consumes fluent host context after a failed delivery attempt', function () {
 });
 
 it('serializes fluent host context for queued delivery', function () {
-    config()->set('mail-notifications.notifiable_types', [
+    config()->set('nvl-mail-notifications.notifiable_types', [
         'test-account' => TestTrackable::class,
     ]);
     app()->forgetInstance(MailNotificationNotifiableTypeRegistry::class);
@@ -244,7 +244,7 @@ it('supports a per-message opt-out followed by opt-in', function () {
 });
 
 it('excludes configured Laravel mailers without changing delivery', function () {
-    config()->set('mail-notifications.tracking.excluded_mailers', ['array']);
+    config()->set('nvl-mail-notifications.tracking.excluded_mailers', ['array']);
 
     Mail::to('recipient@example.test')->send(new TrackedMail);
 
@@ -257,7 +257,7 @@ it('excludes configured Laravel mailers without changing delivery', function () 
 });
 
 it('does not resolve tracking context for an excluded mailer', function () {
-    config()->set('mail-notifications.tracking.excluded_mailers', ['array']);
+    config()->set('nvl-mail-notifications.tracking.excluded_mailers', ['array']);
 
     Mail::to('recipient@example.test')->send(
         new TrackedMail(throwOnTrackingContext: true),
@@ -272,7 +272,7 @@ it('does not resolve tracking context for an excluded mailer', function () {
 });
 
 it('uses the actual explicitly selected mailer for tracking exclusions', function () {
-    config()->set('mail-notifications.tracking.excluded_mailers', ['smtp-test']);
+    config()->set('nvl-mail-notifications.tracking.excluded_mailers', ['smtp-test']);
 
     Mail::mailer('smtp-test')
         ->to('recipient@example.test')
@@ -287,7 +287,7 @@ it('uses the actual explicitly selected mailer for tracking exclusions', functio
 });
 
 it('normalizes configured mailer exclusions', function () {
-    config()->set('mail-notifications.tracking.excluded_mailers', [
+    config()->set('nvl-mail-notifications.tracking.excluded_mailers', [
         ' smtp-test ',
         '',
         'smtp-test',
@@ -303,7 +303,7 @@ it('normalizes configured mailer exclusions', function () {
 });
 
 it('tracks an explicitly selected mailer when only the default mailer is excluded', function () {
-    config()->set('mail-notifications.tracking.excluded_mailers', ['array']);
+    config()->set('nvl-mail-notifications.tracking.excluded_mailers', ['array']);
 
     Mail::mailer('smtp-test')
         ->to('recipient@example.test')
@@ -318,7 +318,7 @@ it('tracks an explicitly selected mailer when only the default mailer is exclude
 
 it('uses the configured provider alias for a Laravel mailer', function () {
     config()->set(
-        'mail-notifications.providers.mailers.smtp-test',
+        'nvl-mail-notifications.providers.mailers.smtp-test',
         'transactional-smtp',
     );
 
@@ -331,7 +331,7 @@ it('uses the configured provider alias for a Laravel mailer', function () {
 });
 
 it('does not persist a subject when subject storage is disabled', function () {
-    config()->set('mail-notifications.tracking.store_subject', false);
+    config()->set('nvl-mail-notifications.tracking.store_subject', false);
 
     Mail::to('recipient@example.test')->send(new TrackedMail);
 
@@ -339,7 +339,7 @@ it('does not persist a subject when subject storage is disabled', function () {
 });
 
 it('rejects malformed subject-storage configuration', function () {
-    config()->set('mail-notifications.tracking.store_subject', 'false');
+    config()->set('nvl-mail-notifications.tracking.store_subject', 'false');
 
     expect(fn () => Mail::to('recipient@example.test')->send(new TrackedMail))
         ->toThrow(InvalidArgumentException::class, 'configured with a boolean');
@@ -356,7 +356,7 @@ it('persists standards-compliant subjects longer than a database varchar', funct
 });
 
 it('disables tracking globally without disabling Laravel Mail', function () {
-    config()->set('mail-notifications.enabled', false);
+    config()->set('nvl-mail-notifications.enabled', false);
 
     Mail::to('recipient@example.test')->send(new TrackedMail);
 
@@ -369,7 +369,7 @@ it('disables tracking globally without disabling Laravel Mail', function () {
 });
 
 it('disables tracking independently without disabling presentation or Laravel Mail', function () {
-    config()->set('mail-notifications.tracking.enabled', false);
+    config()->set('nvl-mail-notifications.tracking.enabled', false);
 
     Mail::to('recipient@example.test')->send(new TrackedMail);
 
@@ -378,7 +378,7 @@ it('disables tracking independently without disabling presentation or Laravel Ma
         ->getSymfonyTransport();
 
     expect(MailNotification::query()->count())->toBe(0)
-        ->and(config('mail-notifications.presentation.enabled'))->toBeTrue()
+        ->and(config('nvl-mail-notifications.presentation.enabled'))->toBeTrue()
         ->and($transport->messages())->toHaveCount(1);
 });
 
@@ -388,12 +388,12 @@ it('rejects malformed tracking feature switches', function (string $key) {
     expect(fn () => app(TrackingEligibility::class)->enabled())
         ->toThrow(MailTrackingException::class, 'must be a boolean');
 })->with([
-    'package switch' => 'mail-notifications.enabled',
-    'tracking switch' => 'mail-notifications.tracking.enabled',
+    'package switch' => 'nvl-mail-notifications.enabled',
+    'tracking switch' => 'nvl-mail-notifications.tracking.enabled',
 ]);
 
 it('continues delivery when fail-open tracking persistence is unavailable', function () {
-    config()->set('mail-notifications.tracking.failure_policy', 'fail_open');
+    config()->set('nvl-mail-notifications.tracking.failure_policy', 'fail_open');
     app()->instance(TrackingLifecycle::class, new UnavailableTrackingLifecycle);
     app()->forgetInstance(TrackingRuntime::class);
     TrackingRuntimeBridge::use(app(TrackingRuntime::class));
@@ -408,7 +408,7 @@ it('continues delivery when fail-open tracking persistence is unavailable', func
 });
 
 it('continues fail-open delivery when an operational failure listener throws', function () {
-    config()->set('mail-notifications.tracking.failure_policy', 'fail_open');
+    config()->set('nvl-mail-notifications.tracking.failure_policy', 'fail_open');
     app()->instance(TrackingLifecycle::class, new UnavailableTrackingLifecycle);
     app()->forgetInstance(TrackingRuntime::class);
     TrackingRuntimeBridge::use(app(TrackingRuntime::class));
@@ -550,7 +550,7 @@ it('dispatches lifecycle event objects through standard Laravel semantics', func
 });
 
 it('blocks delivery when fail-closed tracking persistence is unavailable', function () {
-    config()->set('mail-notifications.tracking.failure_policy', 'fail_closed');
+    config()->set('nvl-mail-notifications.tracking.failure_policy', 'fail_closed');
     app()->instance(TrackingLifecycle::class, new UnavailableTrackingLifecycle);
     app()->forgetInstance(TrackingRuntime::class);
     TrackingRuntimeBridge::use(app(TrackingRuntime::class));
@@ -633,7 +633,7 @@ it('rejects custom mailer contracts before fail-closed tracked delivery', functi
 
 it('delivers custom mailer contracts untracked under fail-open policy', function () {
     Event::fake([MailTrackingFailed::class]);
-    config()->set('mail-notifications.tracking.failure_policy', 'fail_open');
+    config()->set('nvl-mail-notifications.tracking.failure_policy', 'fail_open');
     $laravelMailer = app(MailManager::class)->mailer('array');
     $decoratedMailer = new DecoratedMailer($laravelMailer);
 
@@ -659,7 +659,7 @@ it('delivers custom mailer contracts untracked under fail-open policy', function
 
 it('resolves a mail factory once and sends through that exact mailer', function () {
     Event::fake([MailTrackingFailed::class]);
-    config()->set('mail-notifications.tracking.failure_policy', 'fail_open');
+    config()->set('nvl-mail-notifications.tracking.failure_policy', 'fail_open');
     $laravelMailer = app(MailManager::class)->mailer('array');
     $factory = new class(new DecoratedMailer($laravelMailer)) implements MailFactory
     {
@@ -691,7 +691,7 @@ it('resolves a mail factory once and sends through that exact mailer', function 
 it('leaves excluded custom mailer contracts completely untouched', function () {
     Event::fake([MailTrackingFailed::class]);
     config()->set(
-        'mail-notifications.tracking.excluded_mailers',
+        'nvl-mail-notifications.tracking.excluded_mailers',
         ['decorated'],
     );
     $laravelMailer = app(MailManager::class)->mailer('array');
@@ -710,13 +710,13 @@ it('leaves excluded custom mailer contracts completely untouched', function () {
 
 it('reuses a Mailable after fail-open custom mailer delivery', function () {
     Event::fake([MailTrackingFailed::class]);
-    config()->set('mail-notifications.tracking.failure_policy', 'fail_open');
+    config()->set('nvl-mail-notifications.tracking.failure_policy', 'fail_open');
     $laravelMailer = app(MailManager::class)->mailer('array');
     $mail = (new TrackedMail)->to('recipient@example.test');
 
     $mail->send(new DecoratedMailer($laravelMailer));
 
-    config()->set('mail-notifications.tracking.failure_policy', 'fail_closed');
+    config()->set('nvl-mail-notifications.tracking.failure_policy', 'fail_closed');
     $mail->send($laravelMailer);
 
     expect($laravelMailer->getSymfonyTransport()->messages())->toHaveCount(2)
@@ -917,7 +917,7 @@ it('prefers an explicit host testing configuration over package fallbacks', func
     config()->set('mail.testing', [
         'enabled' => false,
     ]);
-    config()->set('mail-notifications.testing', [
+    config()->set('nvl-mail-notifications.testing', [
         'enabled' => true,
         'to_address' => 'preview@example.test',
         'respect_environment' => false,
@@ -988,7 +988,7 @@ it('remains serializable and reusable after a tracked delivery', function () {
 });
 
 it('tracks a Mailable after real database queue serialization', function () {
-    config()->set('mail-notifications.notifiable_types', [
+    config()->set('nvl-mail-notifications.notifiable_types', [
         'test-account' => TestTrackable::class,
     ]);
     app()->forgetInstance(MailNotificationNotifiableTypeRegistry::class);

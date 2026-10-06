@@ -32,6 +32,11 @@ use Nvl\MailNotifications\Services\SensitiveStorageCodec;
 use Nvl\MailNotifications\Tests\Fixtures\RotatingSensitiveDataTransformer;
 use Nvl\MailNotifications\Tests\Fixtures\TestTrackable;
 
+beforeEach(function (): void {
+    config(['nvl-mail-notifications.presentation.global_markdown' => true, 'nvl-mail-notifications.presentation.global_view_data' => true]);
+    (new MailNotificationsServiceProvider(app()))->boot();
+});
+
 it('loads package presentation after Laravel configured mail paths', function () {
     $paths = config('mail.markdown.paths');
 
@@ -42,10 +47,10 @@ it('loads package presentation after Laravel configured mail paths', function ()
 });
 
 it('shares configured presentation in published-only mode', function () {
-    config()->set('mail-notifications.presentation.auto_load', false);
-    config()->set('mail-notifications.presentation.tokens.primary', '#123456');
-    config()->set('mail-notifications.presentation.brand.name', 'Published Brand');
-    config()->set('mail-notifications.tracking.enabled', false);
+    config()->set('nvl-mail-notifications.presentation.auto_load', false);
+    config()->set('nvl-mail-notifications.presentation.tokens.primary', '#123456');
+    config()->set('nvl-mail-notifications.presentation.brand.name', 'Published Brand');
+    config()->set('nvl-mail-notifications.tracking.enabled', false);
 
     (new MailNotificationsServiceProvider(app()))->boot();
 
@@ -59,7 +64,7 @@ it('updates a Markdown renderer resolved before presentation registration', func
     $hostPath = __DIR__.'/../Fixtures/views';
     $packagePath = dirname(__DIR__, 2).'/resources/views/mail';
     config()->set('mail.markdown.paths', [$hostPath]);
-    config()->set('mail-notifications.tracking.enabled', false);
+    config()->set('nvl-mail-notifications.tracking.enabled', false);
     $markdown = app(Markdown::class);
     $markdown->loadComponentsFrom([$hostPath]);
 
@@ -70,35 +75,35 @@ it('updates a Markdown renderer resolved before presentation registration', func
         ->toContain($packagePath.'/html');
 });
 
-it('publishes the tokenized theme to Laravels conventional override path', function () {
+it('publishes the tokenized theme to its namespaced override path', function () {
     $paths = MailNotificationsServiceProvider::pathsToPublish(
         MailNotificationsServiceProvider::class,
-        'mail-notifications-mail-views',
+        'nvl-mail-notifications-mail-views',
     );
 
     expect($paths)
         ->toHaveKey(
             dirname(__DIR__, 2).'/resources/views/mail',
-            resource_path('views/vendor/mail'),
+            resource_path('views/vendor/nvl-mail-notifications'),
         );
 });
 
 it('publishes the versioned legacy adoption manifest', function () {
     $paths = MailNotificationsServiceProvider::pathsToPublish(
         MailNotificationsServiceProvider::class,
-        'mail-notifications-adoption',
+        'nvl-mail-notifications-adoption',
     );
 
     expect($paths)->toHaveKey(
         dirname(__DIR__, 2).'/resources/adoption/mail-notifications.v1.example.json',
-        base_path('mail-notifications.adoption.json'),
+        base_path('nvl-mail-notifications.adoption.json'),
     );
 });
 
 it('registers package migrations for timestamp-aware publishing', function () {
     $paths = MailNotificationsServiceProvider::pathsToPublish(
         MailNotificationsServiceProvider::class,
-        'mail-notifications-migrations',
+        'nvl-mail-notifications-migrations',
     );
     $migrationPath = realpath(dirname(__DIR__, 2).'/database/migrations');
     $publishableMigrationPaths = array_map(
@@ -113,29 +118,29 @@ it('registers package migrations for timestamp-aware publishing', function () {
 });
 
 it('exposes serializable defaults for every host integration seam', function () {
-    $configuration = config('mail-notifications');
+    $configuration = config('nvl-mail-notifications');
 
     expect($configuration)->toBeArray()
         ->and(serialize($configuration))->toBeString()
-        ->and(config('mail-notifications.extensions'))->toBe([
+        ->and(config('nvl-mail-notifications.extensions'))->toBe([
             'provider_adapters' => [],
             'message_id_resolvers' => [],
             'notifiable_type_providers' => [],
             'scheduled_message_factories' => [],
             'webhook_managers' => [],
         ])
-        ->and(config('mail-notifications.notifiable_types'))->toBe([])
+        ->and(config('nvl-mail-notifications.notifiable_types'))->toBe([])
         ->and(app(MailNotificationReadAuthorization::class))
         ->toBeInstanceOf(ConfiguredMailNotificationReadAuthorization::class)
         ->and(app(ScheduledMailReadAuthorization::class))
         ->toBeInstanceOf(ConfiguredScheduledMailReadAuthorization::class)
-        ->and(config('mail-notifications.services.tracking_lifecycle'))
+        ->and(config('nvl-mail-notifications.services.tracking_lifecycle'))
         ->toBe(DatabaseTrackingLifecycle::class)
-        ->and(config('mail-notifications.services.sensitive_data_redactor'))
+        ->and(config('nvl-mail-notifications.services.sensitive_data_redactor'))
         ->toBe(DefaultSensitiveDataRedactor::class)
-        ->and(config('mail-notifications.services.sensitive_storage_transformer'))
+        ->and(config('nvl-mail-notifications.services.sensitive_storage_transformer'))
         ->toBeNull()
-        ->and(config('mail-notifications.privacy.sensitive_storage.enabled'))
+        ->and(config('nvl-mail-notifications.privacy.sensitive_storage.enabled'))
         ->toBeFalse()
         ->and(app(TrackingLifecycle::class))
         ->toBeInstanceOf(DatabaseTrackingLifecycle::class)
@@ -144,8 +149,8 @@ it('exposes serializable defaults for every host integration seam', function () 
         ->and(app(SensitiveStorageCodec::class))
         ->toBeInstanceOf(SensitiveStorageCodec::class)
         ->and(app()->bound(SensitiveDataTransformer::class))->toBeFalse()
-        ->and(config('mail-notifications.webhooks.enabled'))->toBeTrue()
-        ->and(config('mail-notifications.webhooks.max_payload_bytes'))
+        ->and(config('nvl-mail-notifications.webhooks.enabled'))->toBeTrue()
+        ->and(config('nvl-mail-notifications.webhooks.max_payload_bytes'))
         ->toBe(1_048_576);
 });
 
@@ -172,32 +177,32 @@ it('rejects invalid configured extension registrations', function (
         ->toThrow(LogicException::class, $message);
 })->with([
     'extension list is not an array' => [
-        'mail-notifications.extensions.provider_adapters',
+        'nvl-mail-notifications.extensions.provider_adapters',
         stdClass::class,
         'must be an array',
     ],
     'provider adapter violates its contract' => [
-        'mail-notifications.extensions.provider_adapters',
+        'nvl-mail-notifications.extensions.provider_adapters',
         [stdClass::class],
         'must implement',
     ],
     'message resolver violates its contract' => [
-        'mail-notifications.extensions.message_id_resolvers',
+        'nvl-mail-notifications.extensions.message_id_resolvers',
         [stdClass::class],
         'must implement',
     ],
     'notifiable provider violates its contract' => [
-        'mail-notifications.extensions.notifiable_type_providers',
+        'nvl-mail-notifications.extensions.notifiable_type_providers',
         [stdClass::class],
         'must implement',
     ],
     'scheduled factory violates its contract' => [
-        'mail-notifications.extensions.scheduled_message_factories',
+        'nvl-mail-notifications.extensions.scheduled_message_factories',
         [stdClass::class],
         'must implement',
     ],
     'webhook manager violates its contract' => [
-        'mail-notifications.extensions.webhook_managers',
+        'nvl-mail-notifications.extensions.webhook_managers',
         [stdClass::class],
         'must implement',
     ],
@@ -211,8 +216,8 @@ it('rejects invalid configured service implementations', function (
     expect(fn () => (new MailNotificationsServiceProvider(app()))->register())
         ->toThrow(LogicException::class, 'must implement');
 })->with([
-    'tracking lifecycle' => 'mail-notifications.services.tracking_lifecycle',
-    'sensitive data redactor' => 'mail-notifications.services.sensitive_data_redactor',
+    'tracking lifecycle' => 'nvl-mail-notifications.services.tracking_lifecycle',
+    'sensitive data redactor' => 'nvl-mail-notifications.services.sensitive_data_redactor',
 ]);
 
 it('rejects invalid configured read authorization implementations', function (
@@ -223,8 +228,8 @@ it('rejects invalid configured read authorization implementations', function (
     expect(fn () => (new MailNotificationsServiceProvider(app()))->register())
         ->toThrow(LogicException::class, 'must implement');
 })->with([
-    'delivery history' => 'mail-notifications.management.authorization.class',
-    'scheduled mail' => 'mail-notifications.management.scheduled_authorization.class',
+    'delivery history' => 'nvl-mail-notifications.management.authorization.class',
+    'scheduled mail' => 'nvl-mail-notifications.management.scheduled_authorization.class',
 ]);
 
 it('reports both fail-closed administrative read authorization boundaries', function () {
@@ -245,11 +250,11 @@ it('reports both fail-closed administrative read authorization boundaries', func
 
 it('reports explicit host callbacks for both administrative read boundaries', function () {
     config()->set(
-        'mail-notifications.management.authorization.callback',
+        'nvl-mail-notifications.management.authorization.callback',
         static fn (): bool => true,
     );
     config()->set(
-        'mail-notifications.management.scheduled_authorization.callback',
+        'nvl-mail-notifications.management.scheduled_authorization.callback',
         static fn (): bool => true,
     );
 
@@ -282,11 +287,11 @@ it('reports invalid built-in read authorization callbacks as unhealthy', functio
         ->message->toContain('must be null or callable');
 })->with([
     'delivery history' => [
-        'mail-notifications.management.authorization.callback',
+        'nvl-mail-notifications.management.authorization.callback',
         'management.delivery_authorization',
     ],
     'scheduled mail' => [
-        'mail-notifications.management.scheduled_authorization.callback',
+        'nvl-mail-notifications.management.scheduled_authorization.callback',
         'management.scheduled_authorization',
     ],
 ]);
@@ -299,7 +304,7 @@ it('rejects enabled sensitive storage without a valid bounded transformer', func
 ) {
     if ($transformer !== null) {
         config()->set(
-            'mail-notifications.services.sensitive_storage_transformer',
+            'nvl-mail-notifications.services.sensitive_storage_transformer',
             $transformer,
         );
     }
@@ -310,35 +315,35 @@ it('rejects enabled sensitive storage without a valid bounded transformer', func
         ->toThrow(SensitiveStorageException::class, $message);
 })->with([
     'missing transformer' => [
-        'mail-notifications.privacy.sensitive_storage.enabled',
+        'nvl-mail-notifications.privacy.sensitive_storage.enabled',
         true,
         'requires a transformer class',
     ],
     'invalid transformer' => [
-        'mail-notifications.services.sensitive_storage_transformer',
+        'nvl-mail-notifications.services.sensitive_storage_transformer',
         stdClass::class,
         'must implement',
     ],
     'invalid enabled switch' => [
-        'mail-notifications.privacy.sensitive_storage.enabled',
+        'nvl-mail-notifications.privacy.sensitive_storage.enabled',
         'yes',
         'enabled must be a boolean',
     ],
     'invalid enabled switch with a configured transformer' => [
-        'mail-notifications.privacy.sensitive_storage.enabled',
+        'nvl-mail-notifications.privacy.sensitive_storage.enabled',
         'yes',
         'enabled must be a boolean',
         RotatingSensitiveDataTransformer::class,
     ],
     'invalid transformed bound' => [
-        'mail-notifications.privacy.sensitive_storage.max_transformed_bytes',
+        'nvl-mail-notifications.privacy.sensitive_storage.max_transformed_bytes',
         0,
         'transformed byte limit',
     ],
 ]);
 
 it('rejects invalid direct notifiable type configuration', function () {
-    config()->set('mail-notifications.notifiable_types', TestTrackable::class);
+    config()->set('nvl-mail-notifications.notifiable_types', TestTrackable::class);
     app()->forgetInstance(MailNotificationNotifiableTypeRegistry::class);
 
     expect(fn () => app(MailNotificationNotifiableTypeRegistry::class))
@@ -346,13 +351,13 @@ it('rejects invalid direct notifiable type configuration', function () {
 });
 
 it('honors configured storage connection and table names', function () {
-    config()->set('mail-notifications.storage.connection', 'mail-audit');
+    config()->set('nvl-mail-notifications.storage.connection', 'mail-audit');
     config()->set(
-        'mail-notifications.storage.tables.notifications',
+        'nvl-mail-notifications.storage.tables.notifications',
         'outbound_mail',
     );
     config()->set(
-        'mail-notifications.storage.tables.events',
+        'nvl-mail-notifications.storage.tables.events',
         'outbound_mail_events',
     );
     $notification = new MailNotification;
@@ -373,8 +378,8 @@ it('uses unbounded text storage for sender display names', function () {
 });
 
 it('renders the tokenized Markdown theme with configurable brand values', function () {
-    config()->set('mail-notifications.presentation.tokens.primary', '#123456');
-    config()->set('mail-notifications.presentation.brand', [
+    config()->set('nvl-mail-notifications.presentation.tokens.primary', '#123456');
+    config()->set('nvl-mail-notifications.presentation.brand', [
         'name' => 'Acme Mail',
         'url' => 'https://acme.example.test',
         'logo_url' => null,
@@ -426,10 +431,10 @@ it('keeps default presentation free from package-owned copy', function () {
 });
 
 it('falls back from invalid token and brand configuration safely', function () {
-    config()->set('mail-notifications.presentation.tokens.primary', 'red; display:none');
-    config()->set('mail-notifications.presentation.tokens.content_width', 'calc(100% + 1px)');
-    config()->set('mail-notifications.presentation.brand.logo_url', 'javascript:alert(1)');
-    config()->set('mail-notifications.presentation.brand.header_enabled', 'false');
+    config()->set('nvl-mail-notifications.presentation.tokens.primary', 'red; display:none');
+    config()->set('nvl-mail-notifications.presentation.tokens.content_width', 'calc(100% + 1px)');
+    config()->set('nvl-mail-notifications.presentation.brand.logo_url', 'javascript:alert(1)');
+    config()->set('nvl-mail-notifications.presentation.brand.header_enabled', 'false');
 
     $theme = app(MailTheme::class);
 
@@ -487,7 +492,7 @@ it('normalizes public component variants before using them in markup', function 
 });
 
 it('renders generic plain text and allows brand chrome to be disabled', function () {
-    config()->set('mail-notifications.presentation.brand', [
+    config()->set('nvl-mail-notifications.presentation.brand', [
         'header_enabled' => false,
         'footer_enabled' => false,
         'name' => 'Hidden Brand',
@@ -658,7 +663,7 @@ it('accepts host-owned migration history when package migrations are disabled', 
     app(Migrator::class)->getRepository()->delete((object) [
         'migration' => $migrationName,
     ]);
-    config()->set('mail-notifications.migrations.enabled', false);
+    config()->set('nvl-mail-notifications.migrations.enabled', false);
 
     $history = collect(app(MailNotificationsDoctor::class)->inspect())
         ->firstWhere('key', 'schema.migrations');
@@ -707,7 +712,7 @@ it('recommends pending migrations only for a genuinely fresh package schema', fu
 it('rejects malformed package migration ownership switches', function (
     mixed $enabled,
 ) {
-    config()->set('mail-notifications.migrations.enabled', $enabled);
+    config()->set('nvl-mail-notifications.migrations.enabled', $enabled);
 
     $history = collect(app(MailNotificationsDoctor::class)->inspect())
         ->firstWhere('key', 'schema.migrations');
@@ -733,23 +738,23 @@ it('rejects malformed boot-time feature switches', function (
         ->toThrow($exception, 'boolean');
 })->with([
     'package switch' => [
-        'mail-notifications.enabled',
+        'nvl-mail-notifications.enabled',
         LogicException::class,
     ],
     'tracking switch' => [
-        'mail-notifications.tracking.enabled',
+        'nvl-mail-notifications.tracking.enabled',
         MailTrackingException::class,
     ],
     'presentation switch' => [
-        'mail-notifications.presentation.enabled',
+        'nvl-mail-notifications.presentation.enabled',
         LogicException::class,
     ],
     'presentation auto-load switch' => [
-        'mail-notifications.presentation.auto_load',
+        'nvl-mail-notifications.presentation.auto_load',
         LogicException::class,
     ],
     'migration switch' => [
-        'mail-notifications.migrations.enabled',
+        'nvl-mail-notifications.migrations.enabled',
         LogicException::class,
     ],
 ]);
@@ -767,9 +772,9 @@ it('reports malformed runtime feature switches as unhealthy', function (
         ->passed->toBeFalse()
         ->message->toContain('must be a boolean');
 })->with([
-    'package switch' => 'mail-notifications.enabled',
-    'tracking switch' => 'mail-notifications.tracking.enabled',
-    'webhook switch' => 'mail-notifications.webhooks.enabled',
+    'package switch' => 'nvl-mail-notifications.enabled',
+    'tracking switch' => 'nvl-mail-notifications.tracking.enabled',
+    'webhook switch' => 'nvl-mail-notifications.webhooks.enabled',
 ]);
 
 it('reports production-safe testing interception configuration', function () {
@@ -790,7 +795,7 @@ it('reports production-safe testing interception configuration', function () {
 });
 
 it('reports inactive and package-fallback testing interception modes', function () {
-    config()->set('mail-notifications.enabled', false);
+    config()->set('nvl-mail-notifications.enabled', false);
     $inactive = collect(app(MailNotificationsDoctor::class)->inspect())
         ->firstWhere('key', 'configuration.testing');
 
@@ -799,9 +804,9 @@ it('reports inactive and package-fallback testing interception modes', function 
         ->passed->toBeTrue()
         ->message->toContain('package is disabled');
 
-    config()->set('mail-notifications.enabled', true);
+    config()->set('nvl-mail-notifications.enabled', true);
     config()->set('mail.testing', []);
-    config()->set('mail-notifications.testing', [
+    config()->set('nvl-mail-notifications.testing', [
         0 => 'ignored',
         'enabled' => true,
         'to_address' => 'preview@example.test',
@@ -900,7 +905,7 @@ it('rejects unsupported doctor output formats', function () {
 });
 
 it('reports invalid package configuration as unhealthy', function () {
-    config()->set('mail-notifications.tracking.failure_policy', 'continue_anyway');
+    config()->set('nvl-mail-notifications.tracking.failure_policy', 'continue_anyway');
 
     $configuration = collect(app(MailNotificationsDoctor::class)->inspect())
         ->firstWhere('key', 'configuration');
@@ -918,7 +923,7 @@ it('reports invalid package configuration as unhealthy', function () {
 });
 
 it('reports invalid provider identity configuration as unhealthy', function () {
-    config()->set('mail-notifications.providers.mailers', 'smtp');
+    config()->set('nvl-mail-notifications.providers.mailers', 'smtp');
 
     $configuration = collect(app(MailNotificationsDoctor::class)->inspect())
         ->firstWhere('key', 'configuration');
@@ -948,7 +953,7 @@ it('reports incomplete package schema as unhealthy', function () {
 
 it('reports an unavailable storage connection instead of throwing', function () {
     config()->set(
-        'mail-notifications.storage.connection',
+        'nvl-mail-notifications.storage.connection',
         'missing-mail-notifications-connection',
     );
 

@@ -101,7 +101,7 @@ final class MailNotificationsAdoptionManifest
             throw new InvalidArgumentException('Mail Notifications adoption manifest version must be 1.');
         }
 
-        $connection = $manifest['connection'] ?? config('mail-notifications.storage.connection');
+        $connection = $manifest['connection'] ?? config('nvl-mail-notifications.storage.connection');
 
         if ($connection !== null && (! is_string($connection) || trim($connection) === '')) {
             throw new InvalidArgumentException('Mail Notifications adoption connection must be a name or null.');
@@ -117,11 +117,11 @@ final class MailNotificationsAdoptionManifest
             );
         }
 
-        $maximum = config('mail-notifications.adoption.maximum_records', 10_000);
+        $maximum = config('nvl-mail-notifications.adoption.maximum_records', 10_000);
 
         if (! is_int($maximum) || $maximum < 1) {
             throw new InvalidArgumentException(
-                'mail-notifications.adoption.maximum_records must be a positive integer.',
+                'nvl-mail-notifications.adoption.maximum_records must be a positive integer.',
             );
         }
 

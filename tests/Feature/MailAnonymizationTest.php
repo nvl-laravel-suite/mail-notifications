@@ -116,7 +116,7 @@ function identifyingScheduledMessage(
 
 beforeEach(function (): void {
     CarbonImmutable::setTestNow('2026-07-30 12:00:00 UTC');
-    config()->set('mail-notifications.retention.anonymization', [
+    config()->set('nvl-mail-notifications.retention.anonymization', [
         'enabled' => true,
         'notifications' => [
             'days' => 30,
@@ -296,7 +296,7 @@ it('still rejects changed provider event facts after metadata anonymization', fu
 
 it('keeps new provider events redacted after their notification was anonymized', function () {
     config()->set(
-        'mail-notifications.retention.anonymization.notifications.statuses',
+        'nvl-mail-notifications.retention.anonymization.notifications.statuses',
         ['accepted'],
     );
     $completedAt = CarbonImmutable::now('UTC')->subDays(60);
@@ -358,7 +358,7 @@ it('keeps new provider events redacted after their notification was anonymized',
 
 it('keeps acceptance reconciliation from rehydrating anonymized metadata', function () {
     config()->set(
-        'mail-notifications.retention.anonymization.notifications.statuses',
+        'nvl-mail-notifications.retention.anonymization.notifications.statuses',
         ['pending'],
     );
     $completedAt = CarbonImmutable::now('UTC')->subDays(60);
@@ -403,7 +403,7 @@ it('keeps acceptance reconciliation from rehydrating anonymized metadata', funct
 
 it('keeps failure reconciliation from rehydrating anonymized metadata', function () {
     config()->set(
-        'mail-notifications.retention.anonymization.notifications.statuses',
+        'nvl-mail-notifications.retention.anonymization.notifications.statuses',
         ['pending'],
     );
     $completedAt = CarbonImmutable::now('UTC')->subDays(60);
@@ -442,7 +442,7 @@ it('keeps failure reconciliation from rehydrating anonymized metadata', function
 
 it('bounds each data set independently and leaves recent or active rows untouched', function () {
     config()->set(
-        'mail-notifications.retention.anonymization.batch_size',
+        'nvl-mail-notifications.retention.anonymization.batch_size',
         1,
     );
     $oldest = CarbonImmutable::now('UTC')->subDays(90);
@@ -478,7 +478,7 @@ it('bounds each data set independently and leaves recent or active rows untouche
 
 it('is disabled by default and validates bounded configuration separately', function () {
     config()->set(
-        'mail-notifications.retention.anonymization.enabled',
+        'nvl-mail-notifications.retention.anonymization.enabled',
         false,
     );
 
@@ -495,11 +495,11 @@ it('is disabled by default and validates bounded configuration separately', func
         ->message->toContain('disabled');
 
     config()->set(
-        'mail-notifications.retention.anonymization.enabled',
+        'nvl-mail-notifications.retention.anonymization.enabled',
         true,
     );
     config()->set(
-        'mail-notifications.retention.anonymization.limit',
+        'nvl-mail-notifications.retention.anonymization.limit',
         10_001,
     );
     $invalid = collect(app(MailNotificationsDoctor::class)->inspect())
@@ -523,7 +523,7 @@ it('reports enabled anonymization boundaries through the strict doctor', functio
         ->toContain('1 terminal status(es)');
 
     config()->set(
-        'mail-notifications.retention.anonymization.scheduled_messages.enabled',
+        'nvl-mail-notifications.retention.anonymization.scheduled_messages.enabled',
         false,
     );
     $withoutScheduled = collect(app(MailNotificationsDoctor::class)->inspect())
@@ -552,47 +552,47 @@ it('rejects every malformed anonymization configuration family', function (
         ->message->toContain($message);
 })->with([
     'enabled switch' => [
-        'mail-notifications.retention.anonymization.enabled',
+        'nvl-mail-notifications.retention.anonymization.enabled',
         'yes',
         'enabled must be a boolean',
     ],
     'notification statuses are empty' => [
-        'mail-notifications.retention.anonymization.notifications.statuses',
+        'nvl-mail-notifications.retention.anonymization.notifications.statuses',
         [],
         'statuses must be a non-empty array',
     ],
     'notification status is invalid' => [
-        'mail-notifications.retention.anonymization.notifications.statuses',
+        'nvl-mail-notifications.retention.anonymization.notifications.statuses',
         ['unknown'],
         'valid delivery status strings',
     ],
     'scheduled switch' => [
-        'mail-notifications.retention.anonymization.scheduled_messages.enabled',
+        'nvl-mail-notifications.retention.anonymization.scheduled_messages.enabled',
         'yes',
         'scheduled-message enabled must be a boolean',
     ],
     'scheduled statuses are empty' => [
-        'mail-notifications.retention.anonymization.scheduled_messages.statuses',
+        'nvl-mail-notifications.retention.anonymization.scheduled_messages.statuses',
         [],
         'statuses must be a non-empty array',
     ],
     'scheduled status is active' => [
-        'mail-notifications.retention.anonymization.scheduled_messages.statuses',
+        'nvl-mail-notifications.retention.anonymization.scheduled_messages.statuses',
         ['processing'],
         'only sent, failed, or cancelled',
     ],
     'batch size' => [
-        'mail-notifications.retention.anonymization.batch_size',
+        'nvl-mail-notifications.retention.anonymization.batch_size',
         0,
         'batch size',
     ],
     'notification days' => [
-        'mail-notifications.retention.anonymization.notifications.days',
+        'nvl-mail-notifications.retention.anonymization.notifications.days',
         0,
         'notification days',
     ],
     'scheduled days' => [
-        'mail-notifications.retention.anonymization.scheduled_messages.days',
+        'nvl-mail-notifications.retention.anonymization.scheduled_messages.days',
         0,
         'scheduled-message days',
     ],
@@ -622,7 +622,7 @@ it('returns invalid or failure for unsafe command inputs and disabled mutation',
         ->assertExitCode(Command::INVALID);
 
     config()->set(
-        'mail-notifications.retention.anonymization.enabled',
+        'nvl-mail-notifications.retention.anonymization.enabled',
         false,
     );
 

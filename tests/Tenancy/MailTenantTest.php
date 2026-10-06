@@ -21,7 +21,7 @@ it('registers scheduled mail and tracking as mixed roots with inherited events',
 });
 
 it('keeps provider credentials deployment managed and exposes only a named profile selector', function (): void {
-    expect(config('mail-notifications.scheduling.delivery_profile_setting'))->toBeNull()
-        ->and(config('mail-notifications.scheduling.allowed_delivery_profiles'))->toBe([])
-        ->and(config('mail-notifications.providers'))->toBeArray();
+    expect(config('nvl-mail-notifications.scheduling.delivery_profile_setting'))->toBeNull()
+        ->and(config('nvl-mail-notifications.scheduling.allowed_delivery_profiles'))->toBe([])
+        ->and(config('nvl-mail-notifications.providers'))->toBeArray();
 });

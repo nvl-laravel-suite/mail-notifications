@@ -46,7 +46,7 @@ final readonly class SuggestMailNotificationsAction
             );
         }
 
-        $maximum = config('mail-notifications.management.suggestion_limit', 20);
+        $maximum = config('nvl-mail-notifications.management.suggestion_limit', 20);
 
         if (! is_int($maximum) || $maximum < 1) {
             $maximum = 20;

@@ -45,31 +45,31 @@ function configureMailerSendWebhookManagement(
     bool $registerAdapter = true,
 ): void {
     config()->set([
-        'mail-notifications.extensions.provider_adapters' => $registerAdapter
+        'nvl-mail-notifications.extensions.provider_adapters' => $registerAdapter
             ? [MailerSendAdapter::class]
             : [],
-        'mail-notifications.extensions.webhook_managers' => [
+        'nvl-mail-notifications.extensions.webhook_managers' => [
             MailerSendRemoteWebhookManager::class,
         ],
-        'mail-notifications.providers.mailersend.signing_secret' => 'activity-signing-secret',
-        'mail-notifications.providers.mailersend.management.enabled' => true,
-        'mail-notifications.providers.mailersend.management.token' => 'api-token-secret',
-        'mail-notifications.providers.mailersend.management.domain_id' => 'domain-123',
-        'mail-notifications.providers.mailersend.management.api_url' => 'https://api.mailersend.test/v1',
-        'mail-notifications.providers.mailersend.management.timeout_seconds' => 10,
-        'mail-notifications.providers.mailersend.management.connect_timeout_seconds' => 3,
-        'mail-notifications.providers.mailersend.management.pagination.page_size' => 100,
-        'mail-notifications.providers.mailersend.management.pagination.max_pages' => 10,
-        'mail-notifications.providers.mailersend.management.webhook.name' => 'Mail Notifications',
-        'mail-notifications.providers.mailersend.management.webhook.url' => 'https://app.example.test/webhooks/mailersend',
-        'mail-notifications.providers.mailersend.management.webhook.events' => managedMailerSendEvents(),
-        'mail-notifications.providers.mailersend.management.webhook.enabled' => true,
-        'mail-notifications.providers.mailersend.management.webhook.version' => 2,
+        'nvl-mail-notifications.providers.mailersend.signing_secret' => 'activity-signing-secret',
+        'nvl-mail-notifications.providers.mailersend.management.enabled' => true,
+        'nvl-mail-notifications.providers.mailersend.management.token' => 'api-token-secret',
+        'nvl-mail-notifications.providers.mailersend.management.domain_id' => 'domain-123',
+        'nvl-mail-notifications.providers.mailersend.management.api_url' => 'https://api.mailersend.test/v1',
+        'nvl-mail-notifications.providers.mailersend.management.timeout_seconds' => 10,
+        'nvl-mail-notifications.providers.mailersend.management.connect_timeout_seconds' => 3,
+        'nvl-mail-notifications.providers.mailersend.management.pagination.page_size' => 100,
+        'nvl-mail-notifications.providers.mailersend.management.pagination.max_pages' => 10,
+        'nvl-mail-notifications.providers.mailersend.management.webhook.name' => 'Mail Notifications',
+        'nvl-mail-notifications.providers.mailersend.management.webhook.url' => 'https://app.example.test/webhooks/mailersend',
+        'nvl-mail-notifications.providers.mailersend.management.webhook.events' => managedMailerSendEvents(),
+        'nvl-mail-notifications.providers.mailersend.management.webhook.enabled' => true,
+        'nvl-mail-notifications.providers.mailersend.management.webhook.version' => 2,
     ]);
 
     foreach ($overrides as $key => $value) {
         config()->set(
-            'mail-notifications.providers.mailersend.management.'.$key,
+            'nvl-mail-notifications.providers.mailersend.management.'.$key,
             $value,
         );
     }
@@ -134,7 +134,7 @@ it('creates a missing v2 webhook without exposing its generated secret', functio
         ], 201),
     ]);
     configureMailerSendWebhookManagement();
-    config()->set('mail-notifications.providers.mailersend.signing_secret');
+    config()->set('nvl-mail-notifications.providers.mailersend.signing_secret');
 
     $this->artisan('nvl:mail-notifications:webhooks:sync', [
         '--provider' => 'mailersend',
@@ -446,7 +446,7 @@ it('requires webhook processing and a same-name capable adapter for management',
     configureMailerSendWebhookManagement(
         registerAdapter: $registerAdapter,
     );
-    config()->set('mail-notifications.webhooks.enabled', $webhooksEnabled);
+    config()->set('nvl-mail-notifications.webhooks.enabled', $webhooksEnabled);
 
     $configuration = collect(app(MailNotificationsDoctor::class)->inspect())
         ->firstWhere('key', 'configuration');
@@ -565,6 +565,6 @@ it('rejects malformed package switches before MailerSend management', function (
         ->validateConfiguration())
         ->toThrow(MailTrackingException::class, 'must be a boolean');
 })->with([
-    'package switch' => 'mail-notifications.enabled',
-    'webhook switch' => 'mail-notifications.webhooks.enabled',
+    'package switch' => 'nvl-mail-notifications.enabled',
+    'webhook switch' => 'nvl-mail-notifications.webhooks.enabled',
 ]);

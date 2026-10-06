@@ -52,7 +52,7 @@ final readonly class SymfonyMessageIdResolver implements ProviderMessageIdResolv
     public function validateConfiguration(): void
     {
         $mailerProviders = $this->config->get(
-            'mail-notifications.providers.mailers',
+            'nvl-mail-notifications.providers.mailers',
             [],
         );
 
@@ -77,7 +77,7 @@ final readonly class SymfonyMessageIdResolver implements ProviderMessageIdResolv
         }
 
         $defaultProvider = $this->config->get(
-            'mail-notifications.providers.default',
+            'nvl-mail-notifications.providers.default',
         );
 
         if ($defaultProvider === null || $defaultProvider === '') {
@@ -100,11 +100,11 @@ final readonly class SymfonyMessageIdResolver implements ProviderMessageIdResolv
     {
         $this->validateConfiguration();
         $mailerProviders = $this->config->get(
-            'mail-notifications.providers.mailers',
+            'nvl-mail-notifications.providers.mailers',
             [],
         );
         $defaultProvider = $this->config->get(
-            'mail-notifications.providers.default',
+            'nvl-mail-notifications.providers.default',
         );
         $configuredProvider = is_array($mailerProviders)
             ? ($mailerProviders[$mailer] ?? null)

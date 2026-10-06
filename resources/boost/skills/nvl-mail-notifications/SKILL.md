@@ -125,7 +125,7 @@ tenant Settings; only allow approved named delivery profiles.
 
 ## Adopt legacy schemas through one reviewed manifest
 
-- Publish `mail-notifications-adoption` and edit the version 1 manifest. Never
+- Publish `nvl-mail-notifications-adoption` and edit the version 1 manifest. Never
   infer table, column, status, notifiable, scheduled-factory, or foreign-key
   mappings during deployment.
 - Run `nvl:mail-notifications:adopt <manifest> --stage` without `--apply`
@@ -416,12 +416,19 @@ Run `php artisan nvl:doctor --strict --format=json` to combine checks from loade
 
 ## Optional Settings delivery profiles
 
-Mail Notifications installs without `nvl/settings`. The default `DeliveryProfileResolver` uses Laravel configuration: `mail-notifications.scheduling.delivery_profile=null` preserves the default Laravel mailer, and an explicit profile must appear in `allowed_delivery_profiles`. This supports scheduled delivery in applications with no tenant Settings provider.
+Mail Notifications installs without `nvl/settings`. The default `DeliveryProfileResolver` uses Laravel configuration: `nvl-mail-notifications.scheduling.delivery_profile=null` preserves the default Laravel mailer, and an explicit profile must appear in `allowed_delivery_profiles`. This supports scheduled delivery in applications with no tenant Settings provider.
 
-`mail-notifications.integrations.settings` accepts `null` (automatic activation from a loaded Settings provider), `false` (disabled), or `true` (required). Tenant-specific selection through `scheduling.delivery_profile_setting` requires that loaded provider and retains the existing Settings authorization and profile allowlist. An explicit unavailable selection is a configuration error. Core Doctor reports automatic inactivity as information.
+`nvl-mail-notifications.integrations.settings` accepts `null` (automatic activation from a loaded Settings provider), `false` (disabled), or `true` (required). Tenant-specific selection through `scheduling.delivery_profile_setting` requires that loaded provider and retains the existing Settings authorization and profile allowlist. An explicit unavailable selection is a configuration error. Core Doctor reports automatic inactivity as information.
 
 Bind `Nvl\MailNotifications\Contracts\DeliveryProfileResolver` to provide a host-specific profile source. `TenantDeliveryProfileResolver` remains a container-resolved compatibility facade over that contract.
 
 ### Brownfield storage identities
 
-Resolve all package tables through the table helper and canonical `mail-notifications.tables.*`, connections through `mail-notifications.connection` with Core/Laravel inheritance. Defaults use `nvl_mail_notifications_*`; migration filenames include that package slug. Never silently adopt a matching table or generic migration filename. Run shared `nvl:doctor --strict --format=json` and the explicit `nvl:schema:upgrade --package=mail-notifications --claim-legacy --dry-run --format=json` before upgrading owned legacy storage. Validate the complete plan and choose one migration owner. Preserve host records, constraint names and stored morph values. Deprecated config inputs last one major; canonical options take precedence.
+Resolve all package tables through the table helper and canonical `nvl-mail-notifications.tables.*`, connections through `nvl-mail-notifications.connection` with Core/Laravel inheritance. Defaults use `nvl_mail_notifications_*`; migration filenames include that package slug. Never silently adopt a matching table or generic migration filename. Run shared `nvl:doctor --strict --format=json` and the explicit `nvl:schema:upgrade --package=mail-notifications --claim-legacy --dry-run --format=json` before upgrading owned legacy storage. Validate the complete plan and choose one migration owner. Preserve host records, constraint names and stored morph values. Deprecated config inputs last one major; canonical options take precedence.
+
+## Canonical configuration ownership
+
+- Read/write `nvl-mail-notifications` configuration and publish only canonical `nvl-<package>-<resource>` tags. Keep logical package/tenant resource identifiers unchanged.
+- Generic config roots and unprefixed package environment names are foreign by default. For an upgrading NVL host only, select `nvl-core.compatibility.legacy_config` package IDs and `legacy_env` explicitly; both default off. Canonical presence wins, including false/null/empty values. Legacy inputs are read without writing back and are removed in major 6.
+- Use canonical `NVL_<PACKAGE>_*` variables only in config evaluation, then rebuild configuration caches and restart workers after cutover. Shared Laravel environment variables retain their names. Consult Core's versioned `support/resources/global-names.json` for all renames.
+- Old global aliases and legacy route families require separate explicit `global_aliases`/`legacy_routes` package selections. Preserve collisions and use Doctor diagnostics; never grant generic permissions automatically or claim signed-link compatibility without the same authorization/signature checks.

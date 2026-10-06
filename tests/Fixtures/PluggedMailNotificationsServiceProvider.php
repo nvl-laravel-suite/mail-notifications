@@ -16,7 +16,7 @@ final class PluggedMailNotificationsServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->make('config')->set('mail-notifications', [
+        $this->app->make('config')->set('nvl-mail-notifications', [
             'extensions' => [
                 'provider_adapters' => [
                     PluggedProviderAdapter::class,

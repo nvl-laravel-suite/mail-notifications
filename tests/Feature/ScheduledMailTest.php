@@ -95,8 +95,8 @@ function scheduledMailRequest(
 
 beforeEach(function (): void {
     CarbonImmutable::setTestNow('2026-07-30 12:00:00 UTC');
-    config()->set('mail-notifications.scheduling.enabled', true);
-    config()->set('mail-notifications.scheduling.backoff_seconds', [60, 300]);
+    config()->set('nvl-mail-notifications.scheduling.enabled', true);
+    config()->set('nvl-mail-notifications.scheduling.backoff_seconds', [60, 300]);
     app()->singleton(ScheduledTestFactory::class);
     app()->singleton(FailingScheduledTestFactory::class);
     app()->tag([
@@ -111,9 +111,9 @@ afterEach(function (): void {
 });
 
 it('keeps scheduling disabled by default and refuses mutations while disabled', function () {
-    config()->set('mail-notifications.scheduling.enabled', false);
+    config()->set('nvl-mail-notifications.scheduling.enabled', false);
 
-    expect(config('mail-notifications.scheduling.enabled'))->toBeFalse()
+    expect(config('nvl-mail-notifications.scheduling.enabled'))->toBeFalse()
         ->and(fn () => app(ScheduledMailScheduler::class)->schedule(
             scheduledMailRequest(),
         ))->toThrow(ScheduledMailException::class, 'disabled')
@@ -121,7 +121,7 @@ it('keeps scheduling disabled by default and refuses mutations while disabled', 
 });
 
 it('leaves scheduled processing cadence to the host application', function () {
-    config()->set('mail-notifications.scheduling.enabled', true);
+    config()->set('nvl-mail-notifications.scheduling.enabled', true);
 
     $commands = collect(app(Schedule::class)->events())
         ->map(static fn ($event): string => (string) $event->command);
@@ -144,8 +144,8 @@ it('rejects malformed scheduling feature switches', function (string $key) {
         scheduledMailRequest(),
     ))->toThrow(ScheduledMailException::class, 'must be a boolean');
 })->with([
-    'package switch' => 'mail-notifications.enabled',
-    'scheduling switch' => 'mail-notifications.scheduling.enabled',
+    'package switch' => 'nvl-mail-notifications.enabled',
+    'scheduling switch' => 'nvl-mail-notifications.scheduling.enabled',
 ]);
 
 it('rejects list-shaped payload and metadata before schedule or replacement', function () {
@@ -191,7 +191,7 @@ it('rejects list-shaped payload and metadata before schedule or replacement', fu
 });
 
 it('skips factory and schema readiness checks while scheduling is disabled', function () {
-    config()->set('mail-notifications.scheduling.enabled', false);
+    config()->set('nvl-mail-notifications.scheduling.enabled', false);
     app()->forgetInstance(ScheduledMessageFactoryRegistry::class);
 
     expect(app()->resolved(ScheduledMessageFactoryRegistry::class))->toBeFalse();
@@ -207,13 +207,13 @@ it('skips factory and schema readiness checks while scheduling is disabled', fun
 });
 
 it('requires scheduled history schema for pruning while scheduling is disabled', function () {
-    config()->set('mail-notifications.scheduling.enabled', false);
+    config()->set('nvl-mail-notifications.scheduling.enabled', false);
     config()->set(
-        'mail-notifications.retention.scheduled_messages.enabled',
+        'nvl-mail-notifications.retention.scheduled_messages.enabled',
         true,
     );
     config()->set(
-        'mail-notifications.storage.tables.scheduled_messages',
+        'nvl-mail-notifications.storage.tables.scheduled_messages',
         'missing_scheduled_history',
     );
     app()->forgetInstance(ScheduledMessageFactoryRegistry::class);
@@ -288,7 +288,7 @@ it('requires both host scheduler entries while scheduling is enabled', function 
 });
 
 it('reports invalid recipient bounds as scheduling configuration failures', function () {
-    config()->set('mail-notifications.scheduling.max_recipients', 0);
+    config()->set('nvl-mail-notifications.scheduling.max_recipients', 0);
     $checks = collect(app(MailNotificationsDoctor::class)->inspect())
         ->keyBy('key');
 
@@ -299,7 +299,7 @@ it('reports invalid recipient bounds as scheduling configuration failures', func
 
 it('detects wrong scheduled schema definitions and missing indexes', function () {
     config()->set(
-        'mail-notifications.storage.tables.scheduled_messages',
+        'nvl-mail-notifications.storage.tables.scheduled_messages',
         'invalid_scheduled_mail_messages',
     );
     Schema::create(
@@ -377,7 +377,7 @@ it('rejects a recorded scheduled schema missing a retention index', function () 
 
 it('refuses to adopt a partially matching scheduled-mail table', function () {
     config()->set(
-        'mail-notifications.storage.tables.scheduled_messages',
+        'nvl-mail-notifications.storage.tables.scheduled_messages',
         'partial_scheduled_mail_messages',
     );
     Schema::create(
@@ -417,11 +417,11 @@ it('refuses to adopt even a compatible unowned scheduled-mail table', function (
     ]);
     DB::purge($connectionName);
     config()->set(
-        'mail-notifications.storage.connection',
+        'nvl-mail-notifications.storage.connection',
         $connectionName,
     );
     config()->set(
-        'mail-notifications.storage.tables.scheduled_messages',
+        'nvl-mail-notifications.storage.tables.scheduled_messages',
         'host_owned_scheduled_mail_messages',
     );
     $migrationPath = dirname(__DIR__, 2)
@@ -448,7 +448,7 @@ it('refuses to adopt even a compatible unowned scheduled-mail table', function (
 
 it('registers configured factories under the public container tag', function () {
     config()->set(
-        'mail-notifications.extensions.scheduled_message_factories',
+        'nvl-mail-notifications.extensions.scheduled_message_factories',
         [ScheduledTestFactory::class],
     );
     (new MailNotificationsServiceProvider(app()))->register();
@@ -732,7 +732,7 @@ it('bounds payloads and recipients before invoking host factory validation', fun
         new ScheduledMessageFactoryRegistry([$factory]),
     );
     app()->forgetInstance(ScheduledMailScheduler::class);
-    config()->set('mail-notifications.scheduling.max_payload_bytes', 16);
+    config()->set('nvl-mail-notifications.scheduling.max_payload_bytes', 16);
     $oversized = new ScheduleMailData(
         factoryAlias: 'test.input-order',
         payloadVersion: 1,
@@ -754,8 +754,8 @@ it('bounds payloads and recipients before invoking host factory validation', fun
             'body' => 'Scheduled body',
         ]);
 
-    config()->set('mail-notifications.scheduling.max_payload_bytes', 65_536);
-    config()->set('mail-notifications.scheduling.max_recipients', 2);
+    config()->set('nvl-mail-notifications.scheduling.max_payload_bytes', 65_536);
+    config()->set('nvl-mail-notifications.scheduling.max_recipients', 2);
     $excessRecipients = new ScheduleMailData(
         factoryAlias: 'test.input-order',
         payloadVersion: 1,
@@ -841,7 +841,7 @@ it('dispatches scheduling events only after the owning transaction commits', fun
         'foreign_key_constraints' => true,
     ]);
     DB::purge($connectionName);
-    config()->set('mail-notifications.storage.connection', $connectionName);
+    config()->set('nvl-mail-notifications.storage.connection', $connectionName);
     $migration = require dirname(__DIR__, 2)
         .'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
     $migration->up();

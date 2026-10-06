@@ -38,11 +38,11 @@ final readonly class TrackingEligibility
     public function enabled(): bool
     {
         $packageEnabled = $this->boolean(
-            'mail-notifications.enabled',
+            'nvl-mail-notifications.enabled',
             true,
         );
         $trackingEnabled = $this->boolean(
-            'mail-notifications.tracking.enabled',
+            'nvl-mail-notifications.tracking.enabled',
             true,
         );
 
@@ -71,7 +71,7 @@ final readonly class TrackingEligibility
     public function failurePolicy(): FailurePolicy
     {
         $configuredPolicy = $this->config->get(
-            'mail-notifications.tracking.failure_policy',
+            'nvl-mail-notifications.tracking.failure_policy',
             FailurePolicy::FailClosed->value,
         );
         $policy = is_string($configuredPolicy)
@@ -95,7 +95,7 @@ final readonly class TrackingEligibility
     public function excludedMailers(): array
     {
         $configuredMailers = $this->config->get(
-            'mail-notifications.tracking.excluded_mailers',
+            'nvl-mail-notifications.tracking.excluded_mailers',
             [],
         );
 

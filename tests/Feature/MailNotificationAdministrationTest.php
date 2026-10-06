@@ -35,13 +35,13 @@ function mailNotificationAdministrator(): GenericUser
 
 beforeEach(function (): void {
     config()->set(
-        'mail-notifications.management.authorization.callback',
+        'nvl-mail-notifications.management.authorization.callback',
         static fn (): bool => true,
     );
 });
 
 it('denies administrative reads until the host supplies an authorization decision', function (): void {
-    config()->set('mail-notifications.management.authorization.callback', null);
+    config()->set('nvl-mail-notifications.management.authorization.callback', null);
 
     expect(fn () => app(ListMailNotificationsAction::class)->execute(
         mailNotificationAdministrator(),
@@ -63,7 +63,7 @@ it('returns bounded filtered pages without sensitive arrays or metadata', functi
     MailNotification::factory()->failed()->create([
         'subject' => 'Different delivery',
     ]);
-    config()->set('mail-notifications.management.maximum_per_page', 1);
+    config()->set('nvl-mail-notifications.management.maximum_per_page', 1);
 
     $page = app(ListMailNotificationsAction::class)->execute(
         mailNotificationAdministrator(),
@@ -163,7 +163,7 @@ it('rejects unknown exact delivery identities and unauthorized reads', function 
             new ProviderMessageId('unknown', 'provider-message-123'),
         ))->toThrow(DomainException::class, 'not registered');
 
-    config()->set('mail-notifications.management.authorization.callback', null);
+    config()->set('nvl-mail-notifications.management.authorization.callback', null);
     app()->instance(
         MailNotificationNotifiableTypeRegistry::class,
         new MailNotificationNotifiableTypeRegistry(configuredTypes: [
@@ -186,7 +186,7 @@ it('rejects unauthorized exact provider reads', function (): void {
         'provider' => 'plugged-provider',
         'provider_message_id' => 'provider-message-denied',
     ]);
-    config()->set('mail-notifications.management.authorization.callback', null);
+    config()->set('nvl-mail-notifications.management.authorization.callback', null);
 
     expect(fn () => app(ShowMailNotificationByProviderMessageAction::class)->execute(
         mailNotificationAdministrator(),
@@ -226,7 +226,7 @@ it('keeps administrative list queries independent of result size', function (): 
 it('authorizes show statistics and suggestion reads independently', function (): void {
     $abilities = [];
     config()->set(
-        'mail-notifications.management.authorization.callback',
+        'nvl-mail-notifications.management.authorization.callback',
         static function (MailNotificationReadAbility $ability) use (&$abilities): bool {
             $abilities[] = $ability;
 

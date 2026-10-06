@@ -24,7 +24,7 @@ final readonly class MailNotifiableTenantAccess
     /** @param class-string<MailTrackable> $class */
     public function assert(string $class, string $identifier): void
     {
-        if ($this->config->get('tenancy.enabled') !== true) {
+        if ($this->config->get('nvl-tenancy.enabled') !== true) {
             return;
         }
         if (! is_subclass_of($class, Model::class)) {

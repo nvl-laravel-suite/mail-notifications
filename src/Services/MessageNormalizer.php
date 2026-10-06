@@ -149,7 +149,7 @@ final readonly class MessageNormalizer
     private function storeSubject(): bool
     {
         $value = $this->config->get(
-            'mail-notifications.tracking.store_subject',
+            'nvl-mail-notifications.tracking.store_subject',
             true,
         );
 

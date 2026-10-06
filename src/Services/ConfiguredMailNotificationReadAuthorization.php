@@ -20,7 +20,7 @@ final class ConfiguredMailNotificationReadAuthorization implements MailNotificat
         Authenticatable $actor,
         ?MailNotification $notification = null,
     ): void {
-        $callback = config('mail-notifications.management.authorization.callback');
+        $callback = config('nvl-mail-notifications.management.authorization.callback');
         $allowed = is_callable($callback)
             && $callback($ability, $actor, $notification) === true;
 

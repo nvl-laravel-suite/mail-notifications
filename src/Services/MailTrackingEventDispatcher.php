@@ -115,7 +115,7 @@ final readonly class MailTrackingEventDispatcher
     private function storageConnectionName(): ?string
     {
         $configured = $this->config->get(
-            'mail-notifications.storage.connection',
+            'nvl-mail-notifications.storage.connection',
         );
 
         return is_string($configured) && trim($configured) !== ''

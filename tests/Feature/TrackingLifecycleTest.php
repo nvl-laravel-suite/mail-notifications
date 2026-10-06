@@ -533,7 +533,7 @@ it('rejects a provider event that conflicts with accepted message identity', fun
 it('detects multiple provider identity candidates in a broken schema', function () {
     $connectionName = 'ambiguous-tracking-lifecycle-test';
     $originalConnection = config(
-        'mail-notifications.storage.connection',
+        'nvl-mail-notifications.storage.connection',
     );
     config()->set('database.connections.'.$connectionName, [
         'driver' => 'sqlite',
@@ -542,7 +542,7 @@ it('detects multiple provider identity candidates in a broken schema', function 
         'foreign_key_constraints' => true,
     ]);
     DB::purge($connectionName);
-    config()->set('mail-notifications.storage.connection', $connectionName);
+    config()->set('nvl-mail-notifications.storage.connection', $connectionName);
     $migration = require dirname(__DIR__, 2)
         .'/database/migrations/2026_07_29_000000_nvl_mail_notifications_create_mail_notification_tables.php';
     $migration->up();
@@ -597,7 +597,7 @@ it('detects multiple provider identity candidates in a broken schema', function 
             ->and(MailNotificationEvent::query()->count())->toBe(0);
     } finally {
         config()->set(
-            'mail-notifications.storage.connection',
+            'nvl-mail-notifications.storage.connection',
             $originalConnection,
         );
         DB::purge($connectionName);

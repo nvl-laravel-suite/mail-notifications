@@ -32,7 +32,7 @@ final readonly class MailTenantOperations
      */
     public function run(Closure $operation): array
     {
-        if ($this->config->get('tenancy.enabled') !== true) {
+        if ($this->config->get('nvl-tenancy.enabled') !== true) {
             return [$operation()];
         }
         $snapshot = $this->context->snapshot();

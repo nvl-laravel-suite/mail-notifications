@@ -29,7 +29,7 @@ final readonly class ListScheduledMailMessagesAction
     ): ScheduledMailReadPage {
         $this->authorization->authorize(ScheduledMailReadAbility::List, $actor);
         $maximum = config(
-            'mail-notifications.management.scheduled_maximum_per_page',
+            'nvl-mail-notifications.management.scheduled_maximum_per_page',
             100,
         );
 

@@ -27,7 +27,7 @@ function scheduledMailAdministrator(): GenericUser
 beforeEach(function (): void {
     CarbonImmutable::setTestNow('2026-08-13 12:00:00 UTC');
     config()->set(
-        'mail-notifications.management.scheduled_authorization.callback',
+        'nvl-mail-notifications.management.scheduled_authorization.callback',
         static fn (): bool => true,
     );
     app()->instance(
@@ -44,7 +44,7 @@ afterEach(function (): void {
 
 it('denies scheduled-mail reads until the host supplies an authorization decision', function (): void {
     config()->set(
-        'mail-notifications.management.scheduled_authorization.callback',
+        'nvl-mail-notifications.management.scheduled_authorization.callback',
         null,
     );
 
@@ -66,7 +66,7 @@ it('denies scheduled-mail reads until the host supplies an authorization decisio
 
 it('returns bounded scheduled-mail pages with one primary recipient and no protected fields', function (): void {
     config()->set(
-        'mail-notifications.management.scheduled_maximum_per_page',
+        'nvl-mail-notifications.management.scheduled_maximum_per_page',
         1,
     );
     $matching = ScheduledMailMessage::factory()->due()->create([
@@ -124,7 +124,7 @@ it('returns bounded scheduled-mail pages with one primary recipient and no prote
 it('authorizes scheduled list view and statistics independently', function (): void {
     $abilities = [];
     config()->set(
-        'mail-notifications.management.scheduled_authorization.callback',
+        'nvl-mail-notifications.management.scheduled_authorization.callback',
         static function (ScheduledMailReadAbility $ability) use (&$abilities): bool {
             $abilities[] = $ability;
 

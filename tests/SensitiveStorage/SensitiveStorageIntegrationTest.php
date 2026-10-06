@@ -51,7 +51,7 @@ function protectedScheduledRequest(
 
 beforeEach(function (): void {
     CarbonImmutable::setTestNow('2026-07-30 12:00:00 UTC');
-    config()->set('mail-notifications.scheduling.enabled', true);
+    config()->set('nvl-mail-notifications.scheduling.enabled', true);
     app()->singleton(ScheduledTestFactory::class);
     app()->tag(
         ScheduledTestFactory::class,
@@ -182,7 +182,7 @@ it('reads plaintext legacy arrays after protection is enabled', function () {
 
 it('probes a configured transformer before sensitive writes are enabled', function () {
     config()->set(
-        'mail-notifications.privacy.sensitive_storage.enabled',
+        'nvl-mail-notifications.privacy.sensitive_storage.enabled',
         false,
     );
 
@@ -230,7 +230,7 @@ it('stores opaque binary transformer output in a JSON-safe envelope', function (
         }
     };
     config()->set(
-        'mail-notifications.services.sensitive_storage_transformer',
+        'nvl-mail-notifications.services.sensitive_storage_transformer',
         $transformer::class,
     );
     $codec = new SensitiveStorageCodec(
@@ -326,7 +326,7 @@ it('requires previous transformer keys and never returns an unreadable envelope'
     );
 
     config()->set(
-        'mail-notifications.privacy.sensitive_storage.enabled',
+        'nvl-mail-notifications.privacy.sensitive_storage.enabled',
         false,
     );
 
@@ -387,7 +387,7 @@ it('rejects protected storage above the configured byte boundary', function () {
             ], JSON_THROW_ON_ERROR),
         ]);
     config()->set(
-        'mail-notifications.privacy.sensitive_storage.max_transformed_bytes',
+        'nvl-mail-notifications.privacy.sensitive_storage.max_transformed_bytes',
         4,
     );
 
@@ -401,7 +401,7 @@ it('rejects protected storage above the configured byte boundary', function () {
 
 it('fails closed for invalid plaintext values and semantic scopes', function () {
     config()->set(
-        'mail-notifications.privacy.sensitive_storage.enabled',
+        'nvl-mail-notifications.privacy.sensitive_storage.enabled',
         false,
     );
     $codec = new SensitiveStorageCodec(
@@ -493,7 +493,7 @@ it('wraps transformer failures without exposing protected values', function () {
         }
     };
     config()->set(
-        'mail-notifications.services.sensitive_storage_transformer',
+        'nvl-mail-notifications.services.sensitive_storage_transformer',
         $transformer::class,
     );
     $codec = new SensitiveStorageCodec(
@@ -542,7 +542,7 @@ it('rejects non-array restores and readiness round-trip drift', function () {
         }
     };
     config()->set(
-        'mail-notifications.services.sensitive_storage_transformer',
+        'nvl-mail-notifications.services.sensitive_storage_transformer',
         $transformer::class,
     );
     $codec = new SensitiveStorageCodec(
@@ -571,7 +571,7 @@ it('rejects non-array restores and readiness round-trip drift', function () {
 
 it('rejects empty and oversized transformer output before persistence', function () {
     config()->set(
-        'mail-notifications.privacy.sensitive_storage.max_transformed_bytes',
+        'nvl-mail-notifications.privacy.sensitive_storage.max_transformed_bytes',
         4,
     );
     $emptyTransformer = new class implements SensitiveDataTransformer
@@ -601,7 +601,7 @@ it('rejects empty and oversized transformer output before persistence', function
 
     foreach ([$emptyTransformer, $oversizedTransformer] as $transformer) {
         config()->set(
-            'mail-notifications.services.sensitive_storage_transformer',
+            'nvl-mail-notifications.services.sensitive_storage_transformer',
             $transformer::class,
         );
         $codec = new SensitiveStorageCodec(
@@ -625,7 +625,7 @@ it('rejects every malformed protected envelope shape', function (
     string $message,
 ) {
     config()->set(
-        'mail-notifications.privacy.sensitive_storage.max_transformed_bytes',
+        'nvl-mail-notifications.privacy.sensitive_storage.max_transformed_bytes',
         $maximumBytes,
     );
 

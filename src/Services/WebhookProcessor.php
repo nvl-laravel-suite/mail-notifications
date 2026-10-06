@@ -109,7 +109,7 @@ final readonly class WebhookProcessor
         }
 
         try {
-            if ($this->config->get('tenancy.enabled') !== true
+            if ($this->config->get('nvl-tenancy.enabled') !== true
                 && ! $this->lifecycle instanceof DatabaseTrackingLifecycle) {
                 return $this->lifecycle->apply($event);
             }
@@ -139,11 +139,11 @@ final readonly class WebhookProcessor
     public function enabled(): bool
     {
         $packageEnabled = $this->boolean(
-            'mail-notifications.enabled',
+            'nvl-mail-notifications.enabled',
             true,
         );
         $webhooksEnabled = $this->boolean(
-            'mail-notifications.webhooks.enabled',
+            'nvl-mail-notifications.webhooks.enabled',
             true,
         );
 
@@ -156,7 +156,7 @@ final readonly class WebhookProcessor
     public function maximumPayloadBytes(): int
     {
         $configured = $this->config->get(
-            'mail-notifications.webhooks.max_payload_bytes',
+            'nvl-mail-notifications.webhooks.max_payload_bytes',
             1_048_576,
         );
 
@@ -176,7 +176,7 @@ final readonly class WebhookProcessor
     {
         return UnknownWebhookEventPolicy::fromConfig(
             $this->config->get(
-                'mail-notifications.webhooks.unknown_event_policy',
+                'nvl-mail-notifications.webhooks.unknown_event_policy',
                 UnknownWebhookEventPolicy::Acknowledge->value,
             ),
         );
@@ -190,7 +190,7 @@ final readonly class WebhookProcessor
     public function allowedContentTypes(): array
     {
         $configured = $this->config->get(
-            'mail-notifications.webhooks.allowed_content_types',
+            'nvl-mail-notifications.webhooks.allowed_content_types',
             ['application/json'],
         );
 
@@ -235,7 +235,7 @@ final readonly class WebhookProcessor
     {
         return UnmatchedWebhookEventPolicy::fromConfig(
             $this->config->get(
-                'mail-notifications.webhooks.unmatched_events.policy',
+                'nvl-mail-notifications.webhooks.unmatched_events.policy',
                 UnmatchedWebhookEventPolicy::RetryThenAcknowledge->value,
             ),
         );
@@ -247,7 +247,7 @@ final readonly class WebhookProcessor
     public function unmatchedEventRetryGraceSeconds(): int
     {
         $configured = $this->config->get(
-            'mail-notifications.webhooks.unmatched_events.retry_grace_seconds',
+            'nvl-mail-notifications.webhooks.unmatched_events.retry_grace_seconds',
             300,
         );
 

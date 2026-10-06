@@ -60,7 +60,7 @@ it('prefers the first provider-specific message identifier resolver', function (
 });
 
 it('falls back to the Symfony transport identifier', function () {
-    config()->set('mail-notifications.providers.default', 'generic-smtp');
+    config()->set('nvl-mail-notifications.providers.default', 'generic-smtp');
     $resolver = new class implements ProviderMessageIdResolver
     {
         public function supports(TransportResult $result): bool

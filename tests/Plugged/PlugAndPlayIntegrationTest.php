@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Contracts\Config\Repository;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Nvl\MailNotifications\Contracts\ProviderAdapter;
 use Nvl\MailNotifications\Contracts\SensitiveDataRedactor;
 use Nvl\MailNotifications\Contracts\TrackingLifecycle;
@@ -23,6 +25,11 @@ use Nvl\MailNotifications\Tests\Fixtures\TrackedMail;
 use Nvl\MailNotifications\ValueObjects\WebhookRequest;
 use Nvl\Support\Tenancy\Contracts\TenantContext;
 use Nvl\Support\Tenancy\Contracts\TenantRunner;
+use Nvl\Support\Tenancy\Enums\TenantContextMode;
+use Nvl\Support\Tenancy\Exceptions\TenantBoundaryViolation;
+use Nvl\Support\Tenancy\Exceptions\TenantContextMissing;
+use Nvl\Support\Tenancy\ValueObjects\TenantContextSnapshot;
+use Nvl\Support\Tenancy\ValueObjects\TenantId;
 
 it('resolves configured services, provider adapters, and notifiable aliases', function () {
     $notifiableTypes = app(MailNotificationNotifiableTypeRegistry::class);
@@ -97,8 +104,47 @@ it('verifies and applies provider webhooks through one configured adapter', func
         ->toBe(MailDeliveryStatus::Delivered);
 });
 
+it('uses the current application scope before admitting platform webhook callbacks', function (): void {
+    Mail::mailer('plugged-provider')->to('scope@example.test')->send(new TrackedMail(category: 'test.webhook-scope'));
+    $notification = MailNotification::query()->sole();
+    Schema::table($notification->getTable(), static function (Blueprint $table): void {
+        $table->uuid('tenant_id')->nullable();
+    });
+    config()->set('nvl-tenancy.enabled', true);
+    $mode = TenantContextMode::Platform;
+    app()->scoped(TenantContext::class, static function () use (&$mode): TenantContext {
+        return new class($mode) implements TenantContext
+        {
+            /** Retain only this lifecycle's admitted ownership mode. */
+            public function __construct(private TenantContextMode $mode) {}
+
+            /** Return this lifecycle's immutable context. */
+            public function snapshot(): TenantContextSnapshot
+            {
+                return new TenantContextSnapshot($this->mode);
+            }
+
+            /** Deny a tenant identifier in this platform-only fixture. */
+            public function requireTenant(): TenantId
+            {
+                throw new TenantContextMissing;
+            }
+        };
+    });
+    app(WebhookProcessor::class);
+    app()->forgetScopedInstances();
+    $mode = TenantContextMode::Unresolved;
+    $request = Request::create('/mail-webhooks/plugged-provider', 'POST', server: [
+        'CONTENT_TYPE' => 'application/json',
+        'HTTP_X_PLUGGED_SIGNATURE' => 'valid-signature',
+    ], content: json_encode(['event_id' => 'scope-event', 'message_id' => $notification->provider_message_id], JSON_THROW_ON_ERROR));
+
+    expect(fn () => app(WebhookProcessor::class)->process('plugged-provider', WebhookRequest::fromLaravelRequest('plugged-provider', $request)))
+        ->toThrow(TenantBoundaryViolation::class, 'Platform mail callbacks require an explicitly authorized platform context.');
+});
+
 it('enforces the configured webhook payload boundary before adapter processing', function () {
-    config()->set('mail-notifications.webhooks.max_payload_bytes', 4);
+    config()->set('nvl-mail-notifications.webhooks.max_payload_bytes', 4);
 
     expect(fn () => app(WebhookProcessor::class)->process(
         provider: 'plugged-provider',
@@ -132,8 +178,8 @@ it('honors the global and webhook-specific runtime switches', function (
         'webhook processing is disabled',
     );
 })->with([
-    'global package switch' => 'mail-notifications.enabled',
-    'webhook processing switch' => 'mail-notifications.webhooks.enabled',
+    'global package switch' => 'nvl-mail-notifications.enabled',
+    'webhook processing switch' => 'nvl-mail-notifications.webhooks.enabled',
 ]);
 
 it('rejects malformed webhook runtime switches', function (string $configKey) {
@@ -142,8 +188,8 @@ it('rejects malformed webhook runtime switches', function (string $configKey) {
     expect(fn () => app(WebhookProcessor::class)->enabled())
         ->toThrow(MailTrackingException::class, 'must be a boolean');
 })->with([
-    'global package switch' => 'mail-notifications.enabled',
-    'webhook processing switch' => 'mail-notifications.webhooks.enabled',
+    'global package switch' => 'nvl-mail-notifications.enabled',
+    'webhook processing switch' => 'nvl-mail-notifications.webhooks.enabled',
 ]);
 
 it('rejects webhook route and request provider mismatches', function () {
@@ -209,7 +255,7 @@ it('requires registered adapters to provide both webhook contracts', function ()
 it('fails closed for invalid webhook size configuration', function (
     mixed $limit,
 ) {
-    config()->set('mail-notifications.webhooks.max_payload_bytes', $limit);
+    config()->set('nvl-mail-notifications.webhooks.max_payload_bytes', $limit);
 
     expect(fn () => app(WebhookProcessor::class)->maximumPayloadBytes())
         ->toThrow(

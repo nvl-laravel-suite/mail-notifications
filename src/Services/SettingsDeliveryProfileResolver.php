@@ -18,7 +18,7 @@ final readonly class SettingsDeliveryProfileResolver implements DeliveryProfileR
     /** Resolve a tenant-selected named Laravel mailer without changing global configuration. */
     public function resolve(): ?string
     {
-        $key = $this->config->get('mail-notifications.scheduling.delivery_profile_setting');
+        $key = $this->config->get('nvl-mail-notifications.scheduling.delivery_profile_setting');
         if ($key === null) {
             return null;
         }
@@ -35,7 +35,7 @@ final readonly class SettingsDeliveryProfileResolver implements DeliveryProfileR
         if (! is_string($profile)) {
             throw new ScheduledMailException('The tenant delivery profile must resolve to a string or null.');
         }
-        $allowed = $this->config->get('mail-notifications.scheduling.allowed_delivery_profiles', []);
+        $allowed = $this->config->get('nvl-mail-notifications.scheduling.allowed_delivery_profiles', []);
         if (! is_array($allowed) || ! array_is_list($allowed)
             || ! in_array($profile, $allowed, true)) {
             throw new ScheduledMailException("Tenant delivery profile [{$profile}] is not approved by deployment configuration.");

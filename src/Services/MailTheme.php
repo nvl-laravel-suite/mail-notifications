@@ -64,7 +64,7 @@ final readonly class MailTheme
     public function tokens(): array
     {
         $configured = $this->config->get(
-            'mail-notifications.presentation.tokens',
+            'nvl-mail-notifications.presentation.tokens',
             [],
         );
         $configuredTokens = is_array($configured) ? $configured : [];
@@ -99,7 +99,7 @@ final readonly class MailTheme
     public function brand(): array
     {
         $configured = $this->config->get(
-            'mail-notifications.presentation.brand',
+            'nvl-mail-notifications.presentation.brand',
             [],
         );
         $brand = is_array($configured) ? $configured : [];

@@ -25,11 +25,11 @@ final readonly class ScheduledMailConfiguration
     public function enabled(): bool
     {
         $packageEnabled = $this->boolean(
-            'mail-notifications.enabled',
+            'nvl-mail-notifications.enabled',
             true,
         );
         $schedulingEnabled = $this->boolean(
-            'mail-notifications.scheduling.enabled',
+            'nvl-mail-notifications.scheduling.enabled',
             false,
         );
 
@@ -51,7 +51,7 @@ final readonly class ScheduledMailConfiguration
         }
 
         return $this->integer(
-            key: 'mail-notifications.scheduling.batch_size',
+            key: 'nvl-mail-notifications.scheduling.batch_size',
             default: 50,
             minimum: 1,
             maximum: 1_000,
@@ -65,7 +65,7 @@ final readonly class ScheduledMailConfiguration
     public function claimTtlSeconds(): int
     {
         return $this->integer(
-            key: 'mail-notifications.scheduling.claim_ttl_seconds',
+            key: 'nvl-mail-notifications.scheduling.claim_ttl_seconds',
             default: 300,
             minimum: 1,
             maximum: 86_400,
@@ -79,7 +79,7 @@ final readonly class ScheduledMailConfiguration
     public function defaultMaxAttempts(): int
     {
         return $this->integer(
-            key: 'mail-notifications.scheduling.max_attempts',
+            key: 'nvl-mail-notifications.scheduling.max_attempts',
             default: 3,
             minimum: 1,
             maximum: 100,
@@ -93,7 +93,7 @@ final readonly class ScheduledMailConfiguration
     public function maximumPayloadBytes(): int
     {
         return $this->integer(
-            key: 'mail-notifications.scheduling.max_payload_bytes',
+            key: 'nvl-mail-notifications.scheduling.max_payload_bytes',
             default: 65_536,
             minimum: 1,
             maximum: 10_485_760,
@@ -107,7 +107,7 @@ final readonly class ScheduledMailConfiguration
     public function maximumRecipients(): int
     {
         return $this->integer(
-            key: 'mail-notifications.scheduling.max_recipients',
+            key: 'nvl-mail-notifications.scheduling.max_recipients',
             default: 1_000,
             minimum: 1,
             maximum: 10_000,
@@ -127,7 +127,7 @@ final readonly class ScheduledMailConfiguration
         }
 
         $configured = $this->config->get(
-            'mail-notifications.scheduling.backoff_seconds',
+            'nvl-mail-notifications.scheduling.backoff_seconds',
             [60, 300, 900],
         );
 

@@ -147,19 +147,19 @@ function configureMailStatusCreatorStorage(): Connection
     );
     DB::purge(MAIL_STATUS_TEST_CONNECTION);
     config()->set(
-        'mail-notifications.storage.connection',
+        'nvl-mail-notifications.storage.connection',
         MAIL_STATUS_TEST_CONNECTION,
     );
     config()->set(
-        'mail-notifications.storage.tables.notifications',
+        'nvl-mail-notifications.storage.tables.notifications',
         MAIL_STATUS_TEST_NOTIFICATIONS,
     );
     config()->set(
-        'mail-notifications.storage.tables.events',
+        'nvl-mail-notifications.storage.tables.events',
         MAIL_STATUS_TEST_EVENTS,
     );
     config()->set(
-        'mail-notifications.storage.tables.scheduled_messages',
+        'nvl-mail-notifications.storage.tables.scheduled_messages',
         MAIL_STATUS_TEST_SCHEDULED,
     );
     mailStatusTrackingCreator()->up();
@@ -296,7 +296,7 @@ it('reports missing tracking and event status invariants', function () {
 });
 
 it('reports a missing scheduled message status invariant', function () {
-    config()->set('mail-notifications.scheduling.enabled', true);
+    config()->set('nvl-mail-notifications.scheduling.enabled', true);
     $message = new ScheduledMailMessage;
     dropMailStatusInvariant(
         $message->getConnection(),
@@ -437,7 +437,7 @@ it('refuses to adopt a configuration-drifted scheduled table', function () {
         },
     );
     config()->set(
-        'mail-notifications.storage.tables.scheduled_messages',
+        'nvl-mail-notifications.storage.tables.scheduled_messages',
         $driftedTable,
     );
 

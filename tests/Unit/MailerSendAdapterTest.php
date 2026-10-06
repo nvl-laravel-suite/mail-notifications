@@ -101,13 +101,13 @@ it('implements every optional provider capability without being registered by de
         ->toBeInstanceOf(WebhookSignatureVerifier::class)
         ->toBeInstanceOf(WebhookEventNormalizer::class)
         ->name()->toBe('mailersend')
-        ->and(config('mail-notifications.extensions.provider_adapters'))->toBe([])
+        ->and(config('nvl-mail-notifications.extensions.provider_adapters'))->toBe([])
         ->and(app(ProviderRegistry::class)->all())->not->toHaveKey('mailersend');
 });
 
 it('registers the built-in adapter only when its class is configured', function () {
     config()->set(
-        'mail-notifications.extensions.provider_adapters',
+        'nvl-mail-notifications.extensions.provider_adapters',
         [MailerSendAdapter::class],
     );
 
@@ -174,7 +174,7 @@ it('accepts the transport-specific message identifier regardless of the mailer a
 
 it('verifies the official signature against the exact raw body', function () {
     config()->set(
-        'mail-notifications.providers.mailersend.signing_secret',
+        'nvl-mail-notifications.providers.mailersend.signing_secret',
         'webhook-signing-secret',
     );
     $body = json_encode(
@@ -195,7 +195,7 @@ it('verifies the official signature against the exact raw body', function () {
 
 it('rejects a signature produced for different raw bytes', function () {
     config()->set(
-        'mail-notifications.providers.mailersend.signing_secret',
+        'nvl-mail-notifications.providers.mailersend.signing_secret',
         'webhook-signing-secret',
     );
     $signedBody = '{"type":"delivered","created_at":"2026-07-30T07:50:00Z"}';
@@ -214,8 +214,8 @@ it('rejects a signature produced for different raw bytes', function () {
 
 it('supports explicitly configured signature header aliases', function () {
     config()->set([
-        'mail-notifications.providers.mailersend.signing_secret' => 'webhook-signing-secret',
-        'mail-notifications.providers.mailersend.signature_headers' => [
+        'nvl-mail-notifications.providers.mailersend.signing_secret' => 'webhook-signing-secret',
+        'nvl-mail-notifications.providers.mailersend.signature_headers' => [
             'X-Forwarded-MailerSend-Signature',
         ],
     ]);
@@ -237,7 +237,7 @@ it('supports explicitly configured signature header aliases', function () {
 });
 
 it('requires a signing secret before verifying webhooks', function () {
-    config()->set('mail-notifications.providers.mailersend.signing_secret');
+    config()->set('nvl-mail-notifications.providers.mailersend.signing_secret');
     $request = new WebhookRequest(
         provider: 'mailersend',
         body: '{}',
@@ -278,7 +278,7 @@ it('authenticates and acknowledges MailerSend URL validation requests', function
 
 it('never accepts the public validation secret for activity webhooks', function () {
     config()->set(
-        'mail-notifications.providers.mailersend.signing_secret',
+        'nvl-mail-notifications.providers.mailersend.signing_secret',
         'real-activity-secret',
     );
     $body = json_encode(
@@ -304,7 +304,7 @@ it('never accepts the public validation secret for activity webhooks', function 
 it('returns typed acknowledgements through the webhook processor', function () {
     Event::fake([MailWebhookAcknowledged::class]);
     config()->set(
-        'mail-notifications.extensions.provider_adapters',
+        'nvl-mail-notifications.extensions.provider_adapters',
         [MailerSendAdapter::class],
     );
     (new MailNotificationsServiceProvider(app()))->register();
@@ -339,10 +339,10 @@ it('returns typed acknowledgements through the webhook processor', function () {
 
 it('retries recent unmatched delivery events to preserve tracking races', function () {
     config()->set([
-        'mail-notifications.extensions.provider_adapters' => [
+        'nvl-mail-notifications.extensions.provider_adapters' => [
             MailerSendAdapter::class,
         ],
-        'mail-notifications.providers.mailersend.signing_secret' => 'webhook-signing-secret',
+        'nvl-mail-notifications.providers.mailersend.signing_secret' => 'webhook-signing-secret',
     ]);
     (new MailNotificationsServiceProvider(app()))->register();
     $body = json_encode([
@@ -372,10 +372,10 @@ it('retries recent unmatched delivery events to preserve tracking races', functi
 it('acknowledges aged unmatched delivery events from mixed provider domains', function () {
     Event::fake([MailWebhookAcknowledged::class]);
     config()->set([
-        'mail-notifications.extensions.provider_adapters' => [
+        'nvl-mail-notifications.extensions.provider_adapters' => [
             MailerSendAdapter::class,
         ],
-        'mail-notifications.providers.mailersend.signing_secret' => 'webhook-signing-secret',
+        'nvl-mail-notifications.providers.mailersend.signing_secret' => 'webhook-signing-secret',
     ]);
     (new MailNotificationsServiceProvider(app()))->register();
     $body = json_encode([
@@ -411,11 +411,11 @@ it('acknowledges aged unmatched delivery events from mixed provider domains', fu
 
 it('can reject aged unmatched events through the separate strict policy', function () {
     config()->set([
-        'mail-notifications.extensions.provider_adapters' => [
+        'nvl-mail-notifications.extensions.provider_adapters' => [
             MailerSendAdapter::class,
         ],
-        'mail-notifications.providers.mailersend.signing_secret' => 'webhook-signing-secret',
-        'mail-notifications.webhooks.unmatched_events.policy' => 'reject',
+        'nvl-mail-notifications.providers.mailersend.signing_secret' => 'webhook-signing-secret',
+        'nvl-mail-notifications.webhooks.unmatched_events.policy' => 'reject',
     ]);
     (new MailNotificationsServiceProvider(app()))->register();
     $body = json_encode([
@@ -445,11 +445,11 @@ it('acknowledges typed lifecycle ambiguity without mutation or retry', function 
         WebhookEventAmbiguous::class,
     ]);
     config()->set([
-        'mail-notifications.extensions.provider_adapters' => [
+        'nvl-mail-notifications.extensions.provider_adapters' => [
             MailerSendAdapter::class,
         ],
-        'mail-notifications.providers.mailersend.signing_secret' => 'webhook-signing-secret',
-        'mail-notifications.webhooks.unmatched_events.policy' => 'reject',
+        'nvl-mail-notifications.providers.mailersend.signing_secret' => 'webhook-signing-secret',
+        'nvl-mail-notifications.webhooks.unmatched_events.policy' => 'reject',
     ]);
     (new MailNotificationsServiceProvider(app()))->register();
     $lifecycle = new AmbiguousTrackingLifecycle;
@@ -670,7 +670,7 @@ it('acknowledges authenticated unsupported events by default', function () {
 
 it('can reject authenticated unsupported events through strict policy', function () {
     config()->set(
-        'mail-notifications.webhooks.unknown_event_policy',
+        'nvl-mail-notifications.webhooks.unknown_event_policy',
         'reject',
     );
 
@@ -684,7 +684,7 @@ it('can reject authenticated unsupported events through strict policy', function
 
 it('always acknowledges webhook.test under strict unknown event policy', function () {
     config()->set(
-        'mail-notifications.webhooks.unknown_event_policy',
+        'nvl-mail-notifications.webhooks.unknown_event_policy',
         'reject',
     );
 
@@ -740,7 +740,7 @@ it('rejects malformed, stale, and implausibly future provider timestamps', funct
 
 it('accepts JSON content types with parameters for real POST requests', function () {
     config()->set(
-        'mail-notifications.extensions.provider_adapters',
+        'nvl-mail-notifications.extensions.provider_adapters',
         [MailerSendAdapter::class],
     );
     (new MailNotificationsServiceProvider(app()))->register();
@@ -773,7 +773,7 @@ it('rejects missing content types and non-POST HTTP methods', function (
     string $message,
 ) {
     config()->set(
-        'mail-notifications.extensions.provider_adapters',
+        'nvl-mail-notifications.extensions.provider_adapters',
         [MailerSendAdapter::class],
     );
     (new MailNotificationsServiceProvider(app()))->register();
@@ -795,10 +795,10 @@ it('rejects missing content types and non-POST HTTP methods', function (
 
 it('reports registered MailerSend webhook configuration errors through the doctor', function () {
     config()->set(
-        'mail-notifications.extensions.provider_adapters',
+        'nvl-mail-notifications.extensions.provider_adapters',
         [MailerSendAdapter::class],
     );
-    config()->set('mail-notifications.providers.mailersend.signing_secret');
+    config()->set('nvl-mail-notifications.providers.mailersend.signing_secret');
     (new MailNotificationsServiceProvider(app()))->register();
 
     $configuration = collect(app(MailNotificationsDoctor::class)->inspect())
@@ -816,7 +816,7 @@ it('reports registered MailerSend webhook configuration errors through the docto
 });
 
 it('permits outbound-only MailerSend use without a signing secret', function () {
-    config()->set('mail-notifications.webhooks.enabled', false);
+    config()->set('nvl-mail-notifications.webhooks.enabled', false);
 
     expect(fn () => app(MailerSendAdapter::class)->validateConfiguration(false))
         ->not->toThrow(Throwable::class);
@@ -827,7 +827,7 @@ it('reports invalid unmatched-event policy and grace through the doctor', functi
     mixed $value,
     string $message,
 ) {
-    config()->set('mail-notifications.webhooks.unmatched_events.'.$key, $value);
+    config()->set('nvl-mail-notifications.webhooks.unmatched_events.'.$key, $value);
 
     $configuration = collect(app(MailNotificationsDoctor::class)->inspect())
         ->firstWhere('key', 'configuration');
@@ -847,10 +847,10 @@ it('fails closed for invalid MailerSend adapter configuration', function (
     string $message,
 ) {
     config()->set(
-        'mail-notifications.providers.mailersend.signing_secret',
+        'nvl-mail-notifications.providers.mailersend.signing_secret',
         'real-activity-secret',
     );
-    config()->set('mail-notifications.providers.mailersend.'.$key, $value);
+    config()->set('nvl-mail-notifications.providers.mailersend.'.$key, $value);
 
     expect(fn () => app(MailerSendAdapter::class)->validateConfiguration(true))
         ->toThrow(MailTrackingException::class, $message);

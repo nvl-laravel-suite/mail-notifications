@@ -155,7 +155,7 @@ final readonly class MailTestingInterceptor
             return $this->stringKeyedSettings($hostTesting);
         }
 
-        $packageTesting = $this->config->get('mail-notifications.testing', []);
+        $packageTesting = $this->config->get('nvl-mail-notifications.testing', []);
 
         return is_array($packageTesting)
             ? $this->stringKeyedSettings($packageTesting)
@@ -186,7 +186,7 @@ final readonly class MailTestingInterceptor
      */
     private function packageEnabled(): bool
     {
-        $enabled = $this->config->get('mail-notifications.enabled', true);
+        $enabled = $this->config->get('nvl-mail-notifications.enabled', true);
 
         if (! is_bool($enabled)) {
             throw new MailTrackingException(

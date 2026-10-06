@@ -28,7 +28,7 @@ final readonly class ListMailNotificationsAction
         MailNotificationReadQuery $filters,
     ): MailNotificationReadPage {
         $this->authorization->authorize(MailNotificationReadAbility::List, $actor);
-        $maximum = config('mail-notifications.management.maximum_per_page', 100);
+        $maximum = config('nvl-mail-notifications.management.maximum_per_page', 100);
 
         if (! is_int($maximum) || $maximum < 1) {
             $maximum = 100;

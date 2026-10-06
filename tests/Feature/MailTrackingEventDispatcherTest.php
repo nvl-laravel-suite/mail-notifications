@@ -27,7 +27,7 @@ function configureMailEventStorageConnection(): Connection
     ]);
     DB::purge('mail-event-storage');
     config()->set(
-        'mail-notifications.storage.connection',
+        'nvl-mail-notifications.storage.connection',
         'mail-event-storage',
     );
 

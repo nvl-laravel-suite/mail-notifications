@@ -17,13 +17,13 @@ final readonly class ConfiguredDeliveryProfileResolver implements DeliveryProfil
     /** Return the configured mailer while preserving Laravel's default when no override exists. */
     public function resolve(): ?string
     {
-        $profile = $this->config->get('mail-notifications.scheduling.delivery_profile');
+        $profile = $this->config->get('nvl-mail-notifications.scheduling.delivery_profile');
 
         if ($profile === null) {
             return null;
         }
 
-        $allowed = $this->config->get('mail-notifications.scheduling.allowed_delivery_profiles', []);
+        $allowed = $this->config->get('nvl-mail-notifications.scheduling.allowed_delivery_profiles', []);
 
         if (! is_string($profile) || trim($profile) === ''
             || ! is_array($allowed) || ! array_is_list($allowed)

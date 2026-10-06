@@ -33,7 +33,7 @@ final readonly class MailAnonymizationConfiguration
     public function enabled(): bool
     {
         return $this->boolean(
-            key: 'mail-notifications.retention.anonymization.enabled',
+            key: 'nvl-mail-notifications.retention.anonymization.enabled',
             default: false,
             label: 'enabled',
         );
@@ -45,7 +45,7 @@ final readonly class MailAnonymizationConfiguration
     public function notificationRetentionDays(): int
     {
         return $this->integer(
-            key: 'mail-notifications.retention.anonymization.notifications.days',
+            key: 'nvl-mail-notifications.retention.anonymization.notifications.days',
             default: 180,
             minimum: 1,
             maximum: self::MAXIMUM_RETENTION_DAYS,
@@ -61,7 +61,7 @@ final readonly class MailAnonymizationConfiguration
     public function notificationStatuses(): array
     {
         $configured = $this->config->get(
-            'mail-notifications.retention.anonymization.notifications.statuses',
+            'nvl-mail-notifications.retention.anonymization.notifications.statuses',
             [
                 'delivered',
                 'opened',
@@ -105,7 +105,7 @@ final readonly class MailAnonymizationConfiguration
     public function scheduledMessageAnonymizationEnabled(): bool
     {
         return $this->boolean(
-            key: 'mail-notifications.retention.anonymization.scheduled_messages.enabled',
+            key: 'nvl-mail-notifications.retention.anonymization.scheduled_messages.enabled',
             default: false,
             label: 'scheduled-message enabled',
         );
@@ -117,7 +117,7 @@ final readonly class MailAnonymizationConfiguration
     public function scheduledMessageRetentionDays(): int
     {
         return $this->integer(
-            key: 'mail-notifications.retention.anonymization.scheduled_messages.days',
+            key: 'nvl-mail-notifications.retention.anonymization.scheduled_messages.days',
             default: 90,
             minimum: 1,
             maximum: self::MAXIMUM_RETENTION_DAYS,
@@ -133,7 +133,7 @@ final readonly class MailAnonymizationConfiguration
     public function scheduledMessageStatuses(): array
     {
         $configured = $this->config->get(
-            'mail-notifications.retention.anonymization.scheduled_messages.statuses',
+            'nvl-mail-notifications.retention.anonymization.scheduled_messages.statuses',
             ['sent', 'failed', 'cancelled'],
         );
 
@@ -171,7 +171,7 @@ final readonly class MailAnonymizationConfiguration
     public function batchSize(): int
     {
         $value = $this->config->get(
-            'mail-notifications.retention.anonymization.batch_size',
+            'nvl-mail-notifications.retention.anonymization.batch_size',
             500,
         );
 
@@ -202,7 +202,7 @@ final readonly class MailAnonymizationConfiguration
         }
 
         return $this->integer(
-            key: 'mail-notifications.retention.anonymization.limit',
+            key: 'nvl-mail-notifications.retention.anonymization.limit',
             default: 5_000,
             minimum: 1,
             maximum: self::MAXIMUM_LIMIT,

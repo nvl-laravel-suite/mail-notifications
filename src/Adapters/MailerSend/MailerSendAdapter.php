@@ -28,7 +28,7 @@ final readonly class MailerSendAdapter implements ProviderAdapter, ProviderConfi
 {
     private const string PROVIDER = 'mailersend';
 
-    private const string CONFIG_PREFIX = 'mail-notifications.providers.mailersend';
+    private const string CONFIG_PREFIX = 'nvl-mail-notifications.providers.mailersend';
 
     private const string VALIDATION_SECRET = 'test_Am3L1GuOIc4blLUuHqAPxxwkZaJyEk8G';
 

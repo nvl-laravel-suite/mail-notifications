@@ -109,7 +109,7 @@ it('persists one idempotent failed row when a queued Mailable fails before send'
         MailTrackingStarted::class,
         MailTrackingFailed::class,
     ]);
-    config()->set('mail-notifications.notifiable_types', [
+    config()->set('nvl-mail-notifications.notifiable_types', [
         'test-account' => TestTrackable::class,
     ]);
     rebootQueuedMailFailureTracking();
@@ -280,7 +280,7 @@ it('normalizes a manually failed queued Mailable without an exception', function
 });
 
 it('recovers fail-closed bootstrap failure with preserved fluent context', function () {
-    config()->set('mail-notifications.notifiable_types', [
+    config()->set('nvl-mail-notifications.notifiable_types', [
         'test-account' => TestTrackable::class,
     ]);
     app()->forgetInstance(MailNotificationNotifiableTypeRegistry::class);

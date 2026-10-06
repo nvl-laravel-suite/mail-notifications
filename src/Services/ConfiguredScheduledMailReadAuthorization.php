@@ -20,7 +20,7 @@ final class ConfiguredScheduledMailReadAuthorization implements ScheduledMailRea
         Authenticatable $actor,
         ?ScheduledMailMessage $message = null,
     ): void {
-        $callback = config('mail-notifications.management.scheduled_authorization.callback');
+        $callback = config('nvl-mail-notifications.management.scheduled_authorization.callback');
         $allowed = is_callable($callback)
             && $callback($ability, $actor, $message) === true;
 

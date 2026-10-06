@@ -37,7 +37,7 @@ return new class extends Migration
     {
         $connection = PackageStorage::connection('mail-notifications');
         $configuredNotificationTable = config(
-            'mail-notifications.storage.tables.notifications',
+            'nvl-mail-notifications.storage.tables.notifications',
             MailNotificationsTables::get(MailNotificationsTables::Notifications),
         );
         $notificationTable = is_string($configuredNotificationTable)
@@ -45,7 +45,7 @@ return new class extends Migration
                 ? $configuredNotificationTable
                 : MailNotificationsTables::get(MailNotificationsTables::Notifications);
         $configuredEventTable = config(
-            'mail-notifications.storage.tables.events',
+            'nvl-mail-notifications.storage.tables.events',
             MailNotificationsTables::get(MailNotificationsTables::Events),
         );
         $eventTable = is_string($configuredEventTable) && $configuredEventTable !== ''

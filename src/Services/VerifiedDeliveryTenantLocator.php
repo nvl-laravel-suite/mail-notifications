@@ -25,7 +25,7 @@ final readonly class VerifiedDeliveryTenantLocator
     public function locate(VerifiedDeliveryEvent $event): TenantContextSnapshot
     {
         $columns = ['id', 'provider', 'provider_message_id'];
-        if ($this->config->get('tenancy.enabled') === true) {
+        if ($this->config->get('nvl-tenancy.enabled') === true) {
             $columns[] = 'tenant_id';
         }
         $query = MailNotification::query()->select($columns);
@@ -54,7 +54,7 @@ final readonly class VerifiedDeliveryTenantLocator
             && ! hash_equals($notification->provider_message_id, $event->providerMessageId)) {
             throw new DomainException('The verified provider message does not match stored delivery identity.');
         }
-        if ($this->config->get('tenancy.enabled') !== true) {
+        if ($this->config->get('nvl-tenancy.enabled') !== true) {
             return new TenantContextSnapshot(TenantContextMode::Disabled);
         }
         if (! is_string($notification->tenant_id) || $notification->tenant_id === '') {

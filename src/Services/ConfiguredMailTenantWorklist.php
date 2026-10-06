@@ -16,7 +16,7 @@ final readonly class ConfiguredMailTenantWorklist implements MailTenantWorklist
 
     public function activeTenantIds(): array
     {
-        $configured = $this->config->get('mail-notifications.tenancy.active_tenant_worklist', []);
+        $configured = $this->config->get('nvl-mail-notifications.tenancy.active_tenant_worklist', []);
         if (! is_array($configured) || ! array_is_list($configured)
             || array_any($configured, static fn (mixed $id): bool => ! is_string($id) || ! Str::isUuid($id))) {
             throw new TenantConfigurationInvalid('The Mail tenant worklist must be a list of canonical UUIDs.');

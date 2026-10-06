@@ -17,11 +17,11 @@ final class SensitiveStorageHostServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->make('config')->set(
-            'mail-notifications.services.sensitive_storage_transformer',
+            'nvl-mail-notifications.services.sensitive_storage_transformer',
             RotatingSensitiveDataTransformer::class,
         );
         $this->app->make('config')->set(
-            'mail-notifications.privacy.sensitive_storage',
+            'nvl-mail-notifications.privacy.sensitive_storage',
             [
                 'enabled' => true,
                 'max_transformed_bytes' => 262_144,

@@ -12,7 +12,7 @@ use Nvl\MailNotifications\Exceptions\MailTrackingException;
  */
 final readonly class MailerSendWebhookManagementConfiguration
 {
-    private const string CONFIG_PREFIX = 'mail-notifications.providers.mailersend.management';
+    private const string CONFIG_PREFIX = 'nvl-mail-notifications.providers.mailersend.management';
 
     /**
      * @var list<string>
@@ -64,11 +64,11 @@ final readonly class MailerSendWebhookManagementConfiguration
         }
 
         $packageEnabled = $this->boolean(
-            'mail-notifications.enabled',
+            'nvl-mail-notifications.enabled',
             true,
         );
         $webhooksEnabled = $this->boolean(
-            'mail-notifications.webhooks.enabled',
+            'nvl-mail-notifications.webhooks.enabled',
             true,
         );
 

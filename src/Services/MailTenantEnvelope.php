@@ -28,7 +28,7 @@ final readonly class MailTenantEnvelope
     /** @return array<string, mixed> */
     public function scheduledAttributes(): array
     {
-        if ($this->config->get('tenancy.enabled') !== true) {
+        if ($this->config->get('nvl-tenancy.enabled') !== true) {
             return [];
         }
 
@@ -48,7 +48,7 @@ final readonly class MailTenantEnvelope
     public function assertScheduled(ScheduledMailMessage $message): TenantJobEnvelope
     {
         $this->boundary->assertRecord($message, 'mail.scheduled');
-        if ($this->config->get('tenancy.enabled') !== true) {
+        if ($this->config->get('nvl-tenancy.enabled') !== true) {
             return new TenantJobEnvelope(new TenantContextSnapshot(TenantContextMode::Disabled));
         }
         $envelope = $this->decode($message->tenant_envelope);

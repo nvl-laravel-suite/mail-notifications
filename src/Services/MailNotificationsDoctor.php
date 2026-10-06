@@ -256,9 +256,14 @@ final readonly class MailNotificationsDoctor
     public function inspect(): array
     {
         return [
+            ...array_map(static fn (string $adoption): MailNotificationsDoctorCheck => new MailNotificationsDoctorCheck(
+                key: 'adoption.'.$adoption, severity: 'info', passed: true, message: config('nvl-mail-notifications.presentation.'.$adoption) === true
+                    ? 'Explicit Mail presentation adoption is active: '.$adoption
+                    : 'Global Mail presentation adoption is disabled: '.$adoption,
+            ), ['global_markdown', 'global_view_data']),
             new MailNotificationsDoctorCheck(...$this->integrations->check(
-                'mail-notifications.integrations.settings', SettingsServiceProvider::class,
-                config('mail-notifications.scheduling.delivery_profile_setting') !== null,
+                'nvl-mail-notifications.integrations.settings', SettingsServiceProvider::class,
+                config('nvl-mail-notifications.scheduling.delivery_profile_setting') !== null,
             )),
             $this->configurationCheck(),
             ...$this->managementAuthorizationChecks(),
@@ -277,7 +282,7 @@ final readonly class MailNotificationsDoctor
     /** Report tenant ownership schema and explicit worker enumeration readiness. */
     private function tenantOwnershipCheck(): MailNotificationsDoctorCheck
     {
-        if (config('tenancy.enabled') !== true) {
+        if (config('nvl-tenancy.enabled') !== true) {
             return new MailNotificationsDoctorCheck(
                 key: 'tenancy.ownership', severity: 'error', passed: true,
                 message: 'Tenancy is disabled; legacy mail schema compatibility remains active.',
@@ -293,7 +298,7 @@ final readonly class MailNotificationsDoctor
             && $schema->hasColumn($scheduled->getTable(), 'tenant_id')
             && $schema->hasColumn($scheduled->getTable(), 'ownership_key')
             && $schema->hasColumn($scheduled->getTable(), 'tenant_envelope');
-        $worklist = config('mail-notifications.tenancy.active_tenant_worklist');
+        $worklist = config('nvl-mail-notifications.tenancy.active_tenant_worklist');
         $ready = $ready && is_array($worklist) && array_is_list($worklist);
 
         return new MailNotificationsDoctorCheck(
@@ -316,14 +321,14 @@ final readonly class MailNotificationsDoctor
                 key: 'management.delivery_authorization',
                 authorization: $this->readAuthorization,
                 defaultClass: ConfiguredMailNotificationReadAuthorization::class,
-                callbackKey: 'mail-notifications.management.authorization.callback',
+                callbackKey: 'nvl-mail-notifications.management.authorization.callback',
                 subject: 'Delivery-history',
             ),
             $this->managementAuthorizationCheck(
                 key: 'management.scheduled_authorization',
                 authorization: $this->scheduledReadAuthorization,
                 defaultClass: ConfiguredScheduledMailReadAuthorization::class,
-                callbackKey: 'mail-notifications.management.scheduled_authorization.callback',
+                callbackKey: 'nvl-mail-notifications.management.scheduled_authorization.callback',
                 subject: 'Scheduled-mail',
             ),
         ];
@@ -406,7 +411,7 @@ final readonly class MailNotificationsDoctor
      */
     private function migrationOwnershipCheck(): MailNotificationsDoctorCheck
     {
-        $duplicates = config('mail-notifications.migrations.enabled') === true
+        $duplicates = config('nvl-mail-notifications.migrations.enabled') === true
             ? $this->publishedMigrationDuplicates(dirname(__DIR__, 2).'/database/migrations')
             : [];
 
@@ -466,7 +471,7 @@ final readonly class MailNotificationsDoctor
     private function migrationHistoryCheck(): MailNotificationsDoctorCheck
     {
         $enabled = config(
-            'mail-notifications.migrations.enabled',
+            'nvl-mail-notifications.migrations.enabled',
             true,
         );
 
@@ -596,7 +601,7 @@ final readonly class MailNotificationsDoctor
         try {
             $this->sensitiveStorage->assertReady();
             $enabled = config(
-                'mail-notifications.privacy.sensitive_storage.enabled',
+                'nvl-mail-notifications.privacy.sensitive_storage.enabled',
                 false,
             ) === true;
             $configured = $this->sensitiveStorage

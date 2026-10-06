@@ -135,7 +135,7 @@ final readonly class AdoptMailNotificationsAction
     {
         $this->assertCanonicalSchema($plan);
 
-        if ((bool) config('mail-notifications.privacy.sensitive_storage.enabled', false)) {
+        if ((bool) config('nvl-mail-notifications.privacy.sensitive_storage.enabled', false)) {
             throw new InvalidArgumentException(
                 'Disable Mail Notifications sensitive storage until legacy adoption is complete.',
             );
@@ -953,11 +953,11 @@ final readonly class AdoptMailNotificationsAction
 
     private function configuredMaximumAttempts(): int
     {
-        $maximum = config('mail-notifications.scheduling.max_attempts', 3);
+        $maximum = config('nvl-mail-notifications.scheduling.max_attempts', 3);
 
         if (! is_int($maximum) || $maximum < 1) {
             throw new InvalidArgumentException(
-                'mail-notifications.scheduling.max_attempts must be a positive integer.',
+                'nvl-mail-notifications.scheduling.max_attempts must be a positive integer.',
             );
         }
 

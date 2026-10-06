@@ -11,9 +11,9 @@ recovery, anonymization, and retention commands. Provider IDs stay global.
 
 Package webhook and MailerSend readiness reads only:
 
-- `config('mail-notifications.webhooks.enabled')`;
-- `config('mail-notifications.providers.mailersend.signing_secret')`;
-- `config('mail-notifications.providers.mailersend.management.enabled')`.
+- `config('nvl-mail-notifications.webhooks.enabled')`;
+- `config('nvl-mail-notifications.providers.mailersend.signing_secret')`;
+- `config('nvl-mail-notifications.providers.mailersend.management.enabled')`.
 
 Never place these values under the predecessor `mailnotifications.*` namespace.
 A host may retain that older namespace for unrelated reminder settings, but it
@@ -204,12 +204,12 @@ versioned manifest, replace every placeholder with reviewed source facts, and
 record exact counts before changing schema:
 
 ```bash
-php artisan vendor:publish --tag=mail-notifications-adoption
-php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json --stage
-php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json --stage --apply
+php artisan vendor:publish --tag=nvl-mail-notifications-adoption
+php artisan nvl:mail-notifications:adopt nvl-mail-notifications.adoption.json --stage
+php artisan nvl:mail-notifications:adopt nvl-mail-notifications.adoption.json --stage --apply
 php artisan migrate
-php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json
-php artisan nvl:mail-notifications:adopt mail-notifications.adoption.json --apply
+php artisan nvl:mail-notifications:adopt nvl-mail-notifications.adoption.json
+php artisan nvl:mail-notifications:adopt nvl-mail-notifications.adoption.json --apply
 ```
 
 `--stage` is the pre-migration phase for incompatible tables occupying package
@@ -256,11 +256,11 @@ again.
 Choose one schema owner before installing in production:
 
 1. Prefer fresh package-owned tables. Configure
-   `MAIL_NOTIFICATIONS_DB_CONNECTION`, `MAIL_NOTIFICATIONS_TABLE`, and
-   `MAIL_NOTIFICATION_EVENTS_TABLE` with unused names, run the package
+   `NVL_MAIL_NOTIFICATIONS_DB_CONNECTION`, `NVL_MAIL_NOTIFICATIONS_TABLE`, and
+   `NVL_MAIL_NOTIFICATIONS_EVENTS_TABLE` with unused names, run the package
    migrations, then import only the safe history described below.
 2. If the host must own or adopt legacy tables, set
-   `mail-notifications.migrations.enabled` to `false` and create a host-owned
+   `nvl-mail-notifications.migrations.enabled` to `false` and create a host-owned
    migration with the complete package schema, constraints, and indexes. Do not
    point the package at a similarly named legacy table and rely on
    `hasTable()` to adopt it.
@@ -473,7 +473,7 @@ Use `--force` only after reviewing configuration drift. Removal targets only
 the unique configured name unless `--all` is explicitly supplied. The package
 never calls the API at boot and never prints response bodies or signing
 secrets. After creation, retrieve the generated per-webhook signing secret from
-MailerSend, set `MAIL_NOTIFICATIONS_MAILERSEND_SIGNING_SECRET`, reload cached
+MailerSend, set `NVL_MAIL_NOTIFICATIONS_MAILERSEND_SIGNING_SECRET`, reload cached
 configuration, and run the strict doctor. The fixed `webhook.test` secret is
 only for URL validation.
 
@@ -507,12 +507,12 @@ This is a breaking schema identity change. Back up storage and migration history
 
 ```sh
 php artisan nvl:doctor --strict --format=json
-php artisan nvl:schema:upgrade --package=mail-notifications --claim-legacy --dry-run --format=json
-php artisan nvl:schema:upgrade --package=mail-notifications --claim-legacy --format=json
+php artisan nvl:schema:upgrade --package=mail-notifications --claim-legacy --migration-owner=vendor --dry-run --format=json
+php artisan nvl:schema:upgrade --package=mail-notifications --claim-legacy --migration-owner=vendor --format=json
 ```
 
 The command validates released columns and relational keys plus creating migration history, renames owned legacy tables to the effective `tables.*` targets and rewrites exact package migration identities while retaining batches and unrelated host records. It refuses foreign/incomplete shapes and conflicting targets. Explicit old table mappings retain those names; remove them when choosing new defaults. A second run is empty.
 
-Unmodified published files, including changed timestamps, map by verified checksum to the exact vendor migration identity and current package migration implementation. Modified host copies remain host-owned. Disable vendor loading when retaining a published owner; duplicate ownership fails before migration. No migration files or stored morph types are rewritten.
+Declare each published path and canonical identity explicitly in `nvl-core.migrations.published`; retimestamped history also needs an exact `legacy` mapping. Use `--migration-owner=vendor` after manually archiving declared copies outside loaded paths, or `--migration-owner=published` after manually replacing executable copies with current migration code and disabling vendor loading. The plan verifies ownership and preserves batches; checksums do not automatically claim files. Modified host copies remain host-owned. No migration files or stored morph types are rewritten.
 
-DDL transactions are driver dependent and per connection. Inspect dry-run warnings for MySQL/MariaDB or split storage; after a failure, inspect completed steps before resuming. Schema-qualified rename targets require an explicit host schema move first. Re-enable your selected migration owner, migrate remaining package changes and rerun Doctor before resuming writes. See the suite upgrade guide for shared owner/locale inputs, Core option defaults and one-major deprecation rules.
+DDL transactions are driver dependent and per connection. Inspect dry-run warnings for MySQL/MariaDB or split storage; after a failure, inspect completed steps before resuming. Schema-qualified rename targets require an explicit host schema move first. Re-enable your selected migration owner, run `nvl:schema:preflight` with the same selected paths and connection, then migrate remaining package changes and rerun Doctor before resuming writes. See the suite upgrade guide for shared owner/locale inputs, Core option defaults and one-major deprecation rules.

@@ -106,7 +106,7 @@ function retentionScheduledMessage(
 beforeEach(function (): void {
     CarbonImmutable::setTestNow('2026-07-30 12:00:00 UTC');
     config()->set('app.timezone', 'Europe/Sofia');
-    config()->set('mail-notifications.retention', [
+    config()->set('nvl-mail-notifications.retention', [
         'notifications' => [
             'days' => 30,
             'statuses' => ['failed'],
@@ -287,7 +287,7 @@ it('uses created and updated timestamps only as missing lifecycle fallbacks', fu
 });
 
 it('enforces a deterministic per-data-set limit in bounded batches', function () {
-    config()->set('mail-notifications.retention.batch_size', 1);
+    config()->set('nvl-mail-notifications.retention.batch_size', 1);
     $notifications = [];
     $scheduledMessages = [];
 
@@ -320,7 +320,7 @@ it('enforces a deterministic per-data-set limit in bounded batches', function ()
 
 it('supports tracking-only schemas when scheduled pruning is disabled', function () {
     config()->set(
-        'mail-notifications.retention.scheduled_messages.enabled',
+        'nvl-mail-notifications.retention.scheduled_messages.enabled',
         false,
     );
     Schema::drop((new ScheduledMailMessage)->getTable());
@@ -352,32 +352,32 @@ it('rejects unsafe or unbounded retention configuration', function (
     ))->toThrow(MailRetentionException::class, $message);
 })->with([
     'notification days' => [
-        'mail-notifications.retention.notifications.days',
+        'nvl-mail-notifications.retention.notifications.days',
         0,
         'notification retention days',
     ],
     'notification statuses' => [
-        'mail-notifications.retention.notifications.statuses',
+        'nvl-mail-notifications.retention.notifications.statuses',
         ['unknown'],
         'valid delivery status strings',
     ],
     'scheduled switch' => [
-        'mail-notifications.retention.scheduled_messages.enabled',
+        'nvl-mail-notifications.retention.scheduled_messages.enabled',
         'yes',
         'enabled must be a boolean',
     ],
     'scheduled active status' => [
-        'mail-notifications.retention.scheduled_messages.statuses',
+        'nvl-mail-notifications.retention.scheduled_messages.statuses',
         ['pending'],
         'pending and processing are always protected',
     ],
     'batch size' => [
-        'mail-notifications.retention.batch_size',
+        'nvl-mail-notifications.retention.batch_size',
         0,
         'batch size',
     ],
     'limit' => [
-        'mail-notifications.retention.limit',
+        'nvl-mail-notifications.retention.limit',
         10_001,
         'limit',
     ],
@@ -400,32 +400,32 @@ it('reports retention configuration as a separate doctor check', function (
         ->message->toContain($message);
 })->with([
     'notification days' => [
-        'mail-notifications.retention.notifications.days',
+        'nvl-mail-notifications.retention.notifications.days',
         0,
         'notification retention days',
     ],
     'notification statuses' => [
-        'mail-notifications.retention.notifications.statuses',
+        'nvl-mail-notifications.retention.notifications.statuses',
         [],
         'statuses must be a non-empty array',
     ],
     'batch size' => [
-        'mail-notifications.retention.batch_size',
+        'nvl-mail-notifications.retention.batch_size',
         1_001,
         'batch size',
     ],
     'limit' => [
-        'mail-notifications.retention.limit',
+        'nvl-mail-notifications.retention.limit',
         10_001,
         'limit',
     ],
     'scheduled days when enabled' => [
-        'mail-notifications.retention.scheduled_messages.days',
+        'nvl-mail-notifications.retention.scheduled_messages.days',
         0,
         'scheduled-message retention days',
     ],
     'scheduled statuses when enabled' => [
-        'mail-notifications.retention.scheduled_messages.statuses',
+        'nvl-mail-notifications.retention.scheduled_messages.statuses',
         ['processing'],
         'pending and processing are always protected',
     ],
@@ -433,15 +433,15 @@ it('reports retention configuration as a separate doctor check', function (
 
 it('skips scheduled retention validation and storage when disabled', function () {
     config()->set(
-        'mail-notifications.retention.scheduled_messages.enabled',
+        'nvl-mail-notifications.retention.scheduled_messages.enabled',
         false,
     );
     config()->set(
-        'mail-notifications.retention.scheduled_messages.days',
+        'nvl-mail-notifications.retention.scheduled_messages.days',
         0,
     );
     config()->set(
-        'mail-notifications.retention.scheduled_messages.statuses',
+        'nvl-mail-notifications.retention.scheduled_messages.statuses',
         ['processing'],
     );
     Schema::drop((new ScheduledMailMessage)->getTable());
@@ -456,7 +456,7 @@ it('skips scheduled retention validation and storage when disabled', function ()
 });
 
 it('fails the strict doctor for invalid retention configuration', function () {
-    config()->set('mail-notifications.retention.limit', 10_001);
+    config()->set('nvl-mail-notifications.retention.limit', 10_001);
 
     $this->artisan('nvl:mail-notifications:doctor', [
         '--strict' => true,
@@ -512,7 +512,7 @@ it('returns invalid for malformed command options', function (
 
 it('returns failure for invalid configuration and database errors', function () {
     config()->set(
-        'mail-notifications.retention.scheduled_messages.statuses',
+        'nvl-mail-notifications.retention.scheduled_messages.statuses',
         ['processing'],
     );
 
@@ -522,11 +522,11 @@ it('returns failure for invalid configuration and database errors', function () 
         ->assertExitCode(Command::FAILURE);
 
     config()->set(
-        'mail-notifications.retention.scheduled_messages.enabled',
+        'nvl-mail-notifications.retention.scheduled_messages.enabled',
         false,
     );
     config()->set(
-        'mail-notifications.storage.tables.notifications',
+        'nvl-mail-notifications.storage.tables.notifications',
         'missing_retention_notifications',
     );
 

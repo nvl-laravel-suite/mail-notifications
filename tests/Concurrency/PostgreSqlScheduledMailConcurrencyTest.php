@@ -174,9 +174,9 @@ it('partitions due rows across concurrent PostgreSQL claimers with fenced recove
 
     CarbonImmutable::setTestNow('2026-07-30 14:00:00 UTC');
     config()->set([
-        'mail-notifications.scheduling.enabled' => true,
-        'mail-notifications.scheduling.backoff_seconds' => [0],
-        'mail-notifications.scheduling.claim_ttl_seconds' => 60,
+        'nvl-mail-notifications.scheduling.enabled' => true,
+        'nvl-mail-notifications.scheduling.backoff_seconds' => [0],
+        'nvl-mail-notifications.scheduling.claim_ttl_seconds' => 60,
     ]);
     $messageIds = [];
     $socketPairs = [];
