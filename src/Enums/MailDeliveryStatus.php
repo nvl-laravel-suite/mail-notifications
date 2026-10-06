@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\Enums;
 
 /**
  * Enumerates provider-neutral outbound delivery and engagement states.
+ *
+ * @api
  */
 enum MailDeliveryStatus: string
 {

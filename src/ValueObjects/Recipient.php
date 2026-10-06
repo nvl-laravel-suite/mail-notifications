@@ -9,6 +9,8 @@ use Symfony\Component\Mime\Address;
 
 /**
  * Represents one normalized outbound email recipient.
+ *
+ * @api
  */
 final readonly class Recipient
 {

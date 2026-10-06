@@ -10,6 +10,8 @@ use Nvl\MailNotifications\Models\ScheduledMailMessage;
 
 /**
  * Consumer-owned policy boundary for privileged scheduled-mail reads.
+ *
+ * @api
  */
 interface ScheduledMailReadAuthorization
 {

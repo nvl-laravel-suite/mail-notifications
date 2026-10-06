@@ -10,6 +10,8 @@ use Nvl\MailNotifications\Models\MailNotificationEvent;
 
 /**
  * Metadata-free provider event projection for authorized administrators.
+ *
+ * @api
  */
 final readonly class MailNotificationEventReadData
 {
@@ -24,6 +26,11 @@ final readonly class MailNotificationEventReadData
         public ?CarbonImmutable $redactedAt,
     ) {}
 
+    /**
+     * Build the package projection from its internal storage state.
+     *
+     * @internal
+     */
     public static function fromModel(MailNotificationEvent $event): self
     {
         return new self(

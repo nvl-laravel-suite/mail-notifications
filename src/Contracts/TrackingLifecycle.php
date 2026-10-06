@@ -15,6 +15,8 @@ use Throwable;
 
 /**
  * Defines the provider-neutral persistence lifecycle for tracked mail.
+ *
+ * @api
  */
 interface TrackingLifecycle
 {

@@ -9,6 +9,8 @@ use Nvl\MailNotifications\Contracts\MailTrackable;
 
 /**
  * Carries serializable, provider-neutral metadata for one tracked message.
+ *
+ * @api
  */
 final readonly class TrackingContext
 {

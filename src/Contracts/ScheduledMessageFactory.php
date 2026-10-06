@@ -9,6 +9,8 @@ use Nvl\MailNotifications\ValueObjects\ScheduledMessageData;
 
 /**
  * Rebuilds one host-owned Mailable from a stable alias and versioned payload.
+ *
+ * @api
  */
 interface ScheduledMessageFactory
 {

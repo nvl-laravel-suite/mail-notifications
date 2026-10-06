@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\ValueObjects;
 
 /**
  * Carries explicit remote webhook synchronization safety options.
+ *
+ * @api
  */
 final readonly class RemoteWebhookSyncOptions
 {

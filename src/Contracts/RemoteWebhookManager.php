@@ -10,6 +10,8 @@ use Nvl\MailNotifications\ValueObjects\RemoteWebhookSyncOptions;
 
 /**
  * Manages one provider's remote webhook registration through explicit operator commands.
+ *
+ * @api
  */
 interface RemoteWebhookManager
 {

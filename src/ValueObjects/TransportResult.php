@@ -8,6 +8,8 @@ use Illuminate\Mail\SentMessage;
 
 /**
  * Wraps a completed Laravel transport result for provider-capability resolution.
+ *
+ * @api
  */
 final readonly class TransportResult
 {

@@ -8,6 +8,8 @@ use InvalidArgumentException;
 
 /**
  * Carries normalized TO, CC, and BCC recipients for scheduled delivery.
+ *
+ * @api
  */
 final readonly class ScheduledRecipients
 {

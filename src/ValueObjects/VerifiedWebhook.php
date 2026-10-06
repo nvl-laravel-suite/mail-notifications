@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\ValueObjects;
 
 /**
  * Represents an authenticated provider webhook payload.
+ *
+ * @api
  */
 final readonly class VerifiedWebhook
 {

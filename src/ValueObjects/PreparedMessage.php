@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\ValueObjects;
 
 /**
  * Describes the effective message observed immediately before transport.
+ *
+ * @api
  */
 final readonly class PreparedMessage
 {

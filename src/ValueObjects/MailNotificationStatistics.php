@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\ValueObjects;
 
 /**
  * Stable aggregate delivery-health projection.
+ *
+ * @api
  */
 final readonly class MailNotificationStatistics
 {

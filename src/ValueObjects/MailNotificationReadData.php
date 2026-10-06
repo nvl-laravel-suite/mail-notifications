@@ -11,6 +11,8 @@ use Nvl\MailNotifications\Models\MailNotificationEvent;
 
 /**
  * Privacy-bounded projection of one tracked delivery attempt.
+ *
+ * @api
  */
 final readonly class MailNotificationReadData
 {
@@ -73,6 +75,11 @@ final readonly class MailNotificationReadData
         public array $events = [],
     ) {}
 
+    /**
+     * Build the package projection from its internal storage state.
+     *
+     * @internal
+     */
     public static function fromModel(MailNotification $notification): self
     {
         $events = $notification->relationLoaded('providerEvents')

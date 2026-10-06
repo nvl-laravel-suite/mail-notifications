@@ -8,6 +8,8 @@ use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 
 /**
  * Describes the idempotent outcome of one provider lifecycle event.
+ *
+ * @api
  */
 final readonly class TransitionResult
 {

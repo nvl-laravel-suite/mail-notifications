@@ -15,6 +15,8 @@ use Nvl\MailNotifications\ValueObjects\MailNotificationReadQuery;
 
 /**
  * Returns one authorized, bounded page of delivery-history projections.
+ *
+ * @api
  */
 final readonly class ListMailNotificationsAction
 {

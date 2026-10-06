@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\ValueObjects;
 
 /**
  * Carries explicit remote webhook removal scope and dry-run options.
+ *
+ * @api
  */
 final readonly class RemoteWebhookRemoveOptions
 {

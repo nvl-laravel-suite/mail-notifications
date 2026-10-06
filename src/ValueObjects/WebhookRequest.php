@@ -9,6 +9,8 @@ use InvalidArgumentException;
 
 /**
  * Carries the bounded provider webhook inputs needed for signature verification.
+ *
+ * @api
  */
 final readonly class WebhookRequest
 {

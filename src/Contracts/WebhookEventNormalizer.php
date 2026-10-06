@@ -10,6 +10,8 @@ use Nvl\MailNotifications\ValueObjects\WebhookAcknowledgement;
 
 /**
  * Converts one authenticated provider webhook into a core delivery event.
+ *
+ * @api
  */
 interface WebhookEventNormalizer
 {

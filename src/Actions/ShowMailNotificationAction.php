@@ -13,6 +13,8 @@ use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 
 /**
  * Resolves one authorized delivery and its metadata-free provider events.
+ *
+ * @api
  */
 final readonly class ShowMailNotificationAction
 {

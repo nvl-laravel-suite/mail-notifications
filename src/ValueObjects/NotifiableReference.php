@@ -9,6 +9,8 @@ use Nvl\MailNotifications\Contracts\MailTrackable;
 
 /**
  * Carries a stable host-owned notifiable alias and identifier.
+ *
+ * @api
  */
 final readonly class NotifiableReference
 {

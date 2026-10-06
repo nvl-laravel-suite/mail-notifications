@@ -8,6 +8,8 @@ use DomainException;
 
 /**
  * Signals a verified provider event that matches multiple tracked deliveries.
+ *
+ * @api
  */
 final class AmbiguousDeliveryEventException extends DomainException
 {

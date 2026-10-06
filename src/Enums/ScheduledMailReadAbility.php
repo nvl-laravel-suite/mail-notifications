@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\Enums;
 
 /**
  * Administrative read capabilities for scheduled mail.
+ *
+ * @api
  */
 enum ScheduledMailReadAbility: string
 {

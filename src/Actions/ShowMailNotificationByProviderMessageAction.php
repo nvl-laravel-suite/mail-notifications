@@ -16,6 +16,8 @@ use Nvl\Support\Tenancy\Contracts\TenantBoundary;
  *
  * Delegation to ShowMailNotificationAction is deliberate orchestration so the
  * canonical view authorization and privacy-safe detail projection stay shared.
+ *
+ * @api
  */
 final readonly class ShowMailNotificationByProviderMessageAction
 {

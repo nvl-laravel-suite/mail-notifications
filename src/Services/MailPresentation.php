@@ -10,7 +10,11 @@ use Illuminate\Support\HtmlString;
 use Illuminate\View\FileViewFinder;
 use LogicException;
 
-/** Renders explicitly selected NVL components without adopting global mail paths. */
+/**
+ * Renders explicitly selected NVL components without adopting global mail paths.
+ *
+ * @api
+ */
 final class MailPresentation extends Markdown
 {
     /** Configure native Markdown with host paths and the namespaced NVL theme. */

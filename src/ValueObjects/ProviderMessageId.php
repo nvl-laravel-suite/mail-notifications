@@ -8,6 +8,8 @@ use InvalidArgumentException;
 
 /**
  * Pairs a stable provider name with its accepted message identifier.
+ *
+ * @api
  */
 final readonly class ProviderMessageId
 {

@@ -13,6 +13,8 @@ use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 
 /**
  * Resolves one authorized, privacy-bounded scheduled-mail detail projection.
+ *
+ * @api
  */
 final readonly class ShowScheduledMailMessageAction
 {

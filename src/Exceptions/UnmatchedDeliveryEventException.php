@@ -8,6 +8,8 @@ use DomainException;
 
 /**
  * Signals a verified provider event whose tracked message may not be visible yet.
+ *
+ * @api
  */
 final class UnmatchedDeliveryEventException extends DomainException
 {

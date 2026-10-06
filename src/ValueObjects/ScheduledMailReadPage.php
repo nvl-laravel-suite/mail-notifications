@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\ValueObjects;
 
 /**
  * Stable pagination envelope for scheduled-mail administration.
+ *
+ * @api
  */
 final readonly class ScheduledMailReadPage
 {

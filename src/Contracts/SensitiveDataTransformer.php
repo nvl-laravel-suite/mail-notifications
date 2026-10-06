@@ -11,6 +11,8 @@ namespace Nvl\MailNotifications\Contracts;
  * protection profile for writes, and retain previous keys or profiles for as
  * long as historical rows must remain readable. Restore failures must throw;
  * returning the unreadable payload as plaintext is forbidden.
+ *
+ * @api
  */
 interface SensitiveDataTransformer
 {

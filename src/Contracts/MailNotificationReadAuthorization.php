@@ -10,6 +10,8 @@ use Nvl\MailNotifications\Models\MailNotification;
 
 /**
  * Consumer-owned policy boundary for privileged delivery-history reads.
+ *
+ * @api
  */
 interface MailNotificationReadAuthorization
 {

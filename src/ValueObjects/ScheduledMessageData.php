@@ -13,6 +13,8 @@ use Nvl\MailNotifications\Models\ScheduledMailMessage;
  *
  * Initial submission must not follow intended delivery. Later retry attempts
  * may have a later availability because this value also fences retry backoff.
+ *
+ * @api
  */
 final readonly class ScheduledMessageData
 {
@@ -58,6 +60,8 @@ final readonly class ScheduledMessageData
 
     /**
      * Restore factory input from one claimed scheduled message.
+     *
+     * @internal
      */
     public static function fromModel(ScheduledMailMessage $message): self
     {

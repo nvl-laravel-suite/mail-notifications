@@ -49,6 +49,8 @@ use Nvl\Support\Config\PackageStorage;
  * @property CarbonImmutable|null $redacted_at
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
+ *
+ * @api
  */
 final class MailNotification extends Model
 {

@@ -10,6 +10,8 @@ use Nvl\MailNotifications\Models\MailNotification;
 
 /**
  * Minimal authorized autocomplete projection.
+ *
+ * @api
  */
 final readonly class MailNotificationSuggestion
 {
@@ -21,6 +23,11 @@ final readonly class MailNotificationSuggestion
         public CarbonImmutable $createdAt,
     ) {}
 
+    /**
+     * Build the package projection from its internal storage state.
+     *
+     * @internal
+     */
     public static function fromModel(MailNotification $notification): self
     {
         return new self(

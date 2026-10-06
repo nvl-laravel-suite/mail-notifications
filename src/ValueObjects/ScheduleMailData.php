@@ -9,6 +9,8 @@ use InvalidArgumentException;
 
 /**
  * Describes one new scheduled delivery using host-owned message semantics.
+ *
+ * @api
  */
 final readonly class ScheduleMailData
 {

@@ -11,6 +11,8 @@ use Nvl\MailNotifications\Models\ScheduledMailMessage;
 
 /**
  * Privacy-bounded list projection of one scheduled message.
+ *
+ * @api
  */
 final readonly class ScheduledMailListData
 {
@@ -54,6 +56,11 @@ final readonly class ScheduledMailListData
         public CarbonImmutable $createdAt,
     ) {}
 
+    /**
+     * Build the package projection from its internal storage state.
+     *
+     * @internal
+     */
     public static function fromModel(ScheduledMailMessage $message): self
     {
         return new self(
@@ -75,6 +82,8 @@ final readonly class ScheduledMailListData
 
     /**
      * Return the deliberately minimal display recipient from the protected TO envelope.
+     *
+     * @internal
      */
     public static function primaryRecipient(ScheduledMailMessage $message): ?Recipient
     {

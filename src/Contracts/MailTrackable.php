@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\Contracts;
 
 /**
  * Identifies a host-owned model through a stable mail tracking alias.
+ *
+ * @api
  */
 interface MailTrackable
 {

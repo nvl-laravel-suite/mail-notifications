@@ -15,6 +15,8 @@ use Nvl\MailNotifications\ValueObjects\ScheduledMailReadQuery;
 
 /**
  * Returns one authorized, bounded page of safe scheduled-mail projections.
+ *
+ * @api
  */
 final readonly class ListScheduledMailMessagesAction
 {

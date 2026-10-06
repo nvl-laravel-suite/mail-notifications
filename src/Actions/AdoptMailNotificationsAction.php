@@ -31,6 +31,8 @@ use stdClass;
 
 /**
  * Plans, stages, and atomically imports one bounded legacy mail data set.
+ *
+ * @internal
  */
 final readonly class AdoptMailNotificationsAction
 {

@@ -18,6 +18,8 @@ use Nvl\MailNotifications\ValueObjects\ScheduledMailStatistics;
 
 /**
  * Aggregates authorized scheduled-mail health without loading protected fields.
+ *
+ * @api
  */
 final readonly class GetScheduledMailStatisticsAction
 {

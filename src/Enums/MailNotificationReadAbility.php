@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\Enums;
 
 /**
  * Administrative read capabilities delegated to the consuming application.
+ *
+ * @api
  */
 enum MailNotificationReadAbility: string
 {

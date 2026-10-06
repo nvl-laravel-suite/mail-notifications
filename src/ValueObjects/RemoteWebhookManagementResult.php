@@ -8,6 +8,8 @@ use InvalidArgumentException;
 
 /**
  * Describes one bounded remote webhook management outcome without response data.
+ *
+ * @api
  */
 final readonly class RemoteWebhookManagementResult
 {

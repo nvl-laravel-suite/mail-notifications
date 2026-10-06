@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\Contracts;
 
 /**
  * Redacts sensitive nested values before persistence or operational output.
+ *
+ * @api
  */
 interface SensitiveDataRedactor
 {

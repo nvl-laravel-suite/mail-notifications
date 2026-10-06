@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\ValueObjects;
 
 /**
  * Identifies a persisted tracking attempt without exposing its model.
+ *
+ * @api
  */
 final readonly class TrackingAttempt
 {

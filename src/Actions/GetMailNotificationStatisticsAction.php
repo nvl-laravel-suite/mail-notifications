@@ -19,6 +19,8 @@ use Nvl\MailNotifications\ValueObjects\MailNotificationStatistics;
 
 /**
  * Aggregates authorized delivery health without loading sensitive payload columns.
+ *
+ * @api
  */
 final readonly class GetMailNotificationStatisticsAction
 {

@@ -18,6 +18,8 @@ use Nvl\MailNotifications\ValueObjects\NotifiableReference;
 
 /**
  * Returns one authorized delivery-history page for an exact notifiable identity.
+ *
+ * @api
  */
 final readonly class ListMailNotificationsForNotifiableAction
 {

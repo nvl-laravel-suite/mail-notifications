@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\Enums;
 
 /**
  * Describes the durable state of one scheduled mail message.
+ *
+ * @api
  */
 enum ScheduledMailStatus: string
 {

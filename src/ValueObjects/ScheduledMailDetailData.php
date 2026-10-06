@@ -10,6 +10,8 @@ use Nvl\MailNotifications\Models\ScheduledMailMessage;
 
 /**
  * Privacy-bounded detail projection of one scheduled message.
+ *
+ * @api
  */
 final readonly class ScheduledMailDetailData
 {
@@ -44,6 +46,11 @@ final readonly class ScheduledMailDetailData
         public CarbonImmutable $updatedAt,
     ) {}
 
+    /**
+     * Build the package projection from its internal storage state.
+     *
+     * @internal
+     */
     public static function fromModel(ScheduledMailMessage $message): self
     {
         return new self(

@@ -10,6 +10,8 @@ use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 
 /**
  * Validated, fixed-shape filters for administrative delivery-history reads.
+ *
+ * @api
  */
 final readonly class MailNotificationReadQuery
 {

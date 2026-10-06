@@ -22,6 +22,8 @@ use Nvl\Support\Tenancy\Contracts\TenantBoundary;
  *
  * Transaction ownership is intentional because this class is the stable public
  * write boundary used by host applications for scheduled-mail mutations.
+ *
+ * @api
  */
 final readonly class ScheduledMailScheduler
 {

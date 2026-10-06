@@ -11,6 +11,8 @@ use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 
 /**
  * Represents one authenticated and normalized provider delivery event.
+ *
+ * @api
  */
 final readonly class VerifiedDeliveryEvent
 {

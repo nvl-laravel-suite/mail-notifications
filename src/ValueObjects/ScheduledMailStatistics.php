@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\ValueObjects;
 
 /**
  * Privacy-bounded aggregate health for the scheduled-mail queue.
+ *
+ * @api
  */
 final readonly class ScheduledMailStatistics
 {

@@ -9,6 +9,8 @@ use Nvl\MailNotifications\ValueObjects\WebhookRequest;
 
 /**
  * Verifies provider webhook authenticity before normalization.
+ *
+ * @api
  */
 interface WebhookSignatureVerifier
 {

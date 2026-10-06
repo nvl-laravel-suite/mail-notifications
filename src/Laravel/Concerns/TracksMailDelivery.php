@@ -32,6 +32,8 @@ use Throwable;
  * Adds explicit, per-message tracking controls to a Laravel Mailable.
  *
  * @mixin Mailable
+ *
+ * @api
  */
 trait TracksMailDelivery
 {

@@ -10,6 +10,8 @@ use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 
 /**
  * Validated, fixed-shape filters for scheduled-mail administration.
+ *
+ * @api
  */
 final readonly class ScheduledMailReadQuery
 {

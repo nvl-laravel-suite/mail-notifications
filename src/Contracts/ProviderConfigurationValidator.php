@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\Contracts;
 
 /**
  * Validates an optional provider adapter's operator-supplied configuration.
+ *
+ * @api
  */
 interface ProviderConfigurationValidator
 {

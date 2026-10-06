@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\ValueObjects;
 
 /**
  * Stable pagination envelope for delivery-history administration.
+ *
+ * @api
  */
 final readonly class MailNotificationReadPage
 {

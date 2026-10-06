@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\Contracts;
 
 /**
  * Supplies host-owned notifiable aliases to the package registry.
+ *
+ * @api
  */
 interface ProvidesNotifiableTypes
 {

@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\ValueObjects;
 
 /**
  * Describes successful transport acceptance without exposing provider SDK types.
+ *
+ * @api
  */
 final readonly class ProviderAcceptance
 {

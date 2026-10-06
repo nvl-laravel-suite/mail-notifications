@@ -8,6 +8,8 @@ use InvalidArgumentException;
 
 /**
  * Represents an authenticated provider webhook intentionally acknowledged without mutation.
+ *
+ * @api
  */
 final readonly class WebhookAcknowledgement
 {

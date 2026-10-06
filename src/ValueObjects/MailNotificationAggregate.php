@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\ValueObjects;
 
-/** One bounded aggregate dimension in a mail notification statistics projection. */
+/**
+ * One bounded aggregate dimension in a mail notification statistics projection.
+ *
+ * @api
+ */
 final readonly class MailNotificationAggregate
 {
     /** Create one stable aggregate key and count. */

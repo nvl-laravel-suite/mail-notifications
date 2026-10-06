@@ -16,6 +16,8 @@ use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 
 /**
  * Returns minimal, bounded autocomplete results for authorized administrators.
+ *
+ * @api
  */
 final readonly class SuggestMailNotificationsAction
 {

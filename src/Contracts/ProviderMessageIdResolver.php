@@ -9,6 +9,8 @@ use Nvl\MailNotifications\ValueObjects\TransportResult;
 
 /**
  * Resolves a provider message identifier from a completed transport result.
+ *
+ * @api
  */
 interface ProviderMessageIdResolver
 {

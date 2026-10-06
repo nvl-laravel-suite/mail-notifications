@@ -8,6 +8,8 @@ use Nvl\MailNotifications\ValueObjects\TrackingContext;
 
 /**
  * Marks a Laravel Mailable as eligible for opt-in delivery tracking.
+ *
+ * @api
  */
 interface TrackableMessage
 {

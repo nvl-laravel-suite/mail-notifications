@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\Contracts;
 
 /**
  * Identifies one optional provider adapter without coupling core to its SDK.
+ *
+ * @api
  */
 interface ProviderAdapter
 {
