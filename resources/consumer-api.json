@@ -1,0 +1,1046 @@
+{
+    "schema_version": 1,
+    "package": "nvl/mail-notifications",
+    "psr4": {
+        "Nvl\\MailNotifications\\": "src",
+        "Nvl\\MailNotifications\\Database\\Factories\\": "database/factories"
+    },
+    "symbols": {
+        "Nvl\\MailNotifications\\Actions\\GetMailNotificationStatisticsAction": {
+            "kind": "class",
+            "file": "src/Actions/GetMailNotificationStatisticsAction.php",
+            "methods": [
+                "__construct",
+                "execute"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Actions\\GetScheduledMailStatisticsAction": {
+            "kind": "class",
+            "file": "src/Actions/GetScheduledMailStatisticsAction.php",
+            "methods": [
+                "__construct",
+                "execute"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Actions\\ListMailNotificationsAction": {
+            "kind": "class",
+            "file": "src/Actions/ListMailNotificationsAction.php",
+            "methods": [
+                "__construct",
+                "execute"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Actions\\ListMailNotificationsForNotifiableAction": {
+            "kind": "class",
+            "file": "src/Actions/ListMailNotificationsForNotifiableAction.php",
+            "methods": [
+                "__construct",
+                "execute"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Actions\\ListScheduledMailMessagesAction": {
+            "kind": "class",
+            "file": "src/Actions/ListScheduledMailMessagesAction.php",
+            "methods": [
+                "__construct",
+                "execute"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Actions\\ShowMailNotificationAction": {
+            "kind": "class",
+            "file": "src/Actions/ShowMailNotificationAction.php",
+            "methods": [
+                "__construct",
+                "execute"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Actions\\ShowMailNotificationByProviderMessageAction": {
+            "kind": "class",
+            "file": "src/Actions/ShowMailNotificationByProviderMessageAction.php",
+            "methods": [
+                "__construct",
+                "execute"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Actions\\ShowScheduledMailMessageAction": {
+            "kind": "class",
+            "file": "src/Actions/ShowScheduledMailMessageAction.php",
+            "methods": [
+                "__construct",
+                "execute"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Actions\\SuggestMailNotificationsAction": {
+            "kind": "class",
+            "file": "src/Actions/SuggestMailNotificationsAction.php",
+            "methods": [
+                "__construct",
+                "execute"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Contracts\\DeliveryProfileResolver": {
+            "kind": "interface",
+            "file": "src/Contracts/DeliveryProfileResolver.php",
+            "methods": [
+                "resolve"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Contracts\\MailNotificationReadAuthorization": {
+            "kind": "interface",
+            "file": "src/Contracts/MailNotificationReadAuthorization.php",
+            "methods": [
+                "authorize"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Contracts\\MailTrackable": {
+            "kind": "interface",
+            "file": "src/Contracts/MailTrackable.php",
+            "methods": [
+                "mailNotificationIdentifier",
+                "mailNotificationType"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Contracts\\ProviderAdapter": {
+            "kind": "interface",
+            "file": "src/Contracts/ProviderAdapter.php",
+            "methods": [
+                "name"
+            ],
+            "properties": [],
+            "constants": [
+                "CONTAINER_TAG"
+            ]
+        },
+        "Nvl\\MailNotifications\\Contracts\\ProviderConfigurationValidator": {
+            "kind": "interface",
+            "file": "src/Contracts/ProviderConfigurationValidator.php",
+            "methods": [
+                "validateConfiguration"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Contracts\\ProviderMessageIdResolver": {
+            "kind": "interface",
+            "file": "src/Contracts/ProviderMessageIdResolver.php",
+            "methods": [
+                "resolve",
+                "supports"
+            ],
+            "properties": [],
+            "constants": [
+                "TAG"
+            ]
+        },
+        "Nvl\\MailNotifications\\Contracts\\ProvidesNotifiableTypes": {
+            "kind": "interface",
+            "file": "src/Contracts/ProvidesNotifiableTypes.php",
+            "methods": [
+                "mailNotificationNotifiableTypes"
+            ],
+            "properties": [],
+            "constants": [
+                "TAG"
+            ]
+        },
+        "Nvl\\MailNotifications\\Contracts\\RemoteWebhookManager": {
+            "kind": "interface",
+            "file": "src/Contracts/RemoteWebhookManager.php",
+            "methods": [
+                "enabled",
+                "provider",
+                "remove",
+                "sync",
+                "validateConfiguration"
+            ],
+            "properties": [],
+            "constants": [
+                "TAG"
+            ]
+        },
+        "Nvl\\MailNotifications\\Contracts\\ScheduledMailReadAuthorization": {
+            "kind": "interface",
+            "file": "src/Contracts/ScheduledMailReadAuthorization.php",
+            "methods": [
+                "authorize"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Contracts\\ScheduledMessageFactory": {
+            "kind": "interface",
+            "file": "src/Contracts/ScheduledMessageFactory.php",
+            "methods": [
+                "alias",
+                "make",
+                "supportsVersion",
+                "validate"
+            ],
+            "properties": [],
+            "constants": [
+                "TAG"
+            ]
+        },
+        "Nvl\\MailNotifications\\Contracts\\SensitiveDataRedactor": {
+            "kind": "interface",
+            "file": "src/Contracts/SensitiveDataRedactor.php",
+            "methods": [
+                "redact"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Contracts\\SensitiveDataTransformer": {
+            "kind": "interface",
+            "file": "src/Contracts/SensitiveDataTransformer.php",
+            "methods": [
+                "restore",
+                "transform"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Contracts\\TrackableMessage": {
+            "kind": "interface",
+            "file": "src/Contracts/TrackableMessage.php",
+            "methods": [
+                "trackingContext"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Contracts\\TrackingLifecycle": {
+            "kind": "interface",
+            "file": "src/Contracts/TrackingLifecycle.php",
+            "methods": [
+                "accepted",
+                "apply",
+                "begin",
+                "failed",
+                "queuedFailure"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Contracts\\WebhookEventNormalizer": {
+            "kind": "interface",
+            "file": "src/Contracts/WebhookEventNormalizer.php",
+            "methods": [
+                "normalize"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Contracts\\WebhookSignatureVerifier": {
+            "kind": "interface",
+            "file": "src/Contracts/WebhookSignatureVerifier.php",
+            "methods": [
+                "verify"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Enums\\MailDeliveryStatus": {
+            "kind": "enum",
+            "file": "src/Enums/MailDeliveryStatus.php",
+            "methods": [
+                "canTransitionTo",
+                "cases",
+                "from",
+                "isTerminal",
+                "tryFrom"
+            ],
+            "properties": [
+                "name",
+                "value"
+            ],
+            "constants": [
+                "Accepted",
+                "Bounced",
+                "Clicked",
+                "Complained",
+                "Delayed",
+                "Delivered",
+                "Failed",
+                "Opened",
+                "Pending",
+                "Rejected",
+                "Unsubscribed"
+            ]
+        },
+        "Nvl\\MailNotifications\\Enums\\MailNotificationReadAbility": {
+            "kind": "enum",
+            "file": "src/Enums/MailNotificationReadAbility.php",
+            "methods": [
+                "cases",
+                "from",
+                "tryFrom"
+            ],
+            "properties": [
+                "name",
+                "value"
+            ],
+            "constants": [
+                "List",
+                "Statistics",
+                "Suggest",
+                "View"
+            ]
+        },
+        "Nvl\\MailNotifications\\Enums\\ScheduledMailReadAbility": {
+            "kind": "enum",
+            "file": "src/Enums/ScheduledMailReadAbility.php",
+            "methods": [
+                "cases",
+                "from",
+                "tryFrom"
+            ],
+            "properties": [
+                "name",
+                "value"
+            ],
+            "constants": [
+                "List",
+                "Statistics",
+                "View"
+            ]
+        },
+        "Nvl\\MailNotifications\\Enums\\ScheduledMailStatus": {
+            "kind": "enum",
+            "file": "src/Enums/ScheduledMailStatus.php",
+            "methods": [
+                "cases",
+                "from",
+                "isTerminal",
+                "tryFrom"
+            ],
+            "properties": [
+                "name",
+                "value"
+            ],
+            "constants": [
+                "Cancelled",
+                "Failed",
+                "Pending",
+                "Processing",
+                "Sent"
+            ]
+        },
+        "Nvl\\MailNotifications\\Exceptions\\AmbiguousDeliveryEventException": {
+            "kind": "class",
+            "file": "src/Exceptions/AmbiguousDeliveryEventException.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Exceptions\\UnmatchedDeliveryEventException": {
+            "kind": "class",
+            "file": "src/Exceptions/UnmatchedDeliveryEventException.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Laravel\\Concerns\\TracksMailDelivery": {
+            "kind": "trait",
+            "file": "src/Laravel/Concerns/TracksMailDelivery.php",
+            "methods": [
+                "failed",
+                "forNotifiable",
+                "hasMailTrackingEnabled",
+                "later",
+                "queue",
+                "recordMailTrackingFailure",
+                "send",
+                "withMailTracking",
+                "withTrackingMetadata",
+                "withoutMailTracking"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Models\\MailNotification": {
+            "kind": "class",
+            "file": "src/Models/MailNotification.php",
+            "methods": [
+                "getKey",
+                "getKeyName",
+                "getMorphClass",
+                "getRouteKey",
+                "getRouteKeyName",
+                "is",
+                "isNot",
+                "relationLoaded"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Models\\MailNotificationEvent": {
+            "kind": "class",
+            "file": "src/Models/MailNotificationEvent.php",
+            "methods": [
+                "getKey",
+                "getKeyName",
+                "getMorphClass",
+                "getRouteKey",
+                "getRouteKeyName",
+                "is",
+                "isNot",
+                "relationLoaded"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Models\\ScheduledMailMessage": {
+            "kind": "class",
+            "file": "src/Models/ScheduledMailMessage.php",
+            "methods": [
+                "getKey",
+                "getKeyName",
+                "getMorphClass",
+                "getRouteKey",
+                "getRouteKeyName",
+                "is",
+                "isNot",
+                "relationLoaded"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\MailPresentation": {
+            "kind": "class",
+            "file": "src/Services/MailPresentation.php",
+            "methods": [
+                "__construct",
+                "render",
+                "renderText"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\ScheduledMailScheduler": {
+            "kind": "class",
+            "file": "src/Services/ScheduledMailScheduler.php",
+            "methods": [
+                "__construct",
+                "cancel",
+                "replacePending",
+                "reschedule",
+                "schedule"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\MailNotificationAggregate": {
+            "kind": "class",
+            "file": "src/ValueObjects/MailNotificationAggregate.php",
+            "methods": [
+                "__construct",
+                "toArray"
+            ],
+            "properties": [
+                "count",
+                "key"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\MailNotificationEventReadData": {
+            "kind": "class",
+            "file": "src/ValueObjects/MailNotificationEventReadData.php",
+            "methods": [
+                "__construct",
+                "toArray"
+            ],
+            "properties": [
+                "id",
+                "occurredAt",
+                "processedAt",
+                "provider",
+                "providerEventId",
+                "providerMessageId",
+                "redactedAt",
+                "type"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\MailNotificationReadData": {
+            "kind": "class",
+            "file": "src/ValueObjects/MailNotificationReadData.php",
+            "methods": [
+                "__construct",
+                "toArray"
+            ],
+            "properties": [
+                "acceptedAt",
+                "correlationId",
+                "createdAt",
+                "deliveredAt",
+                "events",
+                "failedAt",
+                "fromEmail",
+                "fromName",
+                "id",
+                "mailer",
+                "messageCategory",
+                "notifiableId",
+                "notifiableType",
+                "primaryRecipientEmail",
+                "provider",
+                "providerMessageId",
+                "providerOccurredAt",
+                "queueReference",
+                "redactedAt",
+                "status",
+                "statusChangedAt",
+                "subject",
+                "updatedAt"
+            ],
+            "constants": [
+                "COLUMNS"
+            ]
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\MailNotificationReadPage": {
+            "kind": "class",
+            "file": "src/ValueObjects/MailNotificationReadPage.php",
+            "methods": [
+                "__construct",
+                "toArray"
+            ],
+            "properties": [
+                "currentPage",
+                "items",
+                "lastPage",
+                "perPage",
+                "total"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\MailNotificationReadQuery": {
+            "kind": "class",
+            "file": "src/ValueObjects/MailNotificationReadQuery.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "acceptedOnly",
+                "direction",
+                "failedOnly",
+                "from",
+                "mailer",
+                "messageCategory",
+                "page",
+                "perPage",
+                "search",
+                "sort",
+                "status",
+                "to"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\MailNotificationStatistics": {
+            "kind": "class",
+            "file": "src/ValueObjects/MailNotificationStatistics.php",
+            "methods": [
+                "__construct",
+                "toArray"
+            ],
+            "properties": [
+                "accepted",
+                "categories",
+                "failed",
+                "failureRate",
+                "mailers",
+                "recent",
+                "statuses",
+                "successRate",
+                "successful",
+                "total"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\MailNotificationSuggestion": {
+            "kind": "class",
+            "file": "src/ValueObjects/MailNotificationSuggestion.php",
+            "methods": [
+                "__construct",
+                "toArray"
+            ],
+            "properties": [
+                "createdAt",
+                "id",
+                "primaryRecipientEmail",
+                "status",
+                "subject"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\NotifiableReference": {
+            "kind": "class",
+            "file": "src/ValueObjects/NotifiableReference.php",
+            "methods": [
+                "__construct",
+                "fromTrackable"
+            ],
+            "properties": [
+                "identifier",
+                "type"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\PreparedMessage": {
+            "kind": "class",
+            "file": "src/ValueObjects/PreparedMessage.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "bcc",
+                "cc",
+                "context",
+                "correlationId",
+                "from",
+                "mailer",
+                "queueReference",
+                "subject",
+                "to"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\ProviderAcceptance": {
+            "kind": "class",
+            "file": "src/ValueObjects/ProviderAcceptance.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "messageId",
+                "metadata"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\ProviderMessageId": {
+            "kind": "class",
+            "file": "src/ValueObjects/ProviderMessageId.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "provider",
+                "value"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\Recipient": {
+            "kind": "class",
+            "file": "src/ValueObjects/Recipient.php",
+            "methods": [
+                "__construct",
+                "toArray"
+            ],
+            "properties": [
+                "email",
+                "name"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\RemoteWebhookManagementResult": {
+            "kind": "class",
+            "file": "src/ValueObjects/RemoteWebhookManagementResult.php",
+            "methods": [
+                "__construct",
+                "succeeded"
+            ],
+            "properties": [
+                "changed",
+                "dryRun",
+                "errors",
+                "failed",
+                "operation",
+                "planned",
+                "provider",
+                "unchanged"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\RemoteWebhookRemoveOptions": {
+            "kind": "class",
+            "file": "src/ValueObjects/RemoteWebhookRemoveOptions.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "all",
+                "dryRun"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\RemoteWebhookSyncOptions": {
+            "kind": "class",
+            "file": "src/ValueObjects/RemoteWebhookSyncOptions.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "dryRun",
+                "force"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\ScheduleMailData": {
+            "kind": "class",
+            "file": "src/ValueObjects/ScheduleMailData.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "availableAt",
+                "factoryAlias",
+                "maxAttempts",
+                "metadata",
+                "notifiable",
+                "payload",
+                "payloadVersion",
+                "recipients",
+                "scheduledFor"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\ScheduledMailDetailData": {
+            "kind": "class",
+            "file": "src/ValueObjects/ScheduledMailDetailData.php",
+            "methods": [
+                "__construct",
+                "toArray"
+            ],
+            "properties": [
+                "attempts",
+                "availableAt",
+                "cancelledAt",
+                "createdAt",
+                "factoryAlias",
+                "failedAt",
+                "id",
+                "lastAttemptAt",
+                "maxAttempts",
+                "notifiableId",
+                "notifiableType",
+                "payloadVersion",
+                "primaryRecipient",
+                "redactedAt",
+                "scheduledFor",
+                "sentAt",
+                "status",
+                "updatedAt"
+            ],
+            "constants": [
+                "COLUMNS"
+            ]
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\ScheduledMailListData": {
+            "kind": "class",
+            "file": "src/ValueObjects/ScheduledMailListData.php",
+            "methods": [
+                "__construct",
+                "toArray"
+            ],
+            "properties": [
+                "attempts",
+                "availableAt",
+                "cancelledAt",
+                "createdAt",
+                "factoryAlias",
+                "failedAt",
+                "id",
+                "maxAttempts",
+                "payloadVersion",
+                "primaryRecipient",
+                "scheduledFor",
+                "sentAt",
+                "status"
+            ],
+            "constants": [
+                "COLUMNS"
+            ]
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\ScheduledMailReadPage": {
+            "kind": "class",
+            "file": "src/ValueObjects/ScheduledMailReadPage.php",
+            "methods": [
+                "__construct",
+                "toArray"
+            ],
+            "properties": [
+                "currentPage",
+                "items",
+                "lastPage",
+                "perPage",
+                "total"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\ScheduledMailReadQuery": {
+            "kind": "class",
+            "file": "src/ValueObjects/ScheduledMailReadQuery.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "direction",
+                "dueOnly",
+                "factoryAlias",
+                "from",
+                "notifiable",
+                "page",
+                "perPage",
+                "sort",
+                "status",
+                "to"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\ScheduledMailStatistics": {
+            "kind": "class",
+            "file": "src/ValueObjects/ScheduledMailStatistics.php",
+            "methods": [
+                "__construct",
+                "toArray"
+            ],
+            "properties": [
+                "due",
+                "recent",
+                "statuses",
+                "total"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\ScheduledMessageData": {
+            "kind": "class",
+            "file": "src/ValueObjects/ScheduledMessageData.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "attempt",
+                "availableAt",
+                "factoryAlias",
+                "id",
+                "metadata",
+                "notifiable",
+                "payload",
+                "payloadVersion",
+                "recipients",
+                "scheduledFor"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\ScheduledRecipients": {
+            "kind": "class",
+            "file": "src/ValueObjects/ScheduledRecipients.php",
+            "methods": [
+                "__construct",
+                "bccPayload",
+                "ccPayload",
+                "fromPersisted",
+                "toPayload"
+            ],
+            "properties": [
+                "bcc",
+                "cc",
+                "to"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\TrackingAttempt": {
+            "kind": "class",
+            "file": "src/ValueObjects/TrackingAttempt.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "correlationId",
+                "id"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\TrackingContext": {
+            "kind": "class",
+            "file": "src/ValueObjects/TrackingContext.php",
+            "methods": [
+                "__construct",
+                "forCategory",
+                "forNotifiable",
+                "withCorrelation",
+                "withMetadata"
+            ],
+            "properties": [
+                "category",
+                "correlation",
+                "metadata",
+                "notifiable"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\TransitionResult": {
+            "kind": "class",
+            "file": "src/ValueObjects/TransitionResult.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "applied",
+                "currentStatus",
+                "duplicate",
+                "notificationId",
+                "previousStatus"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\TransportResult": {
+            "kind": "class",
+            "file": "src/ValueObjects/TransportResult.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "mailer",
+                "message"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\VerifiedDeliveryEvent": {
+            "kind": "class",
+            "file": "src/ValueObjects/VerifiedDeliveryEvent.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "correlationId",
+                "eventId",
+                "metadata",
+                "occurredAt",
+                "provider",
+                "providerMessageId",
+                "status"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\VerifiedWebhook": {
+            "kind": "class",
+            "file": "src/ValueObjects/VerifiedWebhook.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "payload",
+                "provider"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\WebhookAcknowledgement": {
+            "kind": "class",
+            "file": "src/ValueObjects/WebhookAcknowledgement.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "event",
+                "provider",
+                "reason"
+            ],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\ValueObjects\\WebhookRequest": {
+            "kind": "class",
+            "file": "src/ValueObjects/WebhookRequest.php",
+            "methods": [
+                "__construct",
+                "fromLaravelRequest"
+            ],
+            "properties": [
+                "body",
+                "headers",
+                "method",
+                "provider",
+                "uri"
+            ],
+            "constants": []
+        }
+    },
+    "models": {
+        "Nvl\\MailNotifications\\Models\\MailNotification": {
+            "read": [],
+            "identity_methods": [
+                "getKey",
+                "getKeyName",
+                "getMorphClass",
+                "getRouteKey",
+                "getRouteKeyName",
+                "is",
+                "isNot",
+                "relationLoaded"
+            ],
+            "capability_relations": []
+        },
+        "Nvl\\MailNotifications\\Models\\MailNotificationEvent": {
+            "read": [],
+            "identity_methods": [
+                "getKey",
+                "getKeyName",
+                "getMorphClass",
+                "getRouteKey",
+                "getRouteKeyName",
+                "is",
+                "isNot",
+                "relationLoaded"
+            ],
+            "capability_relations": []
+        },
+        "Nvl\\MailNotifications\\Models\\ScheduledMailMessage": {
+            "read": [],
+            "identity_methods": [
+                "getKey",
+                "getKeyName",
+                "getMorphClass",
+                "getRouteKey",
+                "getRouteKeyName",
+                "is",
+                "isNot",
+                "relationLoaded"
+            ],
+            "capability_relations": []
+        }
+    },
+    "capability_relations": {},
+    "tables": {
+        "events": "nvl_mail_notifications_events",
+        "notifications": "nvl_mail_notifications_notifications",
+        "scheduled_messages": "nvl_mail_notifications_scheduled_messages"
+    }
+}
