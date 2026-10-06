@@ -1,11 +1,19 @@
 # Changelog
 
+## Unreleased — consumer runtime integration
+
+- Added focused consumer contract/testing guidance and shipped-factory usage limits.
+- Versioned committed event payloads and documented canonical aliases, source connections, failure metadata and optional safe rendering.
+- Added explicit first-use/installer and deployment guidance; new acceptance checks remain pending.
+
+
 All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
 ### Changed
 
+- The scheduler exposes exactly its four native methods through ScheduledMailSchedulerContract and retains its singleton identity. Existing tracking/sensitive-storage extension defaults now retain host bindings. Document contract substitution and truthful host fixtures in Testing your app.
 - Classify the supported consumer PHP surface with explicit source annotations and restrict package model handles to declared identity and in-memory read fields; preserve existing workflow behavior and concrete signatures.
 - Prepare lockstep major 5 with required and development NVL peer floors of `^5.0`. This candidate has not been tagged or published.
 - Scope webhook processing to each lifecycle and make global Markdown/component adoption explicit.

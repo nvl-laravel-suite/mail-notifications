@@ -11,7 +11,6 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
-use Illuminate\Database\DatabaseTransactionsManager;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Mail\Markdown;
@@ -19,6 +18,15 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use LogicException;
 use Nvl\Data\Services\TypeScriptSourceRegistry;
+use Nvl\MailNotifications\Actions\GetMailNotificationStatisticsAction;
+use Nvl\MailNotifications\Actions\GetScheduledMailStatisticsAction;
+use Nvl\MailNotifications\Actions\ListMailNotificationsAction;
+use Nvl\MailNotifications\Actions\ListMailNotificationsForNotifiableAction;
+use Nvl\MailNotifications\Actions\ListScheduledMailMessagesAction;
+use Nvl\MailNotifications\Actions\ShowMailNotificationAction;
+use Nvl\MailNotifications\Actions\ShowMailNotificationByProviderMessageAction;
+use Nvl\MailNotifications\Actions\ShowScheduledMailMessageAction;
+use Nvl\MailNotifications\Actions\SuggestMailNotificationsAction;
 use Nvl\MailNotifications\Console\Commands\AdoptMailNotificationsCommand;
 use Nvl\MailNotifications\Console\Commands\AnonymizeMailNotificationsCommand;
 use Nvl\MailNotifications\Console\Commands\MailNotificationsDoctorCommand;
@@ -28,6 +36,11 @@ use Nvl\MailNotifications\Console\Commands\RecoverScheduledMailCommand;
 use Nvl\MailNotifications\Console\Commands\RemoveRemoteWebhooksCommand;
 use Nvl\MailNotifications\Console\Commands\SyncRemoteWebhooksCommand;
 use Nvl\MailNotifications\Contracts\DeliveryProfileResolver;
+use Nvl\MailNotifications\Contracts\GetMailNotificationStatisticsContract;
+use Nvl\MailNotifications\Contracts\GetScheduledMailStatisticsContract;
+use Nvl\MailNotifications\Contracts\ListMailNotificationsContract;
+use Nvl\MailNotifications\Contracts\ListMailNotificationsForNotifiableContract;
+use Nvl\MailNotifications\Contracts\ListScheduledMailMessagesContract;
 use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
 use Nvl\MailNotifications\Contracts\MailTenantWorklist;
 use Nvl\MailNotifications\Contracts\ProviderAdapter;
@@ -35,9 +48,14 @@ use Nvl\MailNotifications\Contracts\ProviderMessageIdResolver;
 use Nvl\MailNotifications\Contracts\ProvidesNotifiableTypes;
 use Nvl\MailNotifications\Contracts\RemoteWebhookManager;
 use Nvl\MailNotifications\Contracts\ScheduledMailReadAuthorization;
+use Nvl\MailNotifications\Contracts\ScheduledMailSchedulerContract;
 use Nvl\MailNotifications\Contracts\ScheduledMessageFactory;
 use Nvl\MailNotifications\Contracts\SensitiveDataRedactor;
 use Nvl\MailNotifications\Contracts\SensitiveDataTransformer;
+use Nvl\MailNotifications\Contracts\ShowMailNotificationByProviderMessageContract;
+use Nvl\MailNotifications\Contracts\ShowMailNotificationContract;
+use Nvl\MailNotifications\Contracts\ShowScheduledMailMessageContract;
+use Nvl\MailNotifications\Contracts\SuggestMailNotificationsContract;
 use Nvl\MailNotifications\Contracts\TrackingLifecycle;
 use Nvl\MailNotifications\Laravel\Listeners\TrackMessageAfterSending;
 use Nvl\MailNotifications\Laravel\Listeners\TrackMessageBeforeSending;
@@ -83,6 +101,8 @@ use Nvl\MailNotifications\Tenancy\MailNotificationsResourceRegistrar;
 use Nvl\MailNotifications\Tenancy\MailTrackingContextParticipant;
 use Nvl\Settings\Providers\SettingsServiceProvider;
 use Nvl\Support\Doctor\PackageDoctorContributor;
+use Nvl\Support\Events\ConnectionCommitCallbacks;
+use Nvl\Support\Globals\GlobalNames;
 use Nvl\Support\Integrations\OptionalIntegration;
 use Nvl\Support\Providers\SupportServiceProvider;
 use Nvl\Support\Providers\TenantServiceProvider;
@@ -105,6 +125,16 @@ final class MailNotificationsServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bindIf(GetMailNotificationStatisticsContract::class, GetMailNotificationStatisticsAction::class);
+        $this->app->bindIf(GetScheduledMailStatisticsContract::class, GetScheduledMailStatisticsAction::class);
+        $this->app->bindIf(ListMailNotificationsContract::class, ListMailNotificationsAction::class);
+        $this->app->bindIf(ListMailNotificationsForNotifiableContract::class, ListMailNotificationsForNotifiableAction::class);
+        $this->app->bindIf(ListScheduledMailMessagesContract::class, ListScheduledMailMessagesAction::class);
+        $this->app->bindIf(ShowMailNotificationContract::class, ShowMailNotificationAction::class);
+        $this->app->bindIf(ShowMailNotificationByProviderMessageContract::class, ShowMailNotificationByProviderMessageAction::class);
+        $this->app->bindIf(ShowScheduledMailMessageContract::class, ShowScheduledMailMessageAction::class);
+        $this->app->bindIf(SuggestMailNotificationsContract::class, SuggestMailNotificationsAction::class);
+
         $this->app->register(SupportServiceProvider::class);
         PackageDoctorContributor::register($this->app, 'nvl/mail-notifications', fn (): array => $this->app->make(MailNotificationsDoctor::class)->inspect());
 
@@ -200,14 +230,13 @@ final class MailNotificationsServiceProvider extends ServiceProvider
 
                 return new MailTrackingEventDispatcher(
                     events: static fn (): Dispatcher => $app->make(Dispatcher::class),
-                    transactions: static fn (): DatabaseTransactionsManager => $app->make('db.transactions'),
+                    commits: $app->make(ConnectionCommitCallbacks::class),
                     exceptions: $app->make(ExceptionHandler::class),
                     database: $database,
-                    config: $app->make(Repository::class),
                 );
             },
         );
-        $this->app->singleton(
+        $this->app->singletonIf(
             SensitiveDataRedactor::class,
             $this->configuredImplementation(
                 'nvl-mail-notifications.services.sensitive_data_redactor',
@@ -215,7 +244,7 @@ final class MailNotificationsServiceProvider extends ServiceProvider
                 DefaultSensitiveDataRedactor::class,
             ),
         );
-        $this->app->singleton(
+        $this->app->singletonIf(
             TrackingLifecycle::class,
             $this->configuredImplementation(
                 'nvl-mail-notifications.services.tracking_lifecycle',
@@ -234,7 +263,7 @@ final class MailNotificationsServiceProvider extends ServiceProvider
         );
 
         if ($transformerClass !== null) {
-            $this->app->singleton(
+            $this->app->singletonIf(
                 SensitiveDataTransformer::class,
                 $transformerClass,
             );
@@ -297,7 +326,8 @@ final class MailNotificationsServiceProvider extends ServiceProvider
                 $app,
             ),
         );
-        $this->app->singleton(ScheduledMailScheduler::class);
+        $this->app->singletonIf(ScheduledMailScheduler::class);
+        $this->app->singletonIf(ScheduledMailSchedulerContract::class, static fn (Application $app): ScheduledMailSchedulerContract => $app->make(ScheduledMailScheduler::class));
         $this->app->singleton(ScheduledMailClaimer::class);
         $this->app->singleton(ScheduledMailFinalizer::class);
         $this->app->singleton(ScheduledMailInputGuard::class);
@@ -330,6 +360,10 @@ final class MailNotificationsServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->app->make(GlobalNames::class)->translations('mail-notifications', __DIR__.'/../../lang', $this->app->make('translation.loader'));
+        $this->publishes([
+            __DIR__.'/../../lang' => lang_path('vendor/nvl-mail-notifications'),
+        ], 'nvl-mail-notifications-translations');
         if ($this->app->bound(TypeScriptSourceRegistry::class)) {
             $this->app->make(TypeScriptSourceRegistry::class)->register(
                 __DIR__.'/..',

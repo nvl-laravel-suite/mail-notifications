@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Events;
 
-use Illuminate\Foundation\Events\Dispatchable;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
+use Nvl\Support\Contracts\DomainEvent;
 
 /**
  * Announces one monotonic provider-neutral lifecycle transition.
+ *
+ * @api
  */
-final class MailDeliveryStatusChanged
+final class MailDeliveryStatusChanged implements DomainEvent
 {
-    use Dispatchable;
-
     /**
      * Create the delivery status changed event.
      */
@@ -21,5 +21,12 @@ final class MailDeliveryStatusChanged
         public readonly string $notificationId,
         public readonly MailDeliveryStatus $previousStatus,
         public readonly MailDeliveryStatus $currentStatus,
+        public readonly int $schemaVersion = 1,
     ) {}
+
+    /** Return the immutable event payload schema version. */
+    public function schemaVersion(): int
+    {
+        return $this->schemaVersion;
+    }
 }

@@ -6,16 +6,40 @@ namespace Nvl\MailNotifications\Database\Factories;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Models\MailNotification;
 
 /**
+ * Builds native package fixture rows and declared parents.
+ *
+ * @api
+ *
  * @extends Factory<MailNotification>
  */
 final class MailNotificationFactory extends Factory
 {
     protected $model = MailNotification::class;
+
+    /** Associate a persisted native notifiable host owner.
+     *
+     * @api
+     */
+    public function forOwner(Model $owner): static
+    {
+        if (! $owner->exists || (! is_string($owner->getKey()) && ! is_int($owner->getKey()))
+            || $owner->getRawOriginal($owner->getKeyName()) !== $owner->getKey()
+            || $owner->getConnection() !== (new MailNotification)->getConnection()) {
+            throw new InvalidArgumentException('Mail fixture owners require a persisted native model on the fixture connection.');
+        }
+
+        return $this->state([
+            'notifiable_type' => $owner->getMorphClass(),
+            'notifiable_id' => (string) $owner->getKey(),
+        ]);
+    }
 
     /**
      * @return array<model-property<MailNotification>, mixed>
@@ -60,6 +84,8 @@ final class MailNotificationFactory extends Factory
 
     /**
      * Represent a delivery waiting for transport acceptance.
+     *
+     * @api
      */
     public function pending(): static
     {
@@ -77,6 +103,8 @@ final class MailNotificationFactory extends Factory
 
     /**
      * Represent a delivery accepted by its provider.
+     *
+     * @api
      */
     public function accepted(): static
     {
@@ -88,6 +116,8 @@ final class MailNotificationFactory extends Factory
 
     /**
      * Represent a provider-delayed delivery.
+     *
+     * @api
      */
     public function delayed(): static
     {
@@ -99,6 +129,8 @@ final class MailNotificationFactory extends Factory
 
     /**
      * Represent a delivery completed by its provider.
+     *
+     * @api
      */
     public function delivered(): static
     {
@@ -111,6 +143,8 @@ final class MailNotificationFactory extends Factory
 
     /**
      * Represent an opened delivery.
+     *
+     * @api
      */
     public function opened(): static
     {
@@ -123,6 +157,8 @@ final class MailNotificationFactory extends Factory
 
     /**
      * Represent a clicked delivery.
+     *
+     * @api
      */
     public function clicked(): static
     {
@@ -135,6 +171,8 @@ final class MailNotificationFactory extends Factory
 
     /**
      * Represent a delivery that bounced after provider acceptance.
+     *
+     * @api
      */
     public function bounced(): static
     {
@@ -147,6 +185,8 @@ final class MailNotificationFactory extends Factory
 
     /**
      * Represent a delivered message that was reported as spam.
+     *
+     * @api
      */
     public function complained(): static
     {
@@ -160,6 +200,8 @@ final class MailNotificationFactory extends Factory
 
     /**
      * Represent a delivery rejected before provider acceptance.
+     *
+     * @api
      */
     public function rejected(): static
     {
@@ -171,6 +213,8 @@ final class MailNotificationFactory extends Factory
 
     /**
      * Represent a local transport failure without a provider identity.
+     *
+     * @api
      */
     public function failed(): static
     {
@@ -192,6 +236,8 @@ final class MailNotificationFactory extends Factory
 
     /**
      * Represent a delivered message whose recipient unsubscribed.
+     *
+     * @api
      */
     public function unsubscribed(): static
     {

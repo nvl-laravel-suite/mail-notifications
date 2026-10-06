@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Events;
 
-use Illuminate\Foundation\Events\Dispatchable;
 use Nvl\MailNotifications\ValueObjects\ProviderMessageId;
+use Nvl\Support\Contracts\DomainEvent;
 
 /**
  * Announces an operational tracking failure without carrying message content.
+ *
+ * @api
  */
-final class MailTrackingFailed
+final class MailTrackingFailed implements DomainEvent
 {
-    use Dispatchable;
-
     /**
      * Create the tracking failure event.
      */
@@ -22,5 +22,12 @@ final class MailTrackingFailed
         public readonly ?string $attemptId,
         public readonly string $exceptionClass,
         public readonly ?ProviderMessageId $messageId = null,
+        public readonly int $schemaVersion = 1,
     ) {}
+
+    /** Return the immutable event payload schema version. */
+    public function schemaVersion(): int
+    {
+        return $this->schemaVersion;
+    }
 }

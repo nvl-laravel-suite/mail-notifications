@@ -13,11 +13,11 @@
         "mailersend"
     ],
     "require": {
-        "php": "^8.3",
+        "php": "^8.4",
         "ext-filter": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "laravel/framework": "^13.0",
+        "laravel/framework": "^12.0 || ^13.0",
         "nesbot/carbon": "^2.72 || ^3.0",
         "nvl/core": "^5.0",
         "symfony/mailer": "^7.0 || ^8.0",
@@ -29,7 +29,7 @@
         "mockery/mockery": "^1.6",
         "nvl/settings": "^5.0",
         "nvl/tenancy": "^5.0",
-        "orchestra/testbench": "^11.0",
+        "orchestra/testbench": "^10.0 || ^11.0",
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0"
     },
@@ -83,7 +83,12 @@
             "/phpunit.xml.dist",
             "/tests",
             "/.DS_Store",
-            "/**/.DS_Store"
+            "/**/.DS_Store",
+            "/.gitattributes",
+            "/**/.gitattributes",
+            "/.gitignore",
+            "/**/.gitignore",
+            "/**/.gitkeep"
         ]
     },
     "minimum-stability": "stable",
@@ -95,5 +100,19 @@
     "conflict": {
         "nvl/settings": "<5.0 || >=6.0",
         "nvl/tenancy": "<5.0 || >=6.0"
+    },
+    "homepage": "https://github.com/nvl-laravel-suite/mail-notifications",
+    "authors": [
+        {
+            "name": "Nicolas Vlachos",
+            "homepage": "https://github.com/nicolasvlachos",
+            "role": "Developer"
+        }
+    ],
+    "support": {
+        "source": "https://github.com/nvl-laravel-suite/mail-notifications",
+        "docs": "https://github.com/nvl-laravel-suite/mail-notifications#readme",
+        "issues": "https://github.com/nvl-laravel-suite/mail-notifications/issues",
+        "security": "https://github.com/nvl-laravel-suite/mail-notifications/security/policy"
     }
 }

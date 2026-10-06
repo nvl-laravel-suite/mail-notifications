@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Events;
 
-use Illuminate\Foundation\Events\Dispatchable;
 use Nvl\MailNotifications\ValueObjects\TrackingAttempt;
+use Nvl\Support\Contracts\DomainEvent;
 
 /**
  * Announces that a provider-neutral tracking attempt was persisted.
+ *
+ * @api
  */
-final class MailTrackingStarted
+final class MailTrackingStarted implements DomainEvent
 {
-    use Dispatchable;
-
     /**
      * Create the tracking-started event.
      *
@@ -23,5 +23,12 @@ final class MailTrackingStarted
         public readonly TrackingAttempt $attempt,
         public readonly string $category,
         public readonly array $correlation = [],
+        public readonly int $schemaVersion = 1,
     ) {}
+
+    /** Return the immutable event payload schema version. */
+    public function schemaVersion(): int
+    {
+        return $this->schemaVersion;
+    }
 }

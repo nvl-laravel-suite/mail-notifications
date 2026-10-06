@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Exceptions;
 
-use RuntimeException;
-
 /**
+ * @api
+
  * Reports invalid scheduling configuration or lifecycle operations.
  */
-final class ScheduledMailException extends RuntimeException {}
+final class ScheduledMailException extends MailNotificationsException {}

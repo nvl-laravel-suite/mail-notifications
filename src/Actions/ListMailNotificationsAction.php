@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Actions;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Nvl\MailNotifications\Contracts\ListMailNotificationsContract;
 use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
 use Nvl\MailNotifications\Enums\MailNotificationReadAbility;
 use Nvl\MailNotifications\Models\MailNotification;
@@ -18,7 +19,7 @@ use Nvl\MailNotifications\ValueObjects\MailNotificationReadQuery;
  *
  * @api
  */
-final readonly class ListMailNotificationsAction
+final readonly class ListMailNotificationsAction implements ListMailNotificationsContract
 {
     public function __construct(
         private MailNotificationReadAuthorization $authorization,

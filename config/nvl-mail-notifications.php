@@ -9,6 +9,7 @@ use Nvl\MailNotifications\Services\DatabaseTrackingLifecycle;
 use Nvl\MailNotifications\Services\DefaultSensitiveDataRedactor;
 use Nvl\Support\Config\PackageEnvironment;
 
+/** Complete runtime defaults; publication sections are declared in ../resources/config/sections.json. */
 return [
     'enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_ENABLED', true),
 

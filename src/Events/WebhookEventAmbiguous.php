@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Events;
 
-use Illuminate\Foundation\Events\Dispatchable;
+use Nvl\Support\Contracts\DomainEvent;
 
 /**
  * Announces a verified webhook that ambiguously matched tracked deliveries.
+ *
+ * @api
  */
-final class WebhookEventAmbiguous
+final class WebhookEventAmbiguous implements DomainEvent
 {
-    use Dispatchable;
-
     /**
      * Create the privacy-safe webhook ambiguity event.
      */
@@ -21,5 +21,12 @@ final class WebhookEventAmbiguous
         public readonly string $providerEventId,
         public readonly ?string $providerMessageId,
         public readonly ?string $correlationId,
+        public readonly int $schemaVersion = 1,
     ) {}
+
+    /** Return the immutable event payload schema version. */
+    public function schemaVersion(): int
+    {
+        return $this->schemaVersion;
+    }
 }

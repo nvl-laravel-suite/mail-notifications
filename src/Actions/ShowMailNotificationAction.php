@@ -6,6 +6,7 @@ namespace Nvl\MailNotifications\Actions;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
+use Nvl\MailNotifications\Contracts\ShowMailNotificationContract;
 use Nvl\MailNotifications\Enums\MailNotificationReadAbility;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadData;
@@ -16,7 +17,7 @@ use Nvl\Support\Tenancy\Contracts\TenantBoundary;
  *
  * @api
  */
-final readonly class ShowMailNotificationAction
+final readonly class ShowMailNotificationAction implements ShowMailNotificationContract
 {
     public function __construct(private MailNotificationReadAuthorization $authorization, private TenantBoundary $boundary) {}
 

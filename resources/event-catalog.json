@@ -1,0 +1,1265 @@
+{
+  "schema_version": 1,
+  "package": "nvl/mail-notifications",
+  "documentation": "docs/events.md",
+  "implementation_status": "implemented; executable acceptance proof pending",
+  "events": [
+    {
+      "class": "Nvl\\MailNotifications\\Events\\MailAcceptedByProvider",
+      "source": "packages/nvl/mail-notifications/src/Events/MailAcceptedByProvider.php",
+      "constructor_fields": [
+        {
+          "name": "attempt",
+          "type": "Nvl\\MailNotifications\\ValueObjects\\TrackingAttempt",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "messageId",
+          "type": "Nvl\\MailNotifications\\ValueObjects\\ProviderMessageId",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "1"
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "attempt",
+          "type": "Nvl\\MailNotifications\\ValueObjects\\TrackingAttempt"
+        },
+        {
+          "name": "messageId",
+          "type": "Nvl\\MailNotifications\\ValueObjects\\ProviderMessageId"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int"
+        }
+      ],
+      "kind": "value_object",
+      "schema_version": 1,
+      "trigger": "Provider accepted tracked attempt.",
+      "aliases": [],
+      "producers": [
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/DatabaseTrackingLifecycle.php",
+          "trigger": "Provider accepted tracked attempt.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new MailAcceptedByProvider( attempt: $attempt, messageId: $acceptance->messageId, )"
+        }
+      ],
+      "security_notes": [
+        "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+      ],
+      "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure."
+    },
+    {
+      "class": "Nvl\\MailNotifications\\Events\\MailDeliveryStatusChanged",
+      "source": "packages/nvl/mail-notifications/src/Events/MailDeliveryStatusChanged.php",
+      "constructor_fields": [
+        {
+          "name": "notificationId",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "previousStatus",
+          "type": "Nvl\\MailNotifications\\Enums\\MailDeliveryStatus",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "currentStatus",
+          "type": "Nvl\\MailNotifications\\Enums\\MailDeliveryStatus",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "1"
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "notificationId",
+          "type": "string"
+        },
+        {
+          "name": "previousStatus",
+          "type": "Nvl\\MailNotifications\\Enums\\MailDeliveryStatus"
+        },
+        {
+          "name": "currentStatus",
+          "type": "Nvl\\MailNotifications\\Enums\\MailDeliveryStatus"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int"
+        }
+      ],
+      "kind": "value_object",
+      "schema_version": 1,
+      "trigger": "Delivery status advanced.",
+      "aliases": [],
+      "producers": [
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/DatabaseTrackingLifecycle.php",
+          "trigger": "Delivery status advanced.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new MailDeliveryStatusChanged( notificationId: $notification->id, previousStatus: $previousStatus, currentStatus: MailDeliveryStatus::Accepted, )"
+        },
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/DatabaseTrackingLifecycle.php",
+          "trigger": "Delivery status advanced.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new MailDeliveryStatusChanged( notificationId: $notification->id, previousStatus: $previousStatus, currentStatus: $event->status, )"
+        },
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/DatabaseTrackingLifecycle.php",
+          "trigger": "Delivery status advanced.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new MailDeliveryStatusChanged( notificationId: $notification->id, previousStatus: $previousStatus, currentStatus: MailDeliveryStatus::Failed, )"
+        }
+      ],
+      "security_notes": [
+        "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+      ],
+      "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure."
+    },
+    {
+      "class": "Nvl\\MailNotifications\\Events\\MailTrackingFailed",
+      "source": "packages/nvl/mail-notifications/src/Events/MailTrackingFailed.php",
+      "constructor_fields": [
+        {
+          "name": "correlationId",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "attemptId",
+          "type": "?string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "exceptionClass",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "messageId",
+          "type": "?Nvl\\MailNotifications\\ValueObjects\\ProviderMessageId",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "null"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "1"
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "correlationId",
+          "type": "string"
+        },
+        {
+          "name": "attemptId",
+          "type": "?string"
+        },
+        {
+          "name": "exceptionClass",
+          "type": "string"
+        },
+        {
+          "name": "messageId",
+          "type": "?Nvl\\MailNotifications\\ValueObjects\\ProviderMessageId"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int"
+        }
+      ],
+      "kind": "value_object",
+      "schema_version": 1,
+      "trigger": "Operational tracking failed.",
+      "aliases": [],
+      "producers": [
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/DatabaseTrackingLifecycle.php",
+          "trigger": "Operational tracking failed.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new MailTrackingFailed( correlationId: $attempt->correlationId, attemptId: $attempt->id, exceptionClass: $exception::class, )"
+        },
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/TrackingRuntime.php",
+          "trigger": "Operational tracking failed.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new MailTrackingFailed( correlationId: $queueReference, attemptId: null, exceptionClass: $exception::class, )"
+        },
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/TrackingRuntime.php",
+          "trigger": "Operational tracking failed.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new MailTrackingFailed( correlationId: (string) Str::uuid(), attemptId: null, exceptionClass: $exception::class, )"
+        },
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/TrackingRuntime.php",
+          "trigger": "Operational tracking failed.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new MailTrackingFailed( correlationId: $staged->correlationId, attemptId: $staged->attempt?->id, exceptionClass: $exception::class, messageId: $messageId, )"
+        }
+      ],
+      "security_notes": [
+        "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+      ],
+      "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure."
+    },
+    {
+      "class": "Nvl\\MailNotifications\\Events\\MailTrackingStarted",
+      "source": "packages/nvl/mail-notifications/src/Events/MailTrackingStarted.php",
+      "constructor_fields": [
+        {
+          "name": "attempt",
+          "type": "Nvl\\MailNotifications\\ValueObjects\\TrackingAttempt",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "category",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "correlation",
+          "type": "array",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "[]",
+          "phpdoc_type": "array<string, string|int|bool|null>"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "1"
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "attempt",
+          "type": "Nvl\\MailNotifications\\ValueObjects\\TrackingAttempt"
+        },
+        {
+          "name": "category",
+          "type": "string"
+        },
+        {
+          "name": "correlation",
+          "type": "array",
+          "phpdoc_type": "array<string, string|int|bool|null>"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int"
+        }
+      ],
+      "kind": "value_object",
+      "schema_version": 1,
+      "trigger": "Tracking attempt persisted.",
+      "aliases": [],
+      "producers": [
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/DatabaseTrackingLifecycle.php",
+          "trigger": "Tracking attempt persisted.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new MailTrackingStarted( attempt: $attempt, category: $notification->message_category, correlation: $message->context->correlation, )"
+        },
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/DatabaseTrackingLifecycle.php",
+          "trigger": "Tracking attempt persisted.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new MailTrackingStarted( attempt: $this->attempt($notification), category: $notification->message_category, correlation: $message->context->correlation, )"
+        }
+      ],
+      "security_notes": [
+        "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+      ],
+      "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure."
+    },
+    {
+      "class": "Nvl\\MailNotifications\\Events\\MailWebhookAcknowledged",
+      "source": "packages/nvl/mail-notifications/src/Events/MailWebhookAcknowledged.php",
+      "constructor_fields": [
+        {
+          "name": "acknowledgement",
+          "type": "Nvl\\MailNotifications\\ValueObjects\\WebhookAcknowledgement",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "1"
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "acknowledgement",
+          "type": "Nvl\\MailNotifications\\ValueObjects\\WebhookAcknowledgement"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int"
+        }
+      ],
+      "kind": "value_object",
+      "schema_version": 1,
+      "trigger": "Verified webhook acknowledged without lifecycle mutation.",
+      "aliases": [],
+      "producers": [
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/WebhookProcessor.php",
+          "trigger": "Verified webhook acknowledged without lifecycle mutation.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new MailWebhookAcknowledged($acknowledgement)"
+        }
+      ],
+      "security_notes": [
+        "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+      ],
+      "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure."
+    },
+    {
+      "class": "Nvl\\MailNotifications\\Events\\ScheduledMailCancelled",
+      "source": "packages/nvl/mail-notifications/src/Events/ScheduledMailCancelled.php",
+      "constructor_fields": [
+        {
+          "name": "messageId",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "cancelledAt",
+          "type": "Carbon\\CarbonImmutable",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "1"
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "messageId",
+          "type": "string"
+        },
+        {
+          "name": "cancelledAt",
+          "type": "Carbon\\CarbonImmutable"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int"
+        }
+      ],
+      "kind": "value_object",
+      "schema_version": 1,
+      "trigger": "Pending message cancelled.",
+      "aliases": [],
+      "producers": [
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/ScheduledMailScheduler.php",
+          "trigger": "Pending message cancelled.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new ScheduledMailCancelled( messageId: $messageId, cancelledAt: $cancelledAt, )"
+        }
+      ],
+      "security_notes": [
+        "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+      ],
+      "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure."
+    },
+    {
+      "class": "Nvl\\MailNotifications\\Events\\ScheduledMailClaimed",
+      "source": "packages/nvl/mail-notifications/src/Events/ScheduledMailClaimed.php",
+      "constructor_fields": [
+        {
+          "name": "messageId",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "attempt",
+          "type": "int",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "1"
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "messageId",
+          "type": "string"
+        },
+        {
+          "name": "attempt",
+          "type": "int"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int"
+        }
+      ],
+      "kind": "value_object",
+      "schema_version": 1,
+      "trigger": "Due message fenced for one attempt.",
+      "aliases": [],
+      "producers": [
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/ScheduledMailClaimer.php",
+          "trigger": "Due message fenced for one attempt.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new ScheduledMailClaimed( messageId: $message->id, attempt: $message->attempts, )"
+        }
+      ],
+      "security_notes": [
+        "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+      ],
+      "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure."
+    },
+    {
+      "class": "Nvl\\MailNotifications\\Events\\ScheduledMailFailed",
+      "source": "packages/nvl/mail-notifications/src/Events/ScheduledMailFailed.php",
+      "constructor_fields": [
+        {
+          "name": "messageId",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "attempt",
+          "type": "int",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "failureType",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "1"
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "messageId",
+          "type": "string"
+        },
+        {
+          "name": "attempt",
+          "type": "int"
+        },
+        {
+          "name": "failureType",
+          "type": "string"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int"
+        }
+      ],
+      "kind": "value_object",
+      "schema_version": 1,
+      "trigger": "Scheduled delivery failed terminally.",
+      "aliases": [],
+      "producers": [
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/ScheduledMailFinalizer.php",
+          "trigger": "Scheduled delivery failed terminally.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new ScheduledMailFailed( messageId: $message->id, attempt: $message->attempts, failureType: $failureType, )"
+        },
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/ScheduledMailRecovery.php",
+          "trigger": "Scheduled delivery failed terminally.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new ScheduledMailFailed( messageId: $message->id, attempt: $message->attempts, failureType: self::EXPIRED_CLAIM, )"
+        }
+      ],
+      "security_notes": [
+        "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+      ],
+      "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure."
+    },
+    {
+      "class": "Nvl\\MailNotifications\\Events\\ScheduledMailRecovered",
+      "source": "packages/nvl/mail-notifications/src/Events/ScheduledMailRecovered.php",
+      "constructor_fields": [
+        {
+          "name": "messageId",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "attempt",
+          "type": "int",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "willRetry",
+          "type": "bool",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "1"
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "messageId",
+          "type": "string"
+        },
+        {
+          "name": "attempt",
+          "type": "int"
+        },
+        {
+          "name": "willRetry",
+          "type": "bool"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int"
+        }
+      ],
+      "kind": "value_object",
+      "schema_version": 1,
+      "trigger": "Expired claim recovered.",
+      "aliases": [],
+      "producers": [
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/ScheduledMailRecovery.php",
+          "trigger": "Expired claim recovered.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new ScheduledMailRecovered( messageId: $message->id, attempt: $message->attempts, willRetry: $willRetry, )"
+        }
+      ],
+      "security_notes": [
+        "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+      ],
+      "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure."
+    },
+    {
+      "class": "Nvl\\MailNotifications\\Events\\ScheduledMailReplaced",
+      "source": "packages/nvl/mail-notifications/src/Events/ScheduledMailReplaced.php",
+      "constructor_fields": [
+        {
+          "name": "messageId",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "previousFactoryAlias",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "factoryAlias",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "previousPayloadVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "payloadVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "previousScheduledFor",
+          "type": "Carbon\\CarbonImmutable",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "previousAvailableAt",
+          "type": "Carbon\\CarbonImmutable",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "scheduledFor",
+          "type": "Carbon\\CarbonImmutable",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "availableAt",
+          "type": "Carbon\\CarbonImmutable",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "1"
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "messageId",
+          "type": "string"
+        },
+        {
+          "name": "previousFactoryAlias",
+          "type": "string"
+        },
+        {
+          "name": "factoryAlias",
+          "type": "string"
+        },
+        {
+          "name": "previousPayloadVersion",
+          "type": "int"
+        },
+        {
+          "name": "payloadVersion",
+          "type": "int"
+        },
+        {
+          "name": "previousScheduledFor",
+          "type": "Carbon\\CarbonImmutable"
+        },
+        {
+          "name": "previousAvailableAt",
+          "type": "Carbon\\CarbonImmutable"
+        },
+        {
+          "name": "scheduledFor",
+          "type": "Carbon\\CarbonImmutable"
+        },
+        {
+          "name": "availableAt",
+          "type": "Carbon\\CarbonImmutable"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int"
+        }
+      ],
+      "kind": "value_object",
+      "schema_version": 1,
+      "trigger": "Pending factory payload metadata replaced.",
+      "aliases": [],
+      "producers": [
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/ScheduledMailScheduler.php",
+          "trigger": "Pending factory payload metadata replaced.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new ScheduledMailReplaced( messageId: $message->id, previousFactoryAlias: $message->factory_alias, factoryAlias: $attributes['factory_alias'], previousPayloadVersion: $message->payload_version, payloadVersion: $attributes['payload_version'], previousScheduledFor: $message->scheduled_for, previousAvailableAt: $message->available_at, scheduledFor: $attributes['scheduled_for'], availableAt: $attributes['available_at'], )"
+        }
+      ],
+      "security_notes": [
+        "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+      ],
+      "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure."
+    },
+    {
+      "class": "Nvl\\MailNotifications\\Events\\ScheduledMailRescheduled",
+      "source": "packages/nvl/mail-notifications/src/Events/ScheduledMailRescheduled.php",
+      "constructor_fields": [
+        {
+          "name": "messageId",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "previousScheduledFor",
+          "type": "Carbon\\CarbonImmutable",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "previousAvailableAt",
+          "type": "Carbon\\CarbonImmutable",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "scheduledFor",
+          "type": "Carbon\\CarbonImmutable",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "availableAt",
+          "type": "Carbon\\CarbonImmutable",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "1"
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "messageId",
+          "type": "string"
+        },
+        {
+          "name": "previousScheduledFor",
+          "type": "Carbon\\CarbonImmutable"
+        },
+        {
+          "name": "previousAvailableAt",
+          "type": "Carbon\\CarbonImmutable"
+        },
+        {
+          "name": "scheduledFor",
+          "type": "Carbon\\CarbonImmutable"
+        },
+        {
+          "name": "availableAt",
+          "type": "Carbon\\CarbonImmutable"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int"
+        }
+      ],
+      "kind": "value_object",
+      "schema_version": 1,
+      "trigger": "Pending availability changed.",
+      "aliases": [],
+      "producers": [
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/ScheduledMailScheduler.php",
+          "trigger": "Pending availability changed.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new ScheduledMailRescheduled( messageId: $message->id, previousScheduledFor: $message->scheduled_for, previousAvailableAt: $message->available_at, scheduledFor: $timing['scheduled_for'], availableAt: $timing['available_at'], )"
+        }
+      ],
+      "security_notes": [
+        "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+      ],
+      "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure."
+    },
+    {
+      "class": "Nvl\\MailNotifications\\Events\\ScheduledMailRetrying",
+      "source": "packages/nvl/mail-notifications/src/Events/ScheduledMailRetrying.php",
+      "constructor_fields": [
+        {
+          "name": "messageId",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "attempt",
+          "type": "int",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "availableAt",
+          "type": "Carbon\\CarbonImmutable",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "1"
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "messageId",
+          "type": "string"
+        },
+        {
+          "name": "attempt",
+          "type": "int"
+        },
+        {
+          "name": "availableAt",
+          "type": "Carbon\\CarbonImmutable"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int"
+        }
+      ],
+      "kind": "value_object",
+      "schema_version": 1,
+      "trigger": "Scheduled retry made available.",
+      "aliases": [],
+      "producers": [
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/ScheduledMailFinalizer.php",
+          "trigger": "Scheduled retry made available.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new ScheduledMailRetrying( messageId: $message->id, attempt: $message->attempts, availableAt: $availableAt, )"
+        },
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/ScheduledMailRecovery.php",
+          "trigger": "Scheduled retry made available.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new ScheduledMailRetrying( messageId: $message->id, attempt: $message->attempts, availableAt: $availableAt, )"
+        }
+      ],
+      "security_notes": [
+        "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+      ],
+      "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure."
+    },
+    {
+      "class": "Nvl\\MailNotifications\\Events\\ScheduledMailScheduled",
+      "source": "packages/nvl/mail-notifications/src/Events/ScheduledMailScheduled.php",
+      "constructor_fields": [
+        {
+          "name": "messageId",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "factoryAlias",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "payloadVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "scheduledFor",
+          "type": "Carbon\\CarbonImmutable",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "availableAt",
+          "type": "Carbon\\CarbonImmutable",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "1"
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "messageId",
+          "type": "string"
+        },
+        {
+          "name": "factoryAlias",
+          "type": "string"
+        },
+        {
+          "name": "payloadVersion",
+          "type": "int"
+        },
+        {
+          "name": "scheduledFor",
+          "type": "Carbon\\CarbonImmutable"
+        },
+        {
+          "name": "availableAt",
+          "type": "Carbon\\CarbonImmutable"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int"
+        }
+      ],
+      "kind": "value_object",
+      "schema_version": 1,
+      "trigger": "Scheduled message persisted.",
+      "aliases": [],
+      "producers": [
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/ScheduledMailScheduler.php",
+          "trigger": "Scheduled message persisted.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new ScheduledMailScheduled( messageId: $message->id, factoryAlias: $message->factory_alias, payloadVersion: $message->payload_version, scheduledFor: $message->scheduled_for, availableAt: $message->available_at, )"
+        }
+      ],
+      "security_notes": [
+        "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+      ],
+      "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure."
+    },
+    {
+      "class": "Nvl\\MailNotifications\\Events\\ScheduledMailSent",
+      "source": "packages/nvl/mail-notifications/src/Events/ScheduledMailSent.php",
+      "constructor_fields": [
+        {
+          "name": "messageId",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "attempt",
+          "type": "int",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "1"
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "messageId",
+          "type": "string"
+        },
+        {
+          "name": "attempt",
+          "type": "int"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int"
+        }
+      ],
+      "kind": "value_object",
+      "schema_version": 1,
+      "trigger": "Scheduled delivery finalized as sent.",
+      "aliases": [],
+      "producers": [
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/ScheduledMailFinalizer.php",
+          "trigger": "Scheduled delivery finalized as sent.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new ScheduledMailSent( messageId: $message->id, attempt: $message->attempts, )"
+        }
+      ],
+      "security_notes": [
+        "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+      ],
+      "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure."
+    },
+    {
+      "class": "Nvl\\MailNotifications\\Events\\WebhookEventAmbiguous",
+      "source": "packages/nvl/mail-notifications/src/Events/WebhookEventAmbiguous.php",
+      "constructor_fields": [
+        {
+          "name": "provider",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "providerEventId",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "providerMessageId",
+          "type": "?string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "correlationId",
+          "type": "?string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int",
+          "visibility": "public",
+          "required": false,
+          "default_expression": "1"
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "provider",
+          "type": "string"
+        },
+        {
+          "name": "providerEventId",
+          "type": "string"
+        },
+        {
+          "name": "providerMessageId",
+          "type": "?string"
+        },
+        {
+          "name": "correlationId",
+          "type": "?string"
+        },
+        {
+          "name": "schemaVersion",
+          "type": "int"
+        }
+      ],
+      "kind": "value_object",
+      "schema_version": 1,
+      "trigger": "Verified webhook matched ambiguous deliveries.",
+      "aliases": [],
+      "producers": [
+        {
+          "path": "packages/nvl/mail-notifications/src/Services/WebhookProcessor.php",
+          "trigger": "Verified webhook matched ambiguous deliveries.",
+          "connection": "MailTrackingEventDispatcher resolves PackageStorage::connection('mail-notifications') through the injected DatabaseManager; safeDispatch seams report and contain delivery failures.",
+          "construction_expression": "new WebhookEventAmbiguous( provider: $event->provider, providerEventId: $event->eventId, providerMessageId: $event->providerMessageId, correlationId: $event->correlationId, )"
+        }
+      ],
+      "security_notes": [
+        "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+      ],
+      "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure."
+    }
+  ],
+  "value_types": [
+    {
+      "class": "Nvl\\MailNotifications\\Enums\\MailDeliveryStatus",
+      "source": "packages/nvl/mail-notifications/src/Enums/MailDeliveryStatus.php",
+      "constructor_fields": [],
+      "public_fields": [],
+      "kind": "enum",
+      "backing_type": "string",
+      "cases": [
+        {
+          "name": "Pending",
+          "value": "pending"
+        },
+        {
+          "name": "Accepted",
+          "value": "accepted"
+        },
+        {
+          "name": "Delayed",
+          "value": "delayed"
+        },
+        {
+          "name": "Delivered",
+          "value": "delivered"
+        },
+        {
+          "name": "Opened",
+          "value": "opened"
+        },
+        {
+          "name": "Clicked",
+          "value": "clicked"
+        },
+        {
+          "name": "Bounced",
+          "value": "bounced"
+        },
+        {
+          "name": "Complained",
+          "value": "complained"
+        },
+        {
+          "name": "Rejected",
+          "value": "rejected"
+        },
+        {
+          "name": "Failed",
+          "value": "failed"
+        },
+        {
+          "name": "Unsubscribed",
+          "value": "unsubscribed"
+        }
+      ]
+    },
+    {
+      "class": "Nvl\\MailNotifications\\ValueObjects\\ProviderMessageId",
+      "source": "packages/nvl/mail-notifications/src/ValueObjects/ProviderMessageId.php",
+      "constructor_fields": [
+        {
+          "name": "provider",
+          "type": "string",
+          "visibility": "parameter",
+          "required": true
+        },
+        {
+          "name": "value",
+          "type": "string",
+          "visibility": "parameter",
+          "required": true
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "provider",
+          "type": "string"
+        },
+        {
+          "name": "value",
+          "type": "string"
+        }
+      ],
+      "kind": "value_object"
+    },
+    {
+      "class": "Nvl\\MailNotifications\\ValueObjects\\TrackingAttempt",
+      "source": "packages/nvl/mail-notifications/src/ValueObjects/TrackingAttempt.php",
+      "constructor_fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        },
+        {
+          "name": "correlationId",
+          "type": "string",
+          "visibility": "public",
+          "required": true
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "correlationId",
+          "type": "string"
+        }
+      ],
+      "kind": "value_object"
+    },
+    {
+      "class": "Nvl\\MailNotifications\\ValueObjects\\WebhookAcknowledgement",
+      "source": "packages/nvl/mail-notifications/src/ValueObjects/WebhookAcknowledgement.php",
+      "constructor_fields": [
+        {
+          "name": "provider",
+          "type": "string",
+          "visibility": "parameter",
+          "required": true
+        },
+        {
+          "name": "event",
+          "type": "string",
+          "visibility": "parameter",
+          "required": true
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "visibility": "parameter",
+          "required": true
+        }
+      ],
+      "public_fields": [
+        {
+          "name": "provider",
+          "type": "string"
+        },
+        {
+          "name": "event",
+          "type": "string"
+        },
+        {
+          "name": "reason",
+          "type": "string"
+        }
+      ],
+      "kind": "value_object"
+    }
+  ],
+  "aliases": [],
+  "publication": {
+    "publication": "The native host dispatcher receives the captured event after the supplied source connection outer commit, or immediately when that connection has no active transaction.",
+    "rollback": "Callbacks attach to the matching native connection and current nesting record; native outer/savepoint rollback discards the corresponding callbacks.",
+    "registration_failure": "Missing source transaction records fail before commit; Mail Notifications reports and drops unusable observations.",
+    "host_policy": "Host after-commit listeners and queue after_commit policies can add their own deferral after publication. Host transaction infrastructure and dispatcher bindings are preserved.",
+    "delivery_limit": "Local callbacks are not an outbox. Process exit between commit and callback can lose delivery; no crash durability or exactly-once delivery is promised.",
+    "cardinality": "One canonical object is dispatched per qualifying producer call. This is local publication, not cross-process deduplication or a guarantee that repeated observations are unique.",
+    "manual_producers": "Use Nvl\\Support\\Events\\DomainEventDispatcher::dispatch($event, $writerConnection). Native Event::dispatch() is immediate and has no package interception."
+  },
+  "security_notes": [
+    "Operational identifiers, statuses, immutable dates and bounded correlation. No recipient lists, mail content, scheduled factory payload, raw webhook payload or exception objects/messages; MailTrackingFailed includes exception class only. payloadVersion describes the scheduled factory payload, independently of event schemaVersion."
+  ],
+  "no_op_semantics": "Delivery/lifecycle guards and scheduled claim fences govern observations; retries/recovery are distinct facts. Duplicate or unchanged status transitions are suppressed by native lifecycle rules. Observer registration/listener failures are reported and contained, never substituted for the original transport failure.",
+  "notes": [
+    "Factory aliases and payloadVersion in scheduled events are metadata only; no scheduled factory payload is copied. Listener/reporting failures stay contained in MailTrackingEventDispatcher."
+  ]
+}

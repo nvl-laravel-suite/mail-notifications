@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\Tests;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Nvl\MailNotifications\Providers\MailNotificationsServiceProvider;
+use Nvl\Support\Providers\LocaleServiceProvider;
+use Nvl\Support\Providers\SupportServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 /**
@@ -23,6 +25,8 @@ abstract class TestCase extends Orchestra
     protected function getPackageProviders($app): array
     {
         return [
+            SupportServiceProvider::class,
+            LocaleServiceProvider::class,
             MailNotificationsServiceProvider::class,
         ];
     }

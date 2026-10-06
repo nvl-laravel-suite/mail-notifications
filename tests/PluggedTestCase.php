@@ -6,6 +6,7 @@ namespace Nvl\MailNotifications\Tests;
 
 use Nvl\MailNotifications\Providers\MailNotificationsServiceProvider;
 use Nvl\MailNotifications\Tests\Fixtures\PluggedMailNotificationsServiceProvider;
+use Nvl\Support\Providers\LocaleServiceProvider;
 
 /**
  * Boots the package with a host's configuration-first extension set.
@@ -20,6 +21,7 @@ abstract class PluggedTestCase extends TestCase
     protected function getPackageProviders($app): array
     {
         return [
+            LocaleServiceProvider::class,
             PluggedMailNotificationsServiceProvider::class,
             MailNotificationsServiceProvider::class,
         ];

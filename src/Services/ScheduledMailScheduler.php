@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Services;
 
 use Carbon\CarbonImmutable;
+use Nvl\MailNotifications\Contracts\ScheduledMailSchedulerContract;
 use Nvl\MailNotifications\Contracts\SensitiveDataRedactor;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Events\ScheduledMailCancelled;
@@ -25,7 +26,7 @@ use Nvl\Support\Tenancy\Contracts\TenantBoundary;
  *
  * @api
  */
-final readonly class ScheduledMailScheduler
+final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerContract
 {
     /**
      * Create the public scheduled-mail mutation boundary.

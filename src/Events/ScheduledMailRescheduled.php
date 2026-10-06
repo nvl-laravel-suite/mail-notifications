@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Events;
 
 use Carbon\CarbonImmutable;
-use Illuminate\Foundation\Events\Dispatchable;
+use Nvl\Support\Contracts\DomainEvent;
 
 /**
  * Announces a pending message's availability-time change.
+ *
+ * @api
  */
-final class ScheduledMailRescheduled
+final class ScheduledMailRescheduled implements DomainEvent
 {
-    use Dispatchable;
-
     /**
      * Create the rescheduled event.
      */
@@ -23,5 +23,12 @@ final class ScheduledMailRescheduled
         public readonly CarbonImmutable $previousAvailableAt,
         public readonly CarbonImmutable $scheduledFor,
         public readonly CarbonImmutable $availableAt,
+        public readonly int $schemaVersion = 1,
     ) {}
+
+    /** Return the immutable event payload schema version. */
+    public function schemaVersion(): int
+    {
+        return $this->schemaVersion;
+    }
 }

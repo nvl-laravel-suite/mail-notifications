@@ -5,14 +5,11 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Services;
 
 use Closure;
-use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Database\Connection;
 use Illuminate\Database\DatabaseManager;
-use Illuminate\Database\DatabaseTransactionRecord;
-use Illuminate\Database\DatabaseTransactionsManager;
-use RuntimeException;
+use Nvl\Support\Config\PackageStorage;
+use Nvl\Support\Events\ConnectionCommitCallbacks;
 use Throwable;
 
 /**
@@ -24,14 +21,12 @@ final readonly class MailTrackingEventDispatcher
      * Create the after-commit package event dispatcher.
      *
      * @param  Closure(): Dispatcher  $events
-     * @param  Closure(): DatabaseTransactionsManager  $transactions
      */
     public function __construct(
         private Closure $events,
-        private Closure $transactions,
+        private ConnectionCommitCallbacks $commits,
         private ExceptionHandler $exceptions,
         private DatabaseManager $database,
-        private Repository $config,
     ) {}
 
     /**
@@ -41,86 +36,16 @@ final readonly class MailTrackingEventDispatcher
     {
         try {
             $connection = $this->database->connection(
-                $this->storageConnectionName(),
+                PackageStorage::connection('mail-notifications'),
             );
-        } catch (Throwable $exception) {
-            $this->reportSafely($exception);
-            $this->dispatchNow($event);
-
-            return;
-        }
-
-        $this->dispatchWhenStorageCommits($event, $connection);
-    }
-
-    /**
-     * Bind dispatch to the exact active storage transaction and its parents.
-     */
-    private function dispatchWhenStorageCommits(
-        object $event,
-        Connection $connection,
-    ): void {
-        if ($connection->transactionLevel() === 0) {
-            $this->dispatchNow($event);
-
-            return;
-        }
-
-        try {
-            $transactions = ($this->transactions)();
-            $connectionName = $connection->getName();
-            $applicable = $transactions
-                ->callbackApplicableTransactions()
-                ->filter(
-                    static fn (DatabaseTransactionRecord $transaction): bool => $transaction->connection === $connectionName,
-                )
-                ->last();
-
-            if ($applicable instanceof DatabaseTransactionRecord) {
-                $applicable->addCallback(
-                    function () use ($connection, $event): void {
-                        $this->dispatchWhenStorageCommits(
-                            $event,
-                            $connection,
-                        );
-                    },
-                );
-
-                return;
-            }
-
-            $connectionIsDeliberatelyExcluded = $transactions
-                ->getPendingTransactions()
-                ->contains(
-                    static fn (DatabaseTransactionRecord $transaction): bool => $transaction->connection === $connectionName,
-                );
-
-            if ($connectionIsDeliberatelyExcluded) {
+            $this->commits->afterCommit($connection, function () use ($event): void {
                 $this->dispatchNow($event);
-
-                return;
-            }
-
-            $this->reportSafely(new RuntimeException(
-                'The active mail notification storage transaction is not registered with Laravel\'s transaction manager.',
-            ));
+            });
         } catch (Throwable $exception) {
             $this->reportSafely($exception);
+
         }
-    }
 
-    /**
-     * Resolve the optional configured storage connection name.
-     */
-    private function storageConnectionName(): ?string
-    {
-        $configured = $this->config->get(
-            'nvl-mail-notifications.storage.connection',
-        );
-
-        return is_string($configured) && trim($configured) !== ''
-            ? trim($configured)
-            : null;
     }
 
     /**

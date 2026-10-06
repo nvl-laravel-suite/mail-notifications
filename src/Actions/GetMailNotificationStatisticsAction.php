@@ -7,6 +7,7 @@ namespace Nvl\MailNotifications\Actions;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Nvl\MailNotifications\Contracts\GetMailNotificationStatisticsContract;
 use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Enums\MailNotificationReadAbility;
@@ -22,7 +23,7 @@ use Nvl\MailNotifications\ValueObjects\MailNotificationStatistics;
  *
  * @api
  */
-final readonly class GetMailNotificationStatisticsAction
+final readonly class GetMailNotificationStatisticsAction implements GetMailNotificationStatisticsContract
 {
     public function __construct(
         private MailNotificationReadAuthorization $authorization,

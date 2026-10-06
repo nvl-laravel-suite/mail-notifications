@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Actions;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Nvl\MailNotifications\Contracts\ShowMailNotificationByProviderMessageContract;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Services\ProviderRegistry;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadData;
@@ -19,7 +20,7 @@ use Nvl\Support\Tenancy\Contracts\TenantBoundary;
  *
  * @api
  */
-final readonly class ShowMailNotificationByProviderMessageAction
+final readonly class ShowMailNotificationByProviderMessageAction implements ShowMailNotificationByProviderMessageContract
 {
     public function __construct(
         private ProviderRegistry $providers,

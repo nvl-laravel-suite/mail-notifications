@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
 use LogicException;
 use Nvl\MailNotifications\Providers\MailNotificationsServiceProvider;
+use Nvl\Support\Providers\LocaleServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 /**
@@ -60,6 +61,7 @@ abstract class PostgreSqlConcurrencyTestCase extends Orchestra
     protected function getPackageProviders($app): array
     {
         return [
+            LocaleServiceProvider::class,
             MailNotificationsServiceProvider::class,
         ];
     }

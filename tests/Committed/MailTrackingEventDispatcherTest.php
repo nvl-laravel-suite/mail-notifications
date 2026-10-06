@@ -9,10 +9,13 @@ use Nvl\MailNotifications\Contracts\TrackingLifecycle;
 use Nvl\MailNotifications\Events\MailTrackingStarted;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Services\MailTrackingEventDispatcher;
+use Nvl\MailNotifications\Tests\CommittedEventTestCase;
 use Nvl\MailNotifications\ValueObjects\PreparedMessage;
 use Nvl\MailNotifications\ValueObjects\Recipient;
 use Nvl\MailNotifications\ValueObjects\TrackingAttempt;
 use Nvl\MailNotifications\ValueObjects\TrackingContext;
+
+uses(CommittedEventTestCase::class);
 
 /**
  * Configure a package storage connection independent from the host default.

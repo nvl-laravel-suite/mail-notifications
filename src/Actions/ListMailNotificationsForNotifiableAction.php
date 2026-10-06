@@ -6,6 +6,7 @@ namespace Nvl\MailNotifications\Actions;
 
 use DomainException;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Nvl\MailNotifications\Contracts\ListMailNotificationsForNotifiableContract;
 use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
 use Nvl\MailNotifications\Enums\MailNotificationReadAbility;
 use Nvl\MailNotifications\Models\MailNotification;
@@ -21,7 +22,7 @@ use Nvl\MailNotifications\ValueObjects\NotifiableReference;
  *
  * @api
  */
-final readonly class ListMailNotificationsForNotifiableAction
+final readonly class ListMailNotificationsForNotifiableAction implements ListMailNotificationsForNotifiableContract
 {
     public function __construct(
         private MailNotificationReadAuthorization $authorization,

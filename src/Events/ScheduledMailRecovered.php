@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Events;
 
-use Illuminate\Foundation\Events\Dispatchable;
+use Nvl\Support\Contracts\DomainEvent;
 
 /**
  * Announces recovery of one expired scheduled-mail claim.
+ *
+ * @api
  */
-final class ScheduledMailRecovered
+final class ScheduledMailRecovered implements DomainEvent
 {
-    use Dispatchable;
-
     /**
      * Create the recovered event.
      */
@@ -20,5 +20,12 @@ final class ScheduledMailRecovered
         public readonly string $messageId,
         public readonly int $attempt,
         public readonly bool $willRetry,
+        public readonly int $schemaVersion = 1,
     ) {}
+
+    /** Return the immutable event payload schema version. */
+    public function schemaVersion(): int
+    {
+        return $this->schemaVersion;
+    }
 }

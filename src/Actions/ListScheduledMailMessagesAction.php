@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Actions;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Nvl\MailNotifications\Contracts\ListScheduledMailMessagesContract;
 use Nvl\MailNotifications\Contracts\ScheduledMailReadAuthorization;
 use Nvl\MailNotifications\Enums\ScheduledMailReadAbility;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
@@ -18,7 +19,7 @@ use Nvl\MailNotifications\ValueObjects\ScheduledMailReadQuery;
  *
  * @api
  */
-final readonly class ListScheduledMailMessagesAction
+final readonly class ListScheduledMailMessagesAction implements ListScheduledMailMessagesContract
 {
     public function __construct(
         private ScheduledMailReadAuthorization $authorization,

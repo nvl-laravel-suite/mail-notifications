@@ -6,6 +6,7 @@ namespace Nvl\MailNotifications\Actions;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Nvl\MailNotifications\Contracts\GetScheduledMailStatisticsContract;
 use Nvl\MailNotifications\Contracts\ScheduledMailReadAuthorization;
 use Nvl\MailNotifications\Enums\ScheduledMailReadAbility;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
@@ -21,7 +22,7 @@ use Nvl\MailNotifications\ValueObjects\ScheduledMailStatistics;
  *
  * @api
  */
-final readonly class GetScheduledMailStatisticsAction
+final readonly class GetScheduledMailStatisticsAction implements GetScheduledMailStatisticsContract
 {
     public function __construct(
         private ScheduledMailReadAuthorization $authorization,

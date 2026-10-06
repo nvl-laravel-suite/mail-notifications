@@ -12,6 +12,10 @@ use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
 
 /**
+ * Builds native package fixture rows and declared parents.
+ *
+ * @api
+ *
  * @extends Factory<MailNotificationEvent>
  */
 final class MailNotificationEventFactory extends Factory
@@ -39,6 +43,8 @@ final class MailNotificationEventFactory extends Factory
 
     /**
      * Represent a pending provider event.
+     *
+     * @api
      */
     public function pending(): static
     {
@@ -47,6 +53,8 @@ final class MailNotificationEventFactory extends Factory
 
     /**
      * Represent an accepted provider event.
+     *
+     * @api
      */
     public function accepted(): static
     {
@@ -55,6 +63,8 @@ final class MailNotificationEventFactory extends Factory
 
     /**
      * Represent a delayed provider event.
+     *
+     * @api
      */
     public function delayed(): static
     {
@@ -63,6 +73,8 @@ final class MailNotificationEventFactory extends Factory
 
     /**
      * Represent a delivered provider event.
+     *
+     * @api
      */
     public function delivered(): static
     {
@@ -71,6 +83,8 @@ final class MailNotificationEventFactory extends Factory
 
     /**
      * Represent an opened provider event.
+     *
+     * @api
      */
     public function opened(): static
     {
@@ -79,6 +93,8 @@ final class MailNotificationEventFactory extends Factory
 
     /**
      * Represent a clicked provider event.
+     *
+     * @api
      */
     public function clicked(): static
     {
@@ -87,6 +103,8 @@ final class MailNotificationEventFactory extends Factory
 
     /**
      * Represent a bounced provider event.
+     *
+     * @api
      */
     public function bounced(): static
     {
@@ -95,6 +113,8 @@ final class MailNotificationEventFactory extends Factory
 
     /**
      * Represent a complaint provider event.
+     *
+     * @api
      */
     public function complained(): static
     {
@@ -103,6 +123,8 @@ final class MailNotificationEventFactory extends Factory
 
     /**
      * Represent a rejected provider event.
+     *
+     * @api
      */
     public function rejected(): static
     {
@@ -111,6 +133,8 @@ final class MailNotificationEventFactory extends Factory
 
     /**
      * Represent a failed provider event.
+     *
+     * @api
      */
     public function failed(): static
     {
@@ -119,6 +143,8 @@ final class MailNotificationEventFactory extends Factory
 
     /**
      * Represent an unsubscribe provider event.
+     *
+     * @api
      */
     public function unsubscribed(): static
     {
@@ -127,6 +153,8 @@ final class MailNotificationEventFactory extends Factory
 
     /**
      * Set any provider-neutral normalized event type.
+     *
+     * @api
      */
     public function normalizedAs(MailDeliveryStatus $status): static
     {

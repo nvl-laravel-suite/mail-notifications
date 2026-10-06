@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use InvalidArgumentException;
 use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
+use Nvl\MailNotifications\Contracts\SuggestMailNotificationsContract;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Enums\MailNotificationReadAbility;
 use Nvl\MailNotifications\Models\MailNotification;
@@ -19,7 +20,7 @@ use Nvl\Support\Tenancy\Contracts\TenantBoundary;
  *
  * @api
  */
-final readonly class SuggestMailNotificationsAction
+final readonly class SuggestMailNotificationsAction implements SuggestMailNotificationsContract
 {
     public function __construct(private MailNotificationReadAuthorization $authorization, private TenantBoundary $boundary) {}
 
