@@ -62,7 +62,7 @@ it('shares configured presentation in published-only mode', function () {
 
 it('updates a Markdown renderer resolved before presentation registration', function () {
     $hostPath = __DIR__.'/../Fixtures/views';
-    $packagePath = dirname(__DIR__, 2).'/resources/views/mail';
+    $packagePath = realpath(dirname(__DIR__, 2).'/resources/views/mail');
     config()->set('mail.markdown.paths', [$hostPath]);
     config()->set('nvl-mail-notifications.tracking.enabled', false);
     $markdown = app(Markdown::class);
@@ -83,7 +83,7 @@ it('publishes the tokenized theme to its namespaced override path', function () 
 
     expect($paths)
         ->toHaveKey(
-            dirname(__DIR__, 2).'/resources/views/mail',
+            realpath(dirname(__DIR__, 2).'/resources/views/mail'),
             resource_path('views/vendor/nvl-mail-notifications'),
         );
 });
@@ -95,7 +95,7 @@ it('publishes the versioned legacy adoption manifest', function () {
     );
 
     expect($paths)->toHaveKey(
-        dirname(__DIR__, 2).'/resources/adoption/mail-notifications.v1.example.json',
+        realpath(dirname(__DIR__, 2).'/resources/adoption/mail-notifications.v1.example.json'),
         base_path('nvl-mail-notifications.adoption.json'),
     );
 });
@@ -112,7 +112,7 @@ it('registers package migrations for timestamp-aware publishing', function () {
     );
 
     expect($paths)->toHaveKey(
-        dirname(__DIR__, 2).'/database/migrations',
+        realpath(dirname(__DIR__, 2).'/database/migrations'),
         database_path('migrations'),
     )->and($publishableMigrationPaths)->toContain($migrationPath);
 });

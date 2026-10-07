@@ -35,7 +35,7 @@ it('renders namespaced NVL presentation without adopting host Markdown paths', f
 it('adopts Markdown paths and view variables independently', function (): void {
     config(['nvl-mail-notifications.presentation.global_markdown' => true]);
     (new MailNotificationsServiceProvider(app()))->boot();
-    expect(config('mail.markdown.paths'))->toContain(dirname(__DIR__, 2).'/resources/views/mail')
+    expect(config('mail.markdown.paths'))->toContain(realpath(dirname(__DIR__, 2).'/resources/views/mail'))
         ->and(app(Factory::class)->getShared())->not->toHaveKey('nvlMailTheme');
     config(['nvl-mail-notifications.presentation.global_markdown' => false, 'nvl-mail-notifications.presentation.global_view_data' => true]);
     (new MailNotificationsServiceProvider(app()))->boot();
