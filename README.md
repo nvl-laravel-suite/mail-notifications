@@ -68,7 +68,7 @@ Global Markdown-path and shared view-variable adoption default to `false` throug
 ## Requirements and installation
 
 - PHP 8.4 or newer
-- Laravel 13
+- Laravel 12–13
 - SQLite
 - PostgreSQL supported by the installed Laravel version
 - MySQL 8.0.16 or newer
