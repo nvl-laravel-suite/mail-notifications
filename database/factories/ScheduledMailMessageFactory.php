@@ -8,7 +8,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use RuntimeException;
@@ -24,21 +23,36 @@ final class ScheduledMailMessageFactory extends Factory
 {
     protected $model = ScheduledMailMessage::class;
 
+    /** Prepare native owner and tenant facts after Laravel expands relationships.
+     *
+     * @internal
+     */
+    public function configure(): static
+    {
+        $expandRelationships = true;
+
+        return $this->state(function () use (&$expandRelationships): array {
+            $expandRelationships = $this->expandRelationships;
+
+            return [];
+        })->afterMaking(function (ScheduledMailMessage $model) use (&$expandRelationships): void {
+            if ($expandRelationships) {
+                FactoryGuard::prepare($model, 'mail.scheduled');
+            }
+        });
+    }
+
     /** Associate a persisted native notifiable host owner.
      *
      * @api
      */
     public function forOwner(Model $owner): static
     {
-        if (! $owner->exists || (! is_string($owner->getKey()) && ! is_int($owner->getKey()))
-            || $owner->getRawOriginal($owner->getKeyName()) !== $owner->getKey()
-            || $owner->getConnection() !== (new ScheduledMailMessage)->getConnection()) {
-            throw new InvalidArgumentException('Mail fixture owners require a persisted native model on the fixture connection.');
-        }
+        $key = FactoryGuard::parent($owner, new ScheduledMailMessage);
 
         return $this->state([
             'notifiable_type' => $owner->getMorphClass(),
-            'notifiable_id' => (string) $owner->getKey(),
+            'notifiable_id' => (string) $key,
         ]);
     }
 
