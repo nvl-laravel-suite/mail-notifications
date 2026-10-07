@@ -7,6 +7,7 @@ use Illuminate\Console\Command;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Mail\Factory as MailFactory;
 use Illuminate\Contracts\Mail\Mailer;
+use Illuminate\Database\DatabaseTransactionsManager;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Mailable;
@@ -841,7 +842,7 @@ it('dispatches scheduling events only after the owning transaction commits', fun
         'foreign_key_constraints' => true,
     ]);
     DB::purge($connectionName);
-    config()->set('nvl-mail-notifications.storage.connection', $connectionName);
+    config()->set('nvl-mail-notifications.connection', $connectionName);
     $migration = require dirname(__DIR__, 2)
         .'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
     $migration->up();
@@ -854,7 +855,11 @@ it('dispatches scheduling events only after the owning transaction commits', fun
             $observed[] = $event->messageId;
         },
     );
+    $originalTransactions = app('db.transactions');
+    $transactions = new DatabaseTransactionsManager;
     $connection = DB::connection($connectionName);
+    $connection->setTransactionManager($transactions);
+    app()->instance('db.transactions', $transactions);
     $connection->beginTransaction();
 
     try {
@@ -872,6 +877,7 @@ it('dispatches scheduling events only after the owning transaction commits', fun
         }
 
         DB::purge($connectionName);
+        app()->instance('db.transactions', $originalTransactions);
     }
 });
 

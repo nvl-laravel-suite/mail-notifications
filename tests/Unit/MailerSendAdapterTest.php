@@ -499,7 +499,9 @@ it('acknowledges typed lifecycle ambiguity without mutation or retry', function 
                 'providerEventId',
                 'providerMessageId',
                 'correlationId',
-            ],
+                'schemaVersion',
+            ]
+            && $event->schemaVersion === 1,
     );
     Event::assertDispatched(
         MailWebhookAcknowledged::class,
