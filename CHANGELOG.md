@@ -5,6 +5,14 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+## [5.0.1] - 2026-10-08
+
+### Changed
+
+- Correct published-family verification and adoption guidance for local Dagger CI; runtime contracts are unchanged.
+- Clarify that published creator migrations are immutable and retained installations need reviewed forward changes.
+
+
 ## [5.0.0] - 2026-10-08
 
 ### Changed
