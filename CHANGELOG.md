@@ -3,13 +3,15 @@
 
 All notable changes to `nvl/mail-notifications` are documented here.
 
-## [5.0.0] — release candidate (unpublished)
+## [Unreleased]
+
+## [5.0.0] - 2026-10-08
 
 ### Changed
 
 - The scheduler exposes exactly its four native methods through ScheduledMailSchedulerContract and retains its singleton identity. Existing tracking/sensitive-storage extension defaults now retain host bindings. Document contract substitution and truthful host fixtures in Testing your app.
 - Classify the supported consumer PHP surface with explicit source annotations and restrict package model handles to declared identity and in-memory read fields; preserve existing workflow behavior and concrete signatures.
-- Prepare lockstep major 5 with required and development NVL peer floors of `^5.0`. This candidate has not been tagged or published.
+- Adopt lockstep major 5 with required and development NVL peer floors of `^5.0`.
 - Scope webhook processing to each lifecycle and make global Markdown/component adoption explicit.
 - Render package mail through its own presentation namespace while preserving host mail configuration.
 - Review [UPGRADING.md](UPGRADING.md) before adopting the new names and infrastructure boundaries.

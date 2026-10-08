@@ -126,7 +126,7 @@ Choose exactly one migration owner:
 
 Never run both sources. Laravel retimestamps files published through the migration tag. `php artisan nvl:mail-notifications:doctor` reports a warning when automatic loading remains enabled and `database/migrations` contains a timestamp-independent name matching a package migration; `--strict` promotes that warning to failure. Keep the configured storage connection and table names stable between forward migrations. The first-release creator migrations install queue-failure
 identity, privacy markers, retention indexes, and exact status invariants as one
-complete schema contract. This unpublished package has no corrective
+complete schema contract. These creator migrations have no corrective
 queue/status/privacy migration chain to replay.
 
 PostgreSQL, MySQL 8.0.16+, and MariaDB 10.3+ through Laravel's `mariadb`
