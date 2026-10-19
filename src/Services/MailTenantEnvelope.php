@@ -7,7 +7,7 @@ namespace Nvl\MailNotifications\Services;
 use Illuminate\Contracts\Config\Repository;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
-use Nvl\Support\Tenancy\Contracts\TenantBoundary;
+use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 use Nvl\Support\Tenancy\Contracts\TenantContext;
 use Nvl\Support\Tenancy\Enums\TenantContextMode;
 use Nvl\Support\Tenancy\Exceptions\TenantBoundaryViolation;
@@ -20,7 +20,7 @@ final readonly class MailTenantEnvelope
 {
     /** Create the ownership codec. */
     public function __construct(
-        private TenantBoundary $boundary,
+        private OwnershipBoundary $boundary,
         private TenantContext $context,
         private Repository $config,
     ) {}

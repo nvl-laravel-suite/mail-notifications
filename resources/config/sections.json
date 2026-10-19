@@ -11,6 +11,7 @@
                 "management.scheduled_maximum_per_page",
                 "management.suggestion_limit",
                 "migrations.enabled",
+                "ownership.scoped",
                 "presentation.enabled",
                 "privacy.sensitive_storage.enabled",
                 "providers.default",

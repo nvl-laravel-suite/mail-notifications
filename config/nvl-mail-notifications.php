@@ -11,6 +11,7 @@ use Nvl\Support\Config\PackageEnvironment;
 
 /** Complete runtime defaults; publication sections are declared in ../resources/config/sections.json. */
 return [
+    'ownership' => ['scoped' => true],
     'enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_ENABLED', true),
 
     'tenancy' => [

@@ -13,13 +13,13 @@
         "mailersend"
     ],
     "require": {
-        "php": "^8.4",
         "ext-filter": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
         "laravel/framework": "^12.0 || ^13.0",
         "nesbot/carbon": "^2.72 || ^3.0",
-        "nvl/core": "^5.0",
+        "nvl/core": "^5.1",
+        "php": "^8.4",
         "symfony/mailer": "^7.0 || ^8.0",
         "symfony/mime": "^7.0 || ^8.0"
     },
@@ -27,11 +27,14 @@
         "larastan/larastan": "^3.10",
         "laravel/pint": "^1.27",
         "mockery/mockery": "^1.6",
+        "nvl/ownership": "^5.0",
         "nvl/settings": "^5.0",
         "nvl/tenancy": "^5.0",
         "orchestra/testbench": "^10.0 || ^11.0",
         "pestphp/pest": "^4.0",
-        "pestphp/pest-plugin-laravel": "^4.0"
+        "pestphp/pest-plugin-laravel": "^4.0",
+        "spatie/laravel-data": "^4.23",
+        "symfony/process": "^7.0 || ^8.0"
     },
     "autoload": {
         "psr-4": {
@@ -94,10 +97,12 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "suggest": {
+        "nvl/ownership": "Adds optional model-declared ownership, isolation, adoption and captured worker contexts.",
         "nvl/settings": "Enables tenant-selected delivery profiles through the loaded Settings provider.",
-        "nvl/tenancy": "Enables enforcing tenant ownership, scoped execution, adoption, and captured tenant queue contexts."
+        "nvl/tenancy": "Temporary legacy tenancy bridge for existing tenant installations; native ownership does not require it."
     },
     "conflict": {
+        "nvl/ownership": "<5.0 || >=6.0",
         "nvl/settings": "<5.0 || >=6.0",
         "nvl/tenancy": "<5.0 || >=6.0"
     },
