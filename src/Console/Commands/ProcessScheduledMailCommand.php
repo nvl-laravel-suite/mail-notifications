@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Console\Commands;
 
 use Illuminate\Console\Command;
-use Nvl\MailNotifications\Services\MailTenantOperations;
+use Nvl\MailNotifications\Enums\MailOwnerOperation;
+use Nvl\MailNotifications\Services\MailOwnerOperations;
 use Nvl\MailNotifications\Services\ScheduledMailConfiguration;
 use Nvl\MailNotifications\Services\ScheduledMailProcessor;
 
@@ -25,7 +26,7 @@ final class ProcessScheduledMailCommand extends Command
     public function handle(
         ScheduledMailConfiguration $configuration,
         ScheduledMailProcessor $processor,
-        MailTenantOperations $tenants,
+        MailOwnerOperations $owners,
     ): int {
         if (! $configuration->enabled()) {
             $this->components->info('Scheduled mail is disabled.');
@@ -39,7 +40,7 @@ final class ProcessScheduledMailCommand extends Command
             return self::INVALID;
         }
 
-        $processed = array_sum($tenants->run(fn (): int => $processor->process($limit)));
+        $processed = array_sum($owners->run(MailOwnerOperation::ProcessScheduled, fn (): int => $processor->process($limit)));
         $this->components->info(sprintf(
             'Processed %d scheduled mail claim(s).',
             $processed,

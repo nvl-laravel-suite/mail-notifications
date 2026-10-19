@@ -52,9 +52,12 @@ final class ScheduledMessageFactoryRegistry
             }
             $factoryClass = $factory::class;
             $reflection = new ReflectionClass($factory);
+            if (config('nvl-ownership.enabled') === true && $reflection->isAnonymous()) {
+                throw new ScheduledMailException('Native scheduled mail requires stable, class-resolved factories.');
+            }
             $constructor = $reflection->getConstructor();
             $storedFactory = ! $reflection->isAnonymous()
-                && ($constructor === null || $constructor->getNumberOfRequiredParameters() === 0)
+                && (config('nvl-ownership.enabled') === true || $constructor === null || $constructor->getNumberOfRequiredParameters() === 0)
                 ? $factoryClass
                 : $factory;
             $alias = trim($factory->alias());
@@ -95,7 +98,7 @@ final class ScheduledMessageFactoryRegistry
         $factory = is_string($factoryClass)
             ? $this->instantiate($factoryClass)
             : $factoryClass;
-        if ($version < 1 || ! $factory->supportsVersion($version)) {
+        if ($factory->alias() !== $normalizedAlias || $version < 1 || ! $factory->supportsVersion($version)) {
             throw new ScheduledMailException(sprintf(
                 'Scheduled message factory [%s] does not support payload version [%d].',
                 $normalizedAlias,
@@ -128,7 +131,7 @@ final class ScheduledMessageFactoryRegistry
      */
     private function instantiate(string $factory): ScheduledMessageFactory
     {
-        $instance = $this->container->make($factory);
+        $instance = config('nvl-ownership.enabled') === true ? $this->container->build($factory) : $this->container->make($factory);
         if (! $instance instanceof ScheduledMessageFactory) {
             throw new ScheduledMailException(
                 'Scheduled message factories must implement ScheduledMessageFactory.',

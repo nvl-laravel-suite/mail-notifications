@@ -42,6 +42,7 @@ use Nvl\MailNotifications\Contracts\ListMailNotificationsContract;
 use Nvl\MailNotifications\Contracts\ListMailNotificationsForNotifiableContract;
 use Nvl\MailNotifications\Contracts\ListScheduledMailMessagesContract;
 use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
+use Nvl\MailNotifications\Contracts\MailOwnerWorklist;
 use Nvl\MailNotifications\Contracts\MailTenantWorklist;
 use Nvl\MailNotifications\Contracts\ProviderAdapter;
 use Nvl\MailNotifications\Contracts\ProviderMessageIdResolver;
@@ -59,6 +60,9 @@ use Nvl\MailNotifications\Contracts\SuggestMailNotificationsContract;
 use Nvl\MailNotifications\Contracts\TrackingLifecycle;
 use Nvl\MailNotifications\Laravel\Listeners\TrackMessageAfterSending;
 use Nvl\MailNotifications\Laravel\Listeners\TrackMessageBeforeSending;
+use Nvl\MailNotifications\Ownership\MailAdoptionAdapter;
+use Nvl\MailNotifications\Ownership\MailResourceRegistrar;
+use Nvl\MailNotifications\Ownership\StoredMailOwnerWorklist;
 use Nvl\MailNotifications\Services\ConfiguredDeliveryProfileResolver;
 use Nvl\MailNotifications\Services\ConfiguredMailNotificationReadAuthorization;
 use Nvl\MailNotifications\Services\ConfiguredMailTenantWorklist;
@@ -99,11 +103,15 @@ use Nvl\MailNotifications\Support\SensitiveStorageBridge;
 use Nvl\MailNotifications\Support\TrackingRuntimeBridge;
 use Nvl\MailNotifications\Tenancy\MailNotificationsResourceRegistrar;
 use Nvl\MailNotifications\Tenancy\MailTrackingContextParticipant;
+use Nvl\Ownership\Services\OwnershipAdoptionRegistry;
 use Nvl\Settings\Providers\SettingsServiceProvider;
 use Nvl\Support\Doctor\PackageDoctorContributor;
 use Nvl\Support\Events\ConnectionCommitCallbacks;
 use Nvl\Support\Globals\GlobalNames;
 use Nvl\Support\Integrations\OptionalIntegration;
+use Nvl\Support\Ownership\Contracts\OwnershipIntegratedProvider;
+use Nvl\Support\Ownership\Services\OwnershipContextParticipants;
+use Nvl\Support\Ownership\Services\OwnershipResourceRegistry;
 use Nvl\Support\Providers\SupportServiceProvider;
 use Nvl\Support\Providers\TenantServiceProvider;
 use Nvl\Support\Tenancy\Services\TenantContextParticipants;
@@ -115,7 +123,7 @@ use Nvl\Tenancy\Services\TenantAdoptionRegistry;
 /**
  * Registers provider-neutral tracking and a configurable Laravel mail presentation.
  */
-final class MailNotificationsServiceProvider extends ServiceProvider
+final class MailNotificationsServiceProvider extends ServiceProvider implements OwnershipIntegratedProvider
 {
     use MergesPackageConfiguration;
     use RegistersNamespacedResources;
@@ -136,6 +144,7 @@ final class MailNotificationsServiceProvider extends ServiceProvider
         $this->app->bindIf(SuggestMailNotificationsContract::class, SuggestMailNotificationsAction::class);
 
         $this->app->register(SupportServiceProvider::class);
+        $this->app->bindIf(MailOwnerWorklist::class, StoredMailOwnerWorklist::class);
         PackageDoctorContributor::register($this->app, 'nvl/mail-notifications', fn (): array => $this->app->make(MailNotificationsDoctor::class)->inspect());
 
         $this->app->register(TenantServiceProvider::class);
@@ -146,6 +155,12 @@ final class MailNotificationsServiceProvider extends ServiceProvider
         );
         (new MailNotificationsResourceRegistrar)->register($this->app->make(TenantResourceRegistry::class));
         $this->app->booted(function (): void {
+            (new MailResourceRegistrar)->register($this->app->make(OwnershipResourceRegistry::class),
+                config('nvl-ownership.enabled') === true && config('nvl-mail-notifications.ownership.scoped', true) === true);
+            $this->app->make(OwnershipContextParticipants::class)->register(\Nvl\MailNotifications\Ownership\MailTrackingContextParticipant::class);
+            if ($this->app->bound(OwnershipAdoptionRegistry::class)) {
+                $this->app->make(OwnershipAdoptionRegistry::class)->register('mail-notifications', MailAdoptionAdapter::class);
+            }
             if ($this->app->bound(TenantAdoptionRegistry::class)) {
                 (new MailNotificationsResourceRegistrar)->register($this->app->make(TenantResourceRegistry::class), $this->app->make(TenantAdoptionRegistry::class));
             }

@@ -9,7 +9,7 @@ use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadData;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadQuery;
-use Nvl\Support\Tenancy\Contracts\TenantBoundary;
+use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
  * Applies the fixed administrative filter allowlist to tracking reads.
@@ -17,7 +17,7 @@ use Nvl\Support\Tenancy\Contracts\TenantBoundary;
 final readonly class MailNotificationReadQueryBuilder
 {
     /** Create the tenant-bounded read builder. */
-    public function __construct(private TenantBoundary $boundary) {}
+    public function __construct(private OwnershipBoundary $boundary) {}
 
     /**
      * @return Builder<MailNotification>

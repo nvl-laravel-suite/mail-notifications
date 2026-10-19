@@ -12,6 +12,7 @@ use Nvl\MailNotifications\Laravel\ScheduledMailFactory;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\ValueObjects\ScheduledMessageData;
 use Nvl\MailNotifications\ValueObjects\ScheduledRecipients;
+use Nvl\Support\Ownership\Contracts\OwnershipQueueContext;
 use Throwable;
 
 /**
@@ -29,7 +30,8 @@ final readonly class ScheduledMailProcessor
         private ScheduledMailFinalizer $finalizer,
         private MailFactory $mail,
         private ScheduledMailInputGuard $input,
-        private MailTenantEnvelope $tenantEnvelope,
+        private MailOwnershipEnvelope $tenantEnvelope,
+        private OwnershipQueueContext $ownershipQueue,
         private TenantDeliveryProfileResolver $deliveryProfiles,
     ) {}
 
@@ -68,6 +70,18 @@ final readonly class ScheduledMailProcessor
      * Deliver one claim after its claiming transaction has committed.
      */
     private function deliver(ScheduledMailMessage $message): void
+    {
+        $producer = $this->tenantEnvelope->producerEnvelope($message);
+        if ($producer !== null) {
+            $this->ownershipQueue->run($producer, fn () => $this->deliverAdmitted($message));
+
+            return;
+        }
+        $this->deliverAdmitted($message);
+    }
+
+    /** Invoke host factories and transport only after fresh producer admission. */
+    private function deliverAdmitted(ScheduledMailMessage $message): void
     {
         $this->tenantEnvelope->assertScheduled($message);
         $claimToken = $message->claim_token;

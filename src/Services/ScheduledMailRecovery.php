@@ -11,7 +11,8 @@ use Nvl\MailNotifications\Events\ScheduledMailRecovered;
 use Nvl\MailNotifications\Events\ScheduledMailRetrying;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
-use Nvl\Support\Tenancy\Contracts\TenantBoundary;
+use Nvl\MailNotifications\Traits\PersistsScheduledMail;
+use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
  * Recovers expired claims without incrementing their attempt count.
@@ -21,6 +22,8 @@ use Nvl\Support\Tenancy\Contracts\TenantBoundary;
  */
 final readonly class ScheduledMailRecovery
 {
+    use PersistsScheduledMail;
+
     private const string EXPIRED_CLAIM = 'claim_expired';
 
     /**
@@ -29,8 +32,8 @@ final readonly class ScheduledMailRecovery
     public function __construct(
         private ScheduledMailConfiguration $configuration,
         private MailTrackingEventDispatcher $events,
-        private TenantBoundary $boundary,
-        private MailTenantEnvelope $tenantEnvelope,
+        private OwnershipBoundary $boundary,
+        private MailOwnershipEnvelope $tenantEnvelope,
     ) {}
 
     /**
@@ -50,7 +53,7 @@ final readonly class ScheduledMailRecovery
         ): int {
             $now = CarbonImmutable::now('UTC');
             $databaseNow = DatabaseTimestamp::format($now);
-            $expired = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
+            $expired = $this->scheduledQuery(maintenance: true)
                 ->where('status', ScheduledMailStatus::Processing->value)
                 ->whereNotNull('claim_token')
                 ->where('locked_until', '<=', $databaseNow)
@@ -92,8 +95,8 @@ final readonly class ScheduledMailRecovery
                     $updates['failed_at'] = $databaseNow;
                 }
 
-                $this->tenantEnvelope->assertScheduled($message);
-                $updated = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
+                $this->tenantEnvelope->assertScheduled($message, requireProducer: false);
+                $updated = $this->scheduledQuery(maintenance: true)
                     ->whereKey($message->id)
                     ->where('status', ScheduledMailStatus::Processing->value)
                     ->where('claim_token', $token)

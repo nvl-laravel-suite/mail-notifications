@@ -27,7 +27,8 @@ use Nvl\MailNotifications\ValueObjects\Recipient;
 use Nvl\MailNotifications\ValueObjects\TrackingAttempt;
 use Nvl\MailNotifications\ValueObjects\TransitionResult;
 use Nvl\MailNotifications\ValueObjects\VerifiedDeliveryEvent;
-use Nvl\Support\Tenancy\Contracts\TenantBoundary;
+use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
+use Nvl\Support\Ownership\Exceptions\OwnershipViolation;
 use Throwable;
 
 /**
@@ -51,9 +52,9 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         private MailTrackingEventDispatcher $events,
         private MailNotificationNotifiableTypeRegistry $notifiableTypes,
         private SensitiveStorageCodec $sensitiveStorage,
-        private TenantBoundary $boundary,
-        private MailTenantEnvelope $tenantEnvelope,
-        private MailNotifiableTenantAccess $notifiableAccess,
+        private OwnershipBoundary $boundary,
+        private MailOwnershipEnvelope $tenantEnvelope,
+        private MailNotifiableAccess $notifiableAccess,
     ) {}
 
     /**
@@ -66,7 +67,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
 
         return $model->getConnection()->transaction(function () use ($message): TrackingAttempt {
             $now = CarbonImmutable::now('UTC');
-            $notification = $this->boundary->query(MailNotification::query(), 'mail.notifications')->create(
+            $notification = $this->createNotification(
                 $this->notificationAttributes($message, $now),
             );
             $attempt = $this->attempt($notification);
@@ -89,7 +90,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         $model = new MailNotification;
 
         $model->getConnection()->transaction(function () use ($attempt, $acceptance): void {
-            $notification = $this->boundary->query(MailNotification::query(), 'mail.notifications')
+            $notification = $this->notifications()
                 ->whereKey($attempt->id)
                 ->lockForUpdate()
                 ->firstOrFail();
@@ -117,7 +118,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
                 $notification->status_changed_at = $now;
             }
 
-            $notification->save();
+            $this->saveNotification($notification);
 
             if (! $acceptanceRecorded) {
                 $this->events->dispatch(new MailAcceptedByProvider(
@@ -144,7 +145,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         $model = new MailNotification;
 
         $model->getConnection()->transaction(function () use ($attempt, $exception): void {
-            $notification = $this->boundary->query(MailNotification::query(), 'mail.notifications')
+            $notification = $this->notifications()
                 ->whereKey($attempt->id)
                 ->lockForUpdate()
                 ->first();
@@ -235,6 +236,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             'id' => (string) Str::uuid(),
             'mail_notification_id' => $notification->id,
             ...(config('nvl-tenancy.enabled') === true ? ['tenant_id' => $notification->tenant_id] : []),
+            ...($notification->getRawOriginal('owner_scope_key') === null ? [] : ['owner_scope_key' => $notification->getRawOriginal('owner_scope_key')]),
             'provider' => $event->provider,
             'provider_event_id' => $event->eventId,
             'provider_message_id' => $event->providerMessageId,
@@ -312,7 +314,8 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             $updates['failed_at'] = $event->occurredAt;
         }
 
-        $notification->update($updates);
+        $notification->fill($updates);
+        $this->saveNotification($notification);
         $this->events->dispatch(new MailDeliveryStatusChanged(
             notificationId: $notification->id,
             previousStatus: $previousStatus,
@@ -339,7 +342,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             && $currentStatus !== MailDeliveryStatus::Pending
             && $notification->accepted_at === null) {
             $notification->accepted_at = $event->occurredAt;
-            $notification->save();
+            $this->saveNotification($notification);
 
             return;
         }
@@ -356,7 +359,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             && $deliveryImplied
             && $notification->delivered_at === null) {
             $notification->delivered_at = $event->occurredAt;
-            $notification->save();
+            $this->saveNotification($notification);
         }
     }
 
@@ -370,7 +373,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         VerifiedDeliveryEvent $event,
         array $metadata,
     ): void {
-        $existingEvent = MailNotificationEvent::query()
+        $existingEvent = $this->providerEvents()
             ->where('provider', $event->provider)
             ->where('provider_event_id', $event->eventId)
             ->first();
@@ -502,7 +505,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             return;
         }
 
-        $completedAttemptExists = $this->boundary->query(MailNotification::query(), 'mail.notifications')
+        $completedAttemptExists = $this->notifications()
             ->where('queue_reference', $queueReference)
             ->where('status', '!=', MailDeliveryStatus::Pending->value)
             ->exists();
@@ -519,7 +522,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
 
         $this->assertNotifiableTypeIsRegistered($message);
         $now = CarbonImmutable::now('UTC');
-        $notification = $this->boundary->query(MailNotification::query(), 'mail.notifications')->create(
+        $notification = $this->createNotification(
             $this->notificationAttributes($message, $now),
         );
 
@@ -537,7 +540,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
     private function lockedQueuedFailureFallback(
         string $queueReference,
     ): ?MailNotification {
-        $fallback = $this->boundary->query(MailNotification::query(), 'mail.notifications')
+        $fallback = $this->notifications()
             ->where('correlation_id', $queueReference)
             ->where('queue_reference', $queueReference)
             ->first();
@@ -546,7 +549,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             return null;
         }
 
-        $fallback = $this->boundary->query(MailNotification::query(), 'mail.notifications')
+        $fallback = $this->notifications()
             ->whereKey($fallback->id)
             ->lockForUpdate()
             ->first();
@@ -570,7 +573,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         string $queueReference,
         Throwable $exception,
     ): bool {
-        $collisions = $this->boundary->query(MailNotification::query(), 'mail.notifications')
+        $collisions = $this->notifications()
             ->where(
                 static function (Builder $query) use ($queueReference): void {
                     $query
@@ -649,7 +652,8 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             $updates['metadata'] = $metadata;
         }
 
-        $notification->update($updates);
+        $notification->fill($updates);
+        $this->saveNotification($notification);
         $attempt = $this->attempt($notification);
 
         $this->events->dispatch(new MailTrackingFailed(
@@ -669,7 +673,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
      */
     private function notificationForEvent(VerifiedDeliveryEvent $event): MailNotification
     {
-        $query = $this->boundary->query(MailNotification::query(), 'mail.notifications')->lockForUpdate();
+        $query = $this->notifications()->lockForUpdate();
 
         if ($event->correlationId !== null) {
             $query->where('correlation_id', $event->correlationId);
@@ -780,5 +784,70 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             static fn (Recipient $recipient): array => $recipient->toArray(),
             $recipients,
         );
+    }
+
+    /** Return only the current owner or the fixed global tracking partition.
+     * @return Builder<MailNotification>
+     */
+    private function notifications(): Builder
+    {
+        if (! $this->tenantEnvelope->globalTracking()) {
+            return $this->boundary->query(MailNotification::query(), 'mail.notifications');
+        }
+        $model = new MailNotification;
+
+        return (new Builder($model->getConnection()->query()))->setModel($model)->where('owner_scope_key', 'central');
+    }
+
+    /** Read authenticated provider events only inside their canonical tracking partition.
+     * @return Builder<MailNotificationEvent>
+     */
+    private function providerEvents(): Builder
+    {
+        if (! $this->tenantEnvelope->globalTracking()) {
+            return MailNotificationEvent::query();
+        }
+        $model = new MailNotificationEvent;
+
+        return (new Builder($model->getConnection()->query()))->setModel($model)->where('owner_scope_key', 'central');
+    }
+
+    /** Insert one global attempt without exposing a central query or runner to a caller.
+     * @param  array<string,mixed>  $attributes
+     */
+    private function createNotification(array $attributes): MailNotification
+    {
+        if (! $this->tenantEnvelope->globalTracking()) {
+            return $this->notifications()->create($attributes);
+        }
+        $model = new MailNotification;
+        $model->forceFill([...$attributes, 'owner_scope_key' => 'central', 'owner_reference' => null]);
+        $now = $model->freshTimestamp();
+        $model->setCreatedAt($now)->setUpdatedAt($now);
+        $model->getConnection()->table($model->getTable())->insert($model->getAttributes());
+
+        return $this->notifications()->whereKey($model->getKey())->firstOrFail();
+    }
+
+    /** Mutate only a freshly locked global attempt selected by this lifecycle's fixed capability. */
+    private function saveNotification(MailNotification $notification): void
+    {
+        if (! $this->tenantEnvelope->globalTracking()) {
+            $notification->save();
+
+            return;
+        }
+        if ($notification->getRawOriginal('owner_scope_key') !== 'central' || $notification->getRawOriginal('owner_reference') !== null
+            || $notification->isDirty(['id', 'correlation_id', 'queue_reference', 'owner_scope_key', 'owner_reference'])) {
+            throw new OwnershipViolation('Global tracking cannot relabel owner or correlation facts.');
+        }
+        $notification->setUpdatedAt($notification->freshTimestamp());
+        $dirty = $notification->getDirty();
+        if ($dirty !== []) {
+            $notification->getConnection()->table($notification->getTable())->where('owner_scope_key', 'central')
+                ->where('id', $notification->getKey())->where('correlation_id', $notification->correlation_id)->update($dirty);
+            $notification->syncChanges();
+            $notification->syncOriginal();
+        }
     }
 }

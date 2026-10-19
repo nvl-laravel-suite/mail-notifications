@@ -13,8 +13,9 @@ use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
+use Nvl\MailNotifications\Traits\QueriesMailHistory;
 use Nvl\MailNotifications\ValueObjects\MailAnonymizationResult;
-use Nvl\Support\Tenancy\Contracts\TenantBoundary;
+use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
  * Anonymizes bounded retained history without deleting lifecycle rows.
@@ -24,12 +25,15 @@ use Nvl\Support\Tenancy\Contracts\TenantBoundary;
  */
 final readonly class MailHistoryAnonymizer
 {
+    use QueriesMailHistory;
+
     /**
      * Create the database history anonymizer.
      */
     public function __construct(
         private MailAnonymizationConfiguration $configuration,
-        private TenantBoundary $boundary,
+        private OwnershipBoundary $boundary,
+        private MailOwnershipEnvelope $ownership,
     ) {}
 
     /**
@@ -174,7 +178,7 @@ final readonly class MailHistoryAnonymizer
     ): Builder {
         $databaseCutoff = DatabaseTimestamp::format($cutoff);
 
-        return $this->boundary->query(MailNotification::query(), 'mail.notifications')
+        return $this->historyQuery(MailNotification::query(), 'mail.notifications')
             ->whereIn('status', $statuses)
             ->where(static function (Builder $query) use (
                 $databaseCutoff,
@@ -209,7 +213,7 @@ final readonly class MailHistoryAnonymizer
             $cutoff,
             $statuses,
         )->select('id');
-        $query = MailNotificationEvent::query()
+        $query = $this->historyQuery(MailNotificationEvent::query(), 'mail.events')
             ->whereNull('redacted_at')
             ->whereIn('mail_notification_id', $eligibleNotificationIds)
             ->orderBy('occurred_at')
@@ -236,7 +240,7 @@ final readonly class MailHistoryAnonymizer
         bool $lock,
     ): array {
         $databaseCutoff = DatabaseTimestamp::format($cutoff);
-        $query = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
+        $query = $this->historyQuery(ScheduledMailMessage::query(), 'mail.scheduled')
             ->whereNull('redacted_at')
             ->where(static function (Builder $query) use (
                 $databaseCutoff,
@@ -342,7 +346,7 @@ final readonly class MailHistoryAnonymizer
         CarbonImmutable $redactedAt,
     ): void {
         foreach (array_chunk($ids, $batchSize) as $batch) {
-            $models = $this->boundary->query(MailNotification::query(), 'mail.notifications')->whereKey($batch)->get();
+            $models = $this->historyQuery(MailNotification::query(), 'mail.notifications')->whereKey($batch)->get();
 
             if ($models->count() !== count($batch)) {
                 throw $this->candidateSetChanged('notification');
@@ -363,7 +367,7 @@ final readonly class MailHistoryAnonymizer
                     'redacted_at' => $redactedAt,
                 ]);
 
-                if (! $notification->save()) {
+                if (! $this->saveRedaction($notification)) {
                     throw $this->candidateSetChanged('notification');
                 }
             }
@@ -382,7 +386,7 @@ final readonly class MailHistoryAnonymizer
         CarbonImmutable $redactedAt,
     ): void {
         foreach (array_chunk($ids, $batchSize) as $batch) {
-            $models = MailNotificationEvent::query()
+            $models = $this->historyQuery(MailNotificationEvent::query(), 'mail.events')
                 ->whereKey($batch)
                 ->get();
 
@@ -396,7 +400,7 @@ final readonly class MailHistoryAnonymizer
                     'redacted_at' => $redactedAt,
                 ]);
 
-                if (! $event->save()) {
+                if (! $this->saveRedaction($event)) {
                     throw $this->candidateSetChanged('provider-event');
                 }
             }
@@ -415,7 +419,7 @@ final readonly class MailHistoryAnonymizer
         CarbonImmutable $redactedAt,
     ): void {
         foreach (array_chunk($ids, $batchSize) as $batch) {
-            $models = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
+            $models = $this->historyQuery(ScheduledMailMessage::query(), 'mail.scheduled')
                 ->whereKey($batch)
                 ->get();
 
@@ -436,7 +440,7 @@ final readonly class MailHistoryAnonymizer
                     'redacted_at' => $redactedAt,
                 ]);
 
-                if (! $message->save()) {
+                if (! $this->saveRedaction($message)) {
                     throw $this->candidateSetChanged('scheduled-message');
                 }
             }

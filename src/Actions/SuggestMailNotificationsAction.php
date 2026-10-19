@@ -13,7 +13,7 @@ use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Enums\MailNotificationReadAbility;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\ValueObjects\MailNotificationSuggestion;
-use Nvl\Support\Tenancy\Contracts\TenantBoundary;
+use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
  * Returns minimal, bounded autocomplete results for authorized administrators.
@@ -22,7 +22,7 @@ use Nvl\Support\Tenancy\Contracts\TenantBoundary;
  */
 final readonly class SuggestMailNotificationsAction implements SuggestMailNotificationsContract
 {
-    public function __construct(private MailNotificationReadAuthorization $authorization, private TenantBoundary $boundary) {}
+    public function __construct(private MailNotificationReadAuthorization $authorization, private OwnershipBoundary $boundary) {}
 
     /**
      * @return list<MailNotificationSuggestion>

@@ -8,10 +8,11 @@ use Carbon\CarbonImmutable;
 use DateTimeImmutable;
 use DateTimeZone;
 use Illuminate\Console\Command;
+use Nvl\MailNotifications\Enums\MailOwnerOperation;
 use Nvl\MailNotifications\Exceptions\MailRetentionException;
 use Nvl\MailNotifications\Services\MailAnonymizationConfiguration;
 use Nvl\MailNotifications\Services\MailHistoryAnonymizer;
-use Nvl\MailNotifications\Services\MailTenantOperations;
+use Nvl\MailNotifications\Services\MailOwnerOperations;
 use Nvl\MailNotifications\ValueObjects\MailAnonymizationResult;
 use Throwable;
 
@@ -30,7 +31,7 @@ final class AnonymizeMailNotificationsCommand extends Command
     /**
      * Run one explicitly host-invoked anonymization stage.
      */
-    public function handle(MailHistoryAnonymizer $anonymizer, MailTenantOperations $tenants): int
+    public function handle(MailHistoryAnonymizer $anonymizer, MailOwnerOperations $owners): int
     {
         $limit = $this->limitOption();
         $cutoff = $this->cutoffOption();
@@ -40,7 +41,7 @@ final class AnonymizeMailNotificationsCommand extends Command
         }
 
         try {
-            $results = $tenants->run(fn (): MailAnonymizationResult => $anonymizer->anonymize(
+            $results = $owners->run(MailOwnerOperation::Anonymize, fn (): MailAnonymizationResult => $anonymizer->anonymize(
                 dryRun: (bool) $this->option('dry-run'), limit: $limit, cutoff: $cutoff,
             ));
             if ($results === []) {

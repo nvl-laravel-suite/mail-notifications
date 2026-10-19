@@ -16,11 +16,15 @@ use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Laravel\Casts\SensitiveArrayCast;
 use Nvl\MailNotifications\Laravel\Casts\UtcImmutableDateTimeCast;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
+use Nvl\MailNotifications\Traits\HasMailOwnership;
 use Nvl\Support\Config\PackageStorage;
+use Nvl\Support\Ownership\Contracts\Ownable;
 
 /**
  * Persists the provider-neutral lifecycle of one outbound mail delivery.
  *
+ * @property string|null $owner_scope_key
+ * @property string|null $owner_reference
  * @property string $id
  * @property string|null $tenant_id
  * @property string|null $ownership_key
@@ -52,11 +56,12 @@ use Nvl\Support\Config\PackageStorage;
  *
  * @api
  */
-final class MailNotification extends Model
+final class MailNotification extends Model implements Ownable
 {
     /** @use HasFactory<MailNotificationFactory> */
     use HasFactory;
 
+    use HasMailOwnership;
     use HasUuids;
 
     public const string TABLE = MailNotificationsTables::Notifications;

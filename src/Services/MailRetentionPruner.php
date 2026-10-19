@@ -13,20 +13,24 @@ use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
+use Nvl\MailNotifications\Traits\QueriesMailHistory;
 use Nvl\MailNotifications\ValueObjects\MailRetentionResult;
-use Nvl\Support\Tenancy\Contracts\TenantBoundary;
+use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
  * Prunes bounded, allowlisted database history without provider side effects.
  */
 final readonly class MailRetentionPruner
 {
+    use QueriesMailHistory;
+
     /**
      * Create the database retention service.
      */
     public function __construct(
         private MailRetentionConfiguration $configuration,
-        private TenantBoundary $boundary,
+        private OwnershipBoundary $boundary,
+        private MailOwnershipEnvelope $ownership,
     ) {}
 
     /**
@@ -129,7 +133,7 @@ final readonly class MailRetentionPruner
         bool $lock,
     ): array {
         $databaseCutoff = DatabaseTimestamp::format($cutoff);
-        $query = $this->boundary->query(MailNotification::query(), 'mail.notifications')
+        $query = $this->historyQuery(MailNotification::query(), 'mail.notifications')
             ->whereIn('status', $statuses)
             ->where(static function (EloquentBuilder $query) use (
                 $databaseCutoff,
@@ -172,7 +176,7 @@ final readonly class MailRetentionPruner
         bool $lock,
     ): array {
         $databaseCutoff = DatabaseTimestamp::format($cutoff);
-        $query = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
+        $query = $this->historyQuery(ScheduledMailMessage::query(), 'mail.scheduled')
             ->where(static function (EloquentBuilder $query) use (
                 $databaseCutoff,
                 $statuses,
@@ -257,7 +261,7 @@ final readonly class MailRetentionPruner
         $count = 0;
 
         foreach (array_chunk($notificationIds, $batchSize) as $ids) {
-            $count += MailNotificationEvent::query()
+            $count += $this->historyQuery(MailNotificationEvent::query(), 'mail.events')
                 ->whereIn('mail_notification_id', $ids)
                 ->count();
         }
@@ -280,11 +284,11 @@ final readonly class MailRetentionPruner
         int $batchSize,
     ): void {
         foreach (array_chunk($notificationIds, $batchSize) as $ids) {
-            MailNotificationEvent::query()
+            $this->historyQuery(MailNotificationEvent::query(), 'mail.events')
                 ->whereIn('mail_notification_id', $ids)
                 ->delete();
 
-            $deleted = $this->boundary->query(MailNotification::query(), 'mail.notifications')->whereKey($ids)->delete();
+            $deleted = $this->historyQuery(MailNotification::query(), 'mail.notifications')->whereKey($ids)->delete();
 
             if ($deleted !== count($ids)) {
                 throw new MailRetentionException(
@@ -305,7 +309,7 @@ final readonly class MailRetentionPruner
         int $batchSize,
     ): void {
         foreach (array_chunk($scheduledMessageIds, $batchSize) as $ids) {
-            $deleted = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
+            $deleted = $this->historyQuery(ScheduledMailMessage::query(), 'mail.scheduled')
                 ->whereKey($ids)
                 ->delete();
 

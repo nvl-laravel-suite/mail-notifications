@@ -7,7 +7,7 @@ namespace Nvl\MailNotifications\Services;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Database\Eloquent\Model;
 use Nvl\MailNotifications\Contracts\MailTrackable;
-use Nvl\Support\Tenancy\Contracts\TenantBoundary;
+use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 use Nvl\Support\Tenancy\Exceptions\TenantBoundaryViolation;
 use Nvl\Support\Tenancy\Services\TenantResourceRegistry;
 
@@ -18,7 +18,7 @@ final readonly class MailNotifiableTenantAccess
     public function __construct(
         private Repository $config,
         private TenantResourceRegistry $resources,
-        private TenantBoundary $boundary,
+        private OwnershipBoundary $boundary,
     ) {}
 
     /** @param class-string<MailTrackable> $class */

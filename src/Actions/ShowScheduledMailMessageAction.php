@@ -10,7 +10,7 @@ use Nvl\MailNotifications\Contracts\ShowScheduledMailMessageContract;
 use Nvl\MailNotifications\Enums\ScheduledMailReadAbility;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\ValueObjects\ScheduledMailDetailData;
-use Nvl\Support\Tenancy\Contracts\TenantBoundary;
+use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
  * Resolves one authorized, privacy-bounded scheduled-mail detail projection.
@@ -21,7 +21,7 @@ final readonly class ShowScheduledMailMessageAction implements ShowScheduledMail
 {
     public function __construct(
         private ScheduledMailReadAuthorization $authorization,
-        private TenantBoundary $boundary,
+        private OwnershipBoundary $boundary,
     ) {}
 
     public function execute(

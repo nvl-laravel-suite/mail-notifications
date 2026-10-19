@@ -10,7 +10,7 @@ use Nvl\MailNotifications\Contracts\ShowMailNotificationContract;
 use Nvl\MailNotifications\Enums\MailNotificationReadAbility;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadData;
-use Nvl\Support\Tenancy\Contracts\TenantBoundary;
+use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
  * Resolves one authorized delivery and its metadata-free provider events.
@@ -19,7 +19,7 @@ use Nvl\Support\Tenancy\Contracts\TenantBoundary;
  */
 final readonly class ShowMailNotificationAction implements ShowMailNotificationContract
 {
-    public function __construct(private MailNotificationReadAuthorization $authorization, private TenantBoundary $boundary) {}
+    public function __construct(private MailNotificationReadAuthorization $authorization, private OwnershipBoundary $boundary) {}
 
     public function execute(
         Authenticatable $actor,

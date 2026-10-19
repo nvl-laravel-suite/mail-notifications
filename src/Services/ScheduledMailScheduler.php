@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Services;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Str;
 use Nvl\MailNotifications\Contracts\ScheduledMailSchedulerContract;
 use Nvl\MailNotifications\Contracts\SensitiveDataRedactor;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
@@ -15,8 +16,9 @@ use Nvl\MailNotifications\Events\ScheduledMailScheduled;
 use Nvl\MailNotifications\Exceptions\ScheduledMailException;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
+use Nvl\MailNotifications\Traits\PersistsScheduledMail;
 use Nvl\MailNotifications\ValueObjects\ScheduleMailData;
-use Nvl\Support\Tenancy\Contracts\TenantBoundary;
+use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
  * Owns scheduling, cancellation, and rescheduling write transactions.
@@ -28,6 +30,8 @@ use Nvl\Support\Tenancy\Contracts\TenantBoundary;
  */
 final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerContract
 {
+    use PersistsScheduledMail;
+
     /**
      * Create the public scheduled-mail mutation boundary.
      */
@@ -39,9 +43,9 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
         private MailTrackingEventDispatcher $events,
         private ScheduledMailInputGuard $input,
         private SensitiveStorageCodec $sensitiveStorage,
-        private TenantBoundary $boundary,
-        private MailTenantEnvelope $tenantEnvelope,
-        private MailNotifiableTenantAccess $notifiableAccess,
+        private OwnershipBoundary $boundary,
+        private MailOwnershipEnvelope $tenantEnvelope,
+        private MailNotifiableAccess $notifiableAccess,
     ) {}
 
     /**
@@ -55,13 +59,11 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
 
         return $message->getConnection()->transaction(
             function () use ($attributes): ScheduledMailMessage {
-                $message = new ScheduledMailMessage;
-                $message->forceFill([
+                $message = $this->createScheduled([
                     ...$this->tenantEnvelope->scheduledAttributes(),
                     ...$attributes,
                     'status' => ScheduledMailStatus::Pending,
                 ]);
-                $message->save();
                 $this->events->dispatch(new ScheduledMailScheduled(
                     messageId: $message->id,
                     factoryAlias: $message->factory_alias,
@@ -87,7 +89,7 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
             $messageId,
         ): ScheduledMailMessage {
             $cancelledAt = CarbonImmutable::now('UTC');
-            $updated = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
+            $updated = $this->scheduledQuery()
                 ->whereKey($messageId)
                 ->where('status', ScheduledMailStatus::Pending->value)
                 ->update([
@@ -106,7 +108,7 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
                 cancelledAt: $cancelledAt,
             ));
 
-            return $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')->findOrFail($messageId);
+            return $this->scheduledQuery()->findOrFail($messageId);
         });
     }
 
@@ -126,7 +128,7 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
             $messageId,
             $timing,
         ): ScheduledMailMessage {
-            $message = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
+            $message = $this->scheduledQuery()
                 ->whereKey($messageId)
                 ->where('status', ScheduledMailStatus::Pending->value)
                 ->lockForUpdate()
@@ -138,7 +140,7 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
                 );
             }
 
-            $updated = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
+            $updated = $this->scheduledQuery()
                 ->whereKey($messageId)
                 ->where('status', ScheduledMailStatus::Pending->value)
                 ->where('attempts', $message->attempts)
@@ -166,7 +168,7 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
                 availableAt: $timing['available_at'],
             ));
 
-            return $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')->findOrFail($messageId);
+            return $this->scheduledQuery()->findOrFail($messageId);
         });
     }
 
@@ -185,7 +187,7 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
             $messageId,
             $attributes,
         ): ScheduledMailMessage {
-            $message = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
+            $message = $this->scheduledQuery()
                 ->whereKey($messageId)
                 ->where('status', ScheduledMailStatus::Pending->value)
                 ->lockForUpdate()
@@ -232,7 +234,7 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
                     $attributes['metadata'],
                 ),
             ];
-            $updated = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
+            $updated = $this->scheduledQuery()
                 ->whereKey($messageId)
                 ->where('status', ScheduledMailStatus::Pending->value)
                 ->where('attempts', $message->attempts)
@@ -264,7 +266,7 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
                 availableAt: $attributes['available_at'],
             ));
 
-            return $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')->findOrFail($messageId);
+            return $this->scheduledQuery()->findOrFail($messageId);
         });
     }
 
@@ -362,5 +364,25 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
             'scheduled_for' => $scheduledFor,
             'available_at' => $availableAt,
         ];
+    }
+
+    /** Create only this workflow's validated mail payload; never expose a central query capability.
+     * @param  array<string,mixed>  $attributes
+     */
+    private function createScheduled(array $attributes): ScheduledMailMessage
+    {
+        $message = new ScheduledMailMessage;
+        $message->forceFill($attributes);
+        if (! $this->tenantEnvelope->globalScheduling()) {
+            $message->save();
+
+            return $message;
+        }
+        $message->forceFill(['id' => (string) Str::uuid(), 'owner_scope_key' => 'central', 'owner_reference' => null]);
+        $now = $message->freshTimestamp();
+        $message->setCreatedAt($now)->setUpdatedAt($now);
+        $message->getConnection()->table($message->getTable())->insert($message->getAttributes());
+
+        return $this->scheduledQuery()->whereKey($message->getKey())->firstOrFail();
     }
 }

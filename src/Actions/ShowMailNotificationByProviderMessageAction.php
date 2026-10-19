@@ -10,7 +10,7 @@ use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Services\ProviderRegistry;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadData;
 use Nvl\MailNotifications\ValueObjects\ProviderMessageId;
-use Nvl\Support\Tenancy\Contracts\TenantBoundary;
+use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
  * Resolves one authorized delivery by its exact registered provider identity.
@@ -25,7 +25,7 @@ final readonly class ShowMailNotificationByProviderMessageAction implements Show
     public function __construct(
         private ProviderRegistry $providers,
         private ShowMailNotificationAction $show,
-        private TenantBoundary $boundary,
+        private OwnershipBoundary $boundary,
     ) {}
 
     public function execute(

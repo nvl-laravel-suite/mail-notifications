@@ -21,10 +21,6 @@ use Nvl\MailNotifications\ValueObjects\TransitionResult;
 use Nvl\MailNotifications\ValueObjects\VerifiedDeliveryEvent;
 use Nvl\MailNotifications\ValueObjects\WebhookAcknowledgement;
 use Nvl\MailNotifications\ValueObjects\WebhookRequest;
-use Nvl\Support\Tenancy\Contracts\TenantContext;
-use Nvl\Support\Tenancy\Contracts\TenantRunner;
-use Nvl\Support\Tenancy\Enums\TenantContextMode;
-use Nvl\Support\Tenancy\Exceptions\TenantBoundaryViolation;
 
 /**
  * Verifies, normalizes, and persists one provider webhook through a registered adapter.
@@ -38,9 +34,7 @@ final readonly class WebhookProcessor
         private ProviderRegistry $providers,
         private TrackingLifecycle $lifecycle,
         private Repository $config,
-        private VerifiedDeliveryTenantLocator $tenantLocator,
-        private TenantRunner $tenants,
-        private TenantContext $tenantContext,
+        private MailDeliveryReconciler $ownership,
         private ?MailTrackingEventDispatcher $events = null,
     ) {}
 
@@ -109,23 +103,7 @@ final readonly class WebhookProcessor
         }
 
         try {
-            if ($this->config->get('nvl-tenancy.enabled') !== true
-                && ! $this->lifecycle instanceof DatabaseTrackingLifecycle) {
-                return $this->lifecycle->apply($event);
-            }
-            $stored = $this->tenantLocator->locate($event);
-            if ($stored->mode === TenantContextMode::Tenant) {
-                return $this->tenants->run(
-                    $stored->tenantId ?? throw new TenantBoundaryViolation('Stored tenant delivery identity is incomplete.'),
-                    fn (): TransitionResult => $this->lifecycle->apply($event),
-                );
-            }
-            if ($stored->mode === TenantContextMode::Platform
-                && $this->tenantContext->snapshot()->mode !== TenantContextMode::Platform) {
-                throw new TenantBoundaryViolation('Platform mail callbacks require an explicitly authorized platform context.');
-            }
-
-            return $this->lifecycle->apply($event);
+            return $this->ownership->apply($event, $this->lifecycle);
         } catch (AmbiguousDeliveryEventException) {
             return $this->handleAmbiguousEvent($event);
         } catch (UnmatchedDeliveryEventException $exception) {

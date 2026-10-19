@@ -8,10 +8,11 @@ use Carbon\CarbonImmutable;
 use DateTimeImmutable;
 use DateTimeZone;
 use Illuminate\Console\Command;
+use Nvl\MailNotifications\Enums\MailOwnerOperation;
 use Nvl\MailNotifications\Exceptions\MailRetentionException;
+use Nvl\MailNotifications\Services\MailOwnerOperations;
 use Nvl\MailNotifications\Services\MailRetentionConfiguration;
 use Nvl\MailNotifications\Services\MailRetentionPruner;
-use Nvl\MailNotifications\Services\MailTenantOperations;
 use Nvl\MailNotifications\ValueObjects\MailRetentionResult;
 use Throwable;
 
@@ -30,7 +31,7 @@ final class PruneMailNotificationsCommand extends Command
     /**
      * Run one explicitly host-invoked retention batch.
      */
-    public function handle(MailRetentionPruner $pruner, MailTenantOperations $tenants): int
+    public function handle(MailRetentionPruner $pruner, MailOwnerOperations $owners): int
     {
         $limit = $this->limitOption();
         $cutoff = $this->cutoffOption();
@@ -40,7 +41,7 @@ final class PruneMailNotificationsCommand extends Command
         }
 
         try {
-            $results = $tenants->run(fn (): MailRetentionResult => $pruner->prune(
+            $results = $owners->run(MailOwnerOperation::Prune, fn (): MailRetentionResult => $pruner->prune(
                 dryRun: (bool) $this->option('dry-run'), limit: $limit, cutoff: $cutoff,
             ));
             if ($results === []) {

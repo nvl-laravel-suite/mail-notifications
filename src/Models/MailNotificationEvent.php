@@ -16,11 +16,14 @@ use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Laravel\Casts\SensitiveArrayCast;
 use Nvl\MailNotifications\Laravel\Casts\UtcImmutableDateTimeCast;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
+use Nvl\MailNotifications\Traits\HasMailOwnership;
 use Nvl\Support\Config\PackageStorage;
+use Nvl\Support\Ownership\Contracts\Ownable;
 
 /**
  * Persists one authenticated provider event for durable idempotency.
  *
+ * @property string|null $owner_scope_key
  * @property string $id
  * @property string|null $tenant_id
  * @property string $mail_notification_id
@@ -37,11 +40,12 @@ use Nvl\Support\Config\PackageStorage;
  *
  * @api
  */
-final class MailNotificationEvent extends Model
+final class MailNotificationEvent extends Model implements Ownable
 {
     /** @use HasFactory<MailNotificationEventFactory> */
     use HasFactory;
 
+    use HasMailOwnership;
     use HasUuids;
 
     public const string TABLE = MailNotificationsTables::Events;

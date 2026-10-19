@@ -12,7 +12,8 @@ use Nvl\MailNotifications\Events\ScheduledMailRetrying;
 use Nvl\MailNotifications\Events\ScheduledMailSent;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
-use Nvl\Support\Tenancy\Contracts\TenantBoundary;
+use Nvl\MailNotifications\Traits\PersistsScheduledMail;
+use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 use Throwable;
 
 /**
@@ -23,14 +24,16 @@ use Throwable;
  */
 final readonly class ScheduledMailFinalizer
 {
+    use PersistsScheduledMail;
+
     /**
      * Create the claim finalizer.
      */
     public function __construct(
         private ScheduledMailConfiguration $configuration,
         private MailTrackingEventDispatcher $events,
-        private TenantBoundary $boundary,
-        private MailTenantEnvelope $tenantEnvelope,
+        private OwnershipBoundary $boundary,
+        private MailOwnershipEnvelope $tenantEnvelope,
     ) {}
 
     /**
@@ -157,14 +160,14 @@ final readonly class ScheduledMailFinalizer
         string $messageId,
         string $claimToken,
     ): ?ScheduledMailMessage {
-        $message = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
+        $message = $this->scheduledQuery()
             ->whereKey($messageId)
             ->where('status', ScheduledMailStatus::Processing->value)
             ->where('claim_token', $claimToken)
             ->lockForUpdate()
             ->first();
         if ($message instanceof ScheduledMailMessage) {
-            $this->tenantEnvelope->assertScheduled($message);
+            $this->tenantEnvelope->assertScheduled($message, requireProducer: false);
         }
 
         return $message;
@@ -179,7 +182,7 @@ final readonly class ScheduledMailFinalizer
         string $messageId,
         string $claimToken,
     ): Builder {
-        return $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
+        return $this->scheduledQuery()
             ->whereKey($messageId)
             ->where('status', ScheduledMailStatus::Processing->value)
             ->where('claim_token', $claimToken);
