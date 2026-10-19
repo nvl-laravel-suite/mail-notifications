@@ -159,6 +159,15 @@
             "properties": [],
             "constants": []
         },
+        "Nvl\\MailNotifications\\Contracts\\MailOwnerWorklist": {
+            "kind": "interface",
+            "file": "src/Contracts/MailOwnerWorklist.php",
+            "methods": [
+                "owners"
+            ],
+            "properties": [],
+            "constants": []
+        },
         "Nvl\\MailNotifications\\Contracts\\MailTrackable": {
             "kind": "interface",
             "file": "src/Contracts/MailTrackable.php",
@@ -485,6 +494,25 @@
                 "SensitiveDataUnreadable",
                 "SensitiveStorageUnavailable",
                 "UnmatchedDeliveryEvent"
+            ]
+        },
+        "Nvl\\MailNotifications\\Enums\\MailOwnerOperation": {
+            "kind": "enum",
+            "file": "src/Enums/MailOwnerOperation.php",
+            "methods": [
+                "cases",
+                "from",
+                "tryFrom"
+            ],
+            "properties": [
+                "name",
+                "value"
+            ],
+            "constants": [
+                "Anonymize",
+                "ProcessScheduled",
+                "Prune",
+                "RecoverScheduled"
             ]
         },
         "Nvl\\MailNotifications\\Enums\\ScheduledMailReadAbility": {
