@@ -3,12 +3,12 @@
 ## Quickstart
 
 ```sh
-composer require nvl/mail-notifications:^5.0
+composer require nvl/mail-notifications:^6.0
 php artisan nvl:install mail-notifications --dry-run
 php artisan nvl:install mail-notifications
 ```
 
-Required NVL dependencies: `nvl/core` (`^5.0`). Configure a provider and read authorization, then explicitly enable tracking/sending as required. ProviderMessageId is a trusted typed provider identifier, not arbitrary request scope.
+Required NVL dependencies: `nvl/core` (`^6.0`). Configure a provider and read authorization, then explicitly enable tracking/sending as required. ProviderMessageId is a trusted typed provider identifier, not arbitrary request scope.
 Review the published common config, select one migration owner, and run schema preflight before existing-table upgrades. The installer does not enable features or run migrations. Follow the detailed installation and capability sections below before invoking a storage/provider operation.
 
 Inject `Nvl\MailNotifications\Contracts\ShowMailNotificationByProviderMessageContract` in a host service. After supplying the trusted inputs described above, the first public call is:
@@ -34,7 +34,7 @@ See the [installation and publishing guide](https://github.com/nvl-laravel-suite
 
 | Item | Value |
 |---|---|
-| Installed through | `composer require nvl/mail-notifications:^5.0` |
+| Installed through | `composer require nvl/mail-notifications:^6.0` |
 | Module identifier | `nvl/mail-notifications` |
 | PHP namespace | `Nvl\MailNotifications` |
 | Service provider | `Nvl\MailNotifications\Providers\MailNotificationsServiceProvider` |
@@ -76,7 +76,7 @@ Global Markdown-path and shared view-variable adoption default to `false` throug
   variable `check_constraint_checks` enabled
 
 ```bash
-composer require nvl/mail-notifications:^5.0
+composer require nvl/mail-notifications:^6.0
 php artisan migrate
 ```
 
