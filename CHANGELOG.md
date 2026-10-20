@@ -7,6 +7,10 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [6.0.0] - 2026-10-20
 
+### Release fixes
+
+- Include the existing native ownership default in published common configuration.
+
 ### Changed
 
 - Capture native owner context for scheduled delivery, tracking and worker execution; preserve producer identity and scoped host configuration.
