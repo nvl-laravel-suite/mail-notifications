@@ -5,6 +5,13 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+## [6.0.1] - 2026-10-21
+
+### Changed
+
+- Use the shared Ownership resource backfill while preserving retained delivery history, inherited ownership and package verification.
+- Require optional Ownership >=6.0.1 when installed so new shared backfill callers cannot resolve an older runtime.
+
 ## [6.0.0] - 2026-10-20
 
 ### Release fixes
