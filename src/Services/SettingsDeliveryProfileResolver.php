@@ -9,7 +9,11 @@ use Nvl\MailNotifications\Contracts\DeliveryProfileResolver;
 use Nvl\MailNotifications\Exceptions\ScheduledMailException;
 use Nvl\Settings\Contracts\SettingRepository;
 
-/** Selects an approved deployment-managed mailer name from tenant Settings. */
+/**
+ * Selects an approved deployment-managed mailer name from tenant Settings.
+ *
+ * @internal
+ */
 final readonly class SettingsDeliveryProfileResolver implements DeliveryProfileResolver
 {
     /** Create the profile selector. */

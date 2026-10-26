@@ -17,7 +17,11 @@ use Nvl\MailNotifications\ValueObjects\Recipient;
 use Nvl\MailNotifications\ValueObjects\ScheduledMailReadQuery;
 use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
-/** Authorized, privacy-bounded native scheduled delivery reads. */
+/**
+ * Authorized, privacy-bounded native scheduled delivery reads.
+ *
+ * @api
+ */
 final readonly class ScheduledMailReader
 {
     /** @var list<string> */
@@ -104,7 +108,7 @@ final readonly class ScheduledMailReader
      * @param array<string, mixed> $filters */
     private function filter(array $filters): ScheduledMailReadQuery
     {
-        $allowed = ['status', 'factoryAlias', 'notifiable', 'from', 'to', 'dueOnly', 'sort', 'direction', 'page', 'perPage'];
+        $allowed = ['status', 'factoryAlias', 'notifiable', 'from', 'to', 'dueOnly', 'sort', 'direction', 'page', 'per_page'];
         if (array_diff(array_keys($filters), $allowed) !== []) {
             throw new InvalidArgumentException('Unknown scheduled mail filter.');
         }
@@ -145,9 +149,9 @@ final readonly class ScheduledMailReader
         if (! is_int($page)) {
             throw new InvalidArgumentException('Invalid page mail filter.');
         }
-        $perPage = $filters['perPage'] ?? 25;
+        $perPage = $filters['per_page'] ?? 25;
         if (! is_int($perPage)) {
-            throw new InvalidArgumentException('Invalid perPage mail filter.');
+            throw new InvalidArgumentException('Invalid per_page mail filter.');
         }
 
         return new ScheduledMailReadQuery(

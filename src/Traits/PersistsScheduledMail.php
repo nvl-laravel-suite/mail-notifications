@@ -7,7 +7,11 @@ namespace Nvl\MailNotifications\Traits;
 use Illuminate\Database\Eloquent\Builder;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 
-/** Shares private fixed-partition persistence among the package's scheduled-mail workflows. @internal */
+/**
+ * Shares private fixed-partition persistence among the package's scheduled-mail workflows.
+ *
+ * @internal
+ */
 trait PersistsScheduledMail
 {
     /** Read only admitted owner schedules or the fixed global mail partition.

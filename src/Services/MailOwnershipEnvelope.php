@@ -16,7 +16,11 @@ use Nvl\Support\Ownership\Services\OwnershipContextResolver;
 use Nvl\Support\Ownership\Services\OwnershipResourceRegistry;
 use Nvl\Support\Ownership\ValueObjects\OwnershipJobEnvelope;
 
-/** Captures mail authority and preserves global delivery as a fixed package capability. @internal */
+/**
+ * Captures mail authority and preserves global delivery as a fixed package capability.
+ *
+ * @internal
+ */
 final readonly class MailOwnershipEnvelope
 {
     public function __construct(private OwnershipBoundary $boundary, private OwnershipContextResolver $context,

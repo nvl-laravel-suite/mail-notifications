@@ -12,6 +12,8 @@ use Nvl\MailNotifications\Models\ScheduledMailMessage;
 
 /**
  * Fail-closed scheduled-mail authorization backed by an optional host callback.
+ *
+ * @internal
  */
 final class ConfiguredScheduledMailReadAuthorization implements ScheduledMailReadAuthorization
 {

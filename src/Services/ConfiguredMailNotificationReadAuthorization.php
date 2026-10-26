@@ -12,6 +12,8 @@ use Nvl\MailNotifications\Models\MailNotification;
 
 /**
  * Fail-closed read authorization backed by an optional host callback.
+ *
+ * @internal
  */
 final class ConfiguredMailNotificationReadAuthorization implements MailNotificationReadAuthorization
 {

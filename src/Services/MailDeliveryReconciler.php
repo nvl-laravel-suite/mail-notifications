@@ -12,7 +12,11 @@ use Nvl\Support\Ownership\Contracts\OwnershipQueueContext;
 use Nvl\Support\Ownership\Contracts\OwnershipSystemRunner;
 use Nvl\Support\Ownership\Services\OwnershipResourceRegistry;
 
-/** Reconciles authenticated provider facts under freshly admitted stored ownership. @internal */
+/**
+ * Reconciles authenticated provider facts under freshly admitted stored ownership.
+ *
+ * @internal
+ */
 final readonly class MailDeliveryReconciler
 {
     public function __construct(private OwnershipResourceRegistry $resources, private VerifiedDeliveryOwnerLocator $locator,

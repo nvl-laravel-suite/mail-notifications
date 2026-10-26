@@ -8,7 +8,11 @@ use Illuminate\Contracts\Config\Repository;
 use Nvl\MailNotifications\Contracts\DeliveryProfileResolver;
 use Nvl\MailNotifications\Exceptions\ScheduledMailException;
 
-/** Reads a deployment-approved delivery profile from Laravel configuration. */
+/**
+ * Reads a deployment-approved delivery profile from Laravel configuration.
+ *
+ * @internal
+ */
 final readonly class ConfiguredDeliveryProfileResolver implements DeliveryProfileResolver
 {
     /** Create the deployment configuration reader. */

@@ -10,6 +10,8 @@ use Nvl\MailNotifications\Contracts\ProvidesNotifiableTypes;
 
 /**
  * Holds host-owned notifiable aliases without importing host models.
+ *
+ * @api
  */
 final class MailNotificationNotifiableTypeRegistry
 {

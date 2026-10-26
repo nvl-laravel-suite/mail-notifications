@@ -15,6 +15,8 @@ use Nvl\MailNotifications\ValueObjects\MailNotificationsAdoptionPlan;
 
 /**
  * Validates a complete legacy-to-package adoption manifest.
+ *
+ * @internal
  */
 final class MailNotificationsAdoptionManifest
 {

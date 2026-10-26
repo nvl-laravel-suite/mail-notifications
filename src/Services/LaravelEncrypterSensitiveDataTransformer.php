@@ -10,6 +10,8 @@ use Nvl\MailNotifications\Exceptions\SensitiveStorageException;
 
 /**
  * Protects sensitive storage with Laravel's current and previous encryption keys.
+ *
+ * @internal
  */
 final readonly class LaravelEncrypterSensitiveDataTransformer implements SensitiveDataTransformer
 {

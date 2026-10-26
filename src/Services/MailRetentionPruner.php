@@ -19,6 +19,8 @@ use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
  * Prunes bounded, allowlisted database history without provider side effects.
+ *
+ * @api
  */
 final readonly class MailRetentionPruner
 {

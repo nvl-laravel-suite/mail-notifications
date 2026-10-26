@@ -9,6 +9,8 @@ use Nvl\MailNotifications\Contracts\RemoteWebhookManager;
 
 /**
  * Resolves configured remote webhook managers by stable provider name.
+ *
+ * @api
  */
 final class RemoteWebhookManagerRegistry
 {

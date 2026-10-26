@@ -29,6 +29,8 @@ use Throwable;
 
 /**
  * Inspects package configuration and schema readiness without mutation.
+ *
+ * @internal
  */
 final readonly class MailNotificationsDoctor
 {

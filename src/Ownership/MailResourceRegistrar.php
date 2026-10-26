@@ -11,7 +11,11 @@ use Nvl\Support\Ownership\Services\OwnershipResourceRegistry;
 use Nvl\Support\Ownership\ValueObjects\OwnershipDefinition;
 use Nvl\Support\Ownership\ValueObjects\OwnershipResourceDefinition;
 
-/** Declares independent delivery facts and inherited authenticated provider events. @internal */
+/**
+ * Declares independent delivery facts and inherited authenticated provider events.
+ *
+ * @internal
+ */
 final readonly class MailResourceRegistrar
 {
     public function register(OwnershipResourceRegistry $resources, bool $owned): void

@@ -23,6 +23,8 @@ use WeakMap;
 
 /**
  * Coordinates transient Mailable state with provider-neutral lifecycle services.
+ *
+ * @internal
  */
 final class TrackingRuntime
 {

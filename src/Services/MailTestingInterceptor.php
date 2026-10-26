@@ -14,6 +14,8 @@ use Symfony\Component\Mime\Address;
 
 /**
  * Applies an optional environment-aware global test recipient through Laravel Mail.
+ *
+ * @api
  */
 final readonly class MailTestingInterceptor
 {

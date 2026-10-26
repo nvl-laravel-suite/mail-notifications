@@ -20,7 +20,11 @@ use Nvl\MailNotifications\ValueObjects\NotifiableReference;
 use Nvl\MailNotifications\ValueObjects\ProviderMessageId;
 use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
-/** Authorized, privacy-bounded native delivery history reads. */
+/**
+ * Authorized, privacy-bounded native delivery history reads.
+ *
+ * @api
+ */
 final readonly class MailHistory
 {
     /** @var list<string> */
@@ -175,7 +179,7 @@ final readonly class MailHistory
     private function filter(array $filters): MailNotificationReadQuery
     {
         $allowed = ['search', 'status', 'mailer', 'messageCategory', 'from', 'to', 'acceptedOnly',
-            'failedOnly', 'sort', 'direction', 'page', 'perPage'];
+            'failedOnly', 'sort', 'direction', 'page', 'per_page'];
         if (array_diff(array_keys($filters), $allowed) !== []) {
             throw new InvalidArgumentException('Unknown mail notification filter.');
         }
@@ -224,9 +228,9 @@ final readonly class MailHistory
         if (! is_int($page)) {
             throw new InvalidArgumentException('Invalid page mail filter.');
         }
-        $perPage = $filters['perPage'] ?? 25;
+        $perPage = $filters['per_page'] ?? 25;
         if (! is_int($perPage)) {
-            throw new InvalidArgumentException('Invalid perPage mail filter.');
+            throw new InvalidArgumentException('Invalid per_page mail filter.');
         }
 
         return new MailNotificationReadQuery(

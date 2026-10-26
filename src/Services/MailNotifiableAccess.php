@@ -11,7 +11,11 @@ use Nvl\Support\Ownership\Exceptions\OwnershipViolation;
 use Nvl\Support\Ownership\Services\OwnershipResourceRegistry;
 use Nvl\Support\Ownership\Services\PersistedOwnershipStorage;
 
-/** Resolves persisted notifiables canonically without treating identity metadata as an owner grant. @internal */
+/**
+ * Resolves persisted notifiables canonically without treating identity metadata as an owner grant.
+ *
+ * @internal
+ */
 final readonly class MailNotifiableAccess
 {
     public function __construct(private OwnershipResourceRegistry $resources, private OwnershipBoundary $boundary) {}

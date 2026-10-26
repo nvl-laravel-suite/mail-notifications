@@ -24,6 +24,8 @@ use Nvl\MailNotifications\ValueObjects\WebhookRequest;
 
 /**
  * Verifies, normalizes, and persists one provider webhook through a registered adapter.
+ *
+ * @api
  */
 final readonly class WebhookProcessor
 {

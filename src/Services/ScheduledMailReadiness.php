@@ -18,6 +18,8 @@ use Throwable;
 
 /**
  * Inspects optional scheduled-mail configuration and storage without mutation.
+ *
+ * @internal
  */
 final readonly class ScheduledMailReadiness
 {

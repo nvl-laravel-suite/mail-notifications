@@ -36,6 +36,8 @@ use Throwable;
  *
  * Transaction ownership is intentional because this contract is the reusable
  * write boundary used by mail listeners and host webhook entry points.
+ *
+ * @api
  */
 final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
 {

@@ -18,6 +18,8 @@ use Throwable;
 
 /**
  * Rebuilds and sends claimed messages outside database transactions.
+ *
+ * @api
  */
 final readonly class ScheduledMailProcessor
 {

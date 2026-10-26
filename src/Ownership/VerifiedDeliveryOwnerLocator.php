@@ -12,7 +12,11 @@ use Nvl\MailNotifications\ValueObjects\VerifiedDeliveryEvent;
 use Nvl\Support\Ownership\Exceptions\OwnershipViolation;
 use Nvl\Support\Ownership\ValueObjects\OwnerReference;
 
-/** Projects only immutable stored identity after signature verification, never request owner fields. @internal */
+/**
+ * Projects only immutable stored identity after signature verification, never request owner fields.
+ *
+ * @internal
+ */
 final readonly class VerifiedDeliveryOwnerLocator
 {
     public function __construct(private MailIntegrityGuard $readiness) {}

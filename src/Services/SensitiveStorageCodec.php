@@ -12,6 +12,8 @@ use Throwable;
 
 /**
  * Serializes sensitive arrays through an explicit host-owned storage transformer.
+ *
+ * @internal
  */
 final readonly class SensitiveStorageCodec
 {

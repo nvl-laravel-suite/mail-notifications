@@ -11,6 +11,8 @@ use Nvl\MailNotifications\Exceptions\MailRetentionException;
 
 /**
  * Validates and exposes bounded database-retention settings.
+ *
+ * @internal
  */
 final readonly class MailRetentionConfiguration
 {

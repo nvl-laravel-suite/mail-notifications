@@ -12,6 +12,8 @@ use Nvl\MailNotifications\ValueObjects\TransportResult;
 
 /**
  * Resolves the standard Symfony message identifier for any Laravel transport.
+ *
+ * @internal
  */
 final readonly class SymfonyMessageIdResolver implements ProviderMessageIdResolver
 {

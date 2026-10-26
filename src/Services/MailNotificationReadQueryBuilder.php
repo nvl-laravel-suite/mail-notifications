@@ -12,6 +12,8 @@ use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
  * Applies the fixed administrative filter allowlist to tracking reads.
+ *
+ * @internal
  */
 final readonly class MailNotificationReadQueryBuilder
 {

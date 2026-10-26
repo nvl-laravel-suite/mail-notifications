@@ -18,6 +18,8 @@ use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
  *
  * Transaction ownership is intentional because claiming is a reusable atomic
  * persistence boundary that cannot preserve its fencing invariant otherwise.
+ *
+ * @internal
  */
 final readonly class ScheduledMailClaimer
 {

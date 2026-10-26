@@ -13,7 +13,11 @@ use Nvl\Support\Ownership\Enums\OwnershipContextMode;
 use Nvl\Support\Ownership\Exceptions\OwnershipViolation;
 use Nvl\Support\Ownership\ValueObjects\OwnershipJobEnvelope;
 
-/** Selects only protected central producer facts; the queue boundary must re-admit their real actor. @internal */
+/**
+ * Selects only protected central producer facts; the queue boundary must re-admit their real actor.
+ *
+ * @internal
+ */
 final readonly class ScheduledMailCentralWorklist
 {
     public function __construct(private OwnershipReadiness $readiness) {}

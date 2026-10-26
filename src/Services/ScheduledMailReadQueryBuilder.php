@@ -15,6 +15,8 @@ use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
  * Applies the fixed administrative filter allowlist to scheduled-mail reads.
+ *
+ * @internal
  */
 final readonly class ScheduledMailReadQueryBuilder
 {

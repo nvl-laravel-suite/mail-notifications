@@ -40,7 +40,7 @@ it('returns bounded private-safe history and normalized statistics', function ()
     $page = $history->paginate(nativeMailAdministrator(), [
         'search' => 'Quarterly',
         'status' => MailDeliveryStatus::Delivered,
-        'perPage' => 50,
+        'per_page' => 50,
     ]);
     $detail = $history->get(nativeMailAdministrator(), $matching->id);
     $statistics = $history->statistics(nativeMailAdministrator());
@@ -95,7 +95,7 @@ it('keeps data queries bounded as history grows', function (): void {
     $measure = static function () use ($history, $table): int {
         DB::flushQueryLog();
         DB::enableQueryLog();
-        $page = $history->paginate(nativeMailAdministrator(), ['perPage' => 100]);
+        $page = $history->paginate(nativeMailAdministrator(), ['per_page' => 100]);
         $queries = DB::getQueryLog();
         DB::disableQueryLog();
         expect($page['items'])->toBeArray();

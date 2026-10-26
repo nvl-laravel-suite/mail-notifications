@@ -9,6 +9,8 @@ use Nvl\MailNotifications\Contracts\ProviderAdapter;
 
 /**
  * Resolves configured provider adapters by their stable public names.
+ *
+ * @api
  */
 final class ProviderRegistry
 {

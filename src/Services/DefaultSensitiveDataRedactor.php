@@ -11,6 +11,8 @@ use Nvl\MailNotifications\Exceptions\MailTrackingException;
 
 /**
  * Recursively masks configured sensitive keys before package persistence.
+ *
+ * @internal
  */
 final readonly class DefaultSensitiveDataRedactor implements SensitiveDataRedactor
 {

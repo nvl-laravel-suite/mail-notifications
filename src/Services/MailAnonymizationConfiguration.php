@@ -11,6 +11,8 @@ use Nvl\MailNotifications\Exceptions\MailRetentionException;
 
 /**
  * Validates the explicit bounded history-anonymization retention stage.
+ *
+ * @internal
  */
 final readonly class MailAnonymizationConfiguration
 {

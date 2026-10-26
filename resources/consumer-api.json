@@ -773,7 +773,6 @@
             "kind": "class",
             "file": "src/Models/MailNotification.php",
             "methods": [
-                "bootHasOwnership",
                 "delete",
                 "fresh",
                 "freshTimestamp",
@@ -826,7 +825,6 @@
             "kind": "class",
             "file": "src/Models/MailNotificationEvent.php",
             "methods": [
-                "bootHasOwnership",
                 "delete",
                 "fresh",
                 "freshTimestamp",
@@ -863,7 +861,6 @@
             "kind": "class",
             "file": "src/Models/ScheduledMailMessage.php",
             "methods": [
-                "bootHasOwnership",
                 "delete",
                 "fresh",
                 "freshTimestamp",
@@ -912,6 +909,146 @@
                 "TABLE"
             ]
         },
+        "Nvl\\MailNotifications\\Services\\DatabaseTrackingLifecycle": {
+            "kind": "class",
+            "file": "src/Services/DatabaseTrackingLifecycle.php",
+            "methods": [
+                "__construct",
+                "accepted",
+                "apply",
+                "begin",
+                "failed",
+                "queuedFailure"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\MailHistory": {
+            "kind": "class",
+            "file": "src/Services/MailHistory.php",
+            "methods": [
+                "__construct",
+                "forNotifiable",
+                "get",
+                "getByProviderMessage",
+                "paginate",
+                "statistics",
+                "suggest"
+            ],
+            "properties": [],
+            "constants": [
+                "COLUMNS"
+            ]
+        },
+        "Nvl\\MailNotifications\\Services\\MailHistoryAnonymizer": {
+            "kind": "class",
+            "file": "src/Services/MailHistoryAnonymizer.php",
+            "methods": [
+                "__construct",
+                "anonymize"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\MailNotificationNotifiableTypeRegistry": {
+            "kind": "class",
+            "file": "src/Services/MailNotificationNotifiableTypeRegistry.php",
+            "methods": [
+                "__construct",
+                "all",
+                "resolve"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\MailRetentionPruner": {
+            "kind": "class",
+            "file": "src/Services/MailRetentionPruner.php",
+            "methods": [
+                "__construct",
+                "prune"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\MailTestingInterceptor": {
+            "kind": "class",
+            "file": "src/Services/MailTestingInterceptor.php",
+            "methods": [
+                "__construct",
+                "apply",
+                "inspect"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\ProviderMessageIdRegistry": {
+            "kind": "class",
+            "file": "src/Services/ProviderMessageIdRegistry.php",
+            "methods": [
+                "__construct",
+                "resolve"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\ProviderRegistry": {
+            "kind": "class",
+            "file": "src/Services/ProviderRegistry.php",
+            "methods": [
+                "__construct",
+                "all",
+                "resolve"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\RemoteWebhookManagerRegistry": {
+            "kind": "class",
+            "file": "src/Services/RemoteWebhookManagerRegistry.php",
+            "methods": [
+                "__construct",
+                "all",
+                "resolve"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\ScheduledMailProcessor": {
+            "kind": "class",
+            "file": "src/Services/ScheduledMailProcessor.php",
+            "methods": [
+                "__construct",
+                "process"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\ScheduledMailReader": {
+            "kind": "class",
+            "file": "src/Services/ScheduledMailReader.php",
+            "methods": [
+                "__construct",
+                "get",
+                "paginate",
+                "statistics"
+            ],
+            "properties": [],
+            "constants": [
+                "DETAIL_COLUMNS",
+                "LIST_COLUMNS"
+            ]
+        },
+        "Nvl\\MailNotifications\\Services\\ScheduledMailRecovery": {
+            "kind": "class",
+            "file": "src/Services/ScheduledMailRecovery.php",
+            "methods": [
+                "__construct",
+                "recover"
+            ],
+            "properties": [],
+            "constants": []
+        },
         "Nvl\\MailNotifications\\Services\\ScheduledMailScheduler": {
             "kind": "class",
             "file": "src/Services/ScheduledMailScheduler.php",
@@ -921,6 +1058,33 @@
                 "replacePending",
                 "reschedule",
                 "schedule"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\ScheduledMessageFactoryRegistry": {
+            "kind": "class",
+            "file": "src/Services/ScheduledMessageFactoryRegistry.php",
+            "methods": [
+                "__construct",
+                "all",
+                "resolve"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\WebhookProcessor": {
+            "kind": "class",
+            "file": "src/Services/WebhookProcessor.php",
+            "methods": [
+                "__construct",
+                "allowedContentTypes",
+                "enabled",
+                "maximumPayloadBytes",
+                "process",
+                "unknownEventPolicy",
+                "unmatchedEventPolicy",
+                "unmatchedEventRetryGraceSeconds"
             ],
             "properties": [],
             "constants": []

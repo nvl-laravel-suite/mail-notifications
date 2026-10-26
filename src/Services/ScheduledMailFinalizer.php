@@ -21,6 +21,8 @@ use Throwable;
  *
  * Transaction ownership is intentional because fenced finalization is a
  * reusable atomic persistence boundary.
+ *
+ * @internal
  */
 final readonly class ScheduledMailFinalizer
 {

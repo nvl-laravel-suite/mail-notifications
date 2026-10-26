@@ -15,7 +15,11 @@ use Nvl\Support\Ownership\Exceptions\OwnershipViolation;
 use Nvl\Support\Ownership\Services\OwnershipContextResolver;
 use Nvl\Support\Ownership\Services\OwnershipResourceRegistry;
 
-/** Runs mail commands inside separately admitted owner, explicit global, or re-authorized central producer scopes. @internal */
+/**
+ * Runs mail commands inside separately admitted owner, explicit global, or re-authorized central producer scopes.
+ *
+ * @internal
+ */
 final readonly class MailOwnerOperations
 {
     public function __construct(private OwnershipResourceRegistry $resources, private OwnershipContextResolver $context,

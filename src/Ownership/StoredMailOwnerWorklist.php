@@ -14,7 +14,11 @@ use Nvl\Support\Ownership\Contracts\OwnershipReadiness;
 use Nvl\Support\Ownership\Exceptions\OwnershipViolation;
 use Nvl\Support\Ownership\ValueObjects\OwnerReference;
 
-/** Projects only source-backed owner identities for the selected bounded mail maintenance purpose. @internal */
+/**
+ * Projects only source-backed owner identities for the selected bounded mail maintenance purpose.
+ *
+ * @internal
+ */
 final readonly class StoredMailOwnerWorklist implements MailOwnerWorklist
 {
     public function __construct(private OwnershipReadiness $readiness) {}

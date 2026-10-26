@@ -11,7 +11,11 @@ use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 
-/** Confines private retention operations to admitted history or fixed global delivery facts. @internal */
+/**
+ * Confines private retention operations to admitted history or fixed global delivery facts.
+ *
+ * @internal
+ */
 trait QueriesMailHistory
 {
     /**

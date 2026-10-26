@@ -14,6 +14,8 @@ use Throwable;
 
 /**
  * Dispatches observational package events safely after active transactions commit.
+ *
+ * @internal
  */
 final readonly class MailTrackingEventDispatcher
 {

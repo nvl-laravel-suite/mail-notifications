@@ -12,6 +12,8 @@ use ReflectionClass;
 
 /**
  * Resolves scheduled message factories by stable alias and payload version.
+ *
+ * @api
  */
 final class ScheduledMessageFactoryRegistry
 {

@@ -6,7 +6,9 @@ namespace Nvl\MailNotifications\Enums;
 
 use Nvl\Support\Contracts\ResponseCode;
 
-/** Stable public response discriminators for MailNotifications.
+/**
+ * Stable public response discriminators for MailNotifications.
+ *
  * @api
  */
 enum MailNotificationsResponseCode: string implements ResponseCode

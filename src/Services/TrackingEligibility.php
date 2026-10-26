@@ -10,6 +10,8 @@ use Nvl\MailNotifications\Exceptions\MailTrackingException;
 
 /**
  * Resolves global and per-mailer tracking eligibility.
+ *
+ * @internal
  */
 final readonly class TrackingEligibility
 {

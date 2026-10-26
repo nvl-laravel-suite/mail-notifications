@@ -22,6 +22,8 @@ use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
  *
  * Transaction ownership is intentional because this service is the explicit
  * reusable write boundary for one complete anonymization stage.
+ *
+ * @api
  */
 final readonly class MailHistoryAnonymizer
 {

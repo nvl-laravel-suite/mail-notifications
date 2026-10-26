@@ -45,7 +45,7 @@ it('keeps scheduled page data queries constant as rows grow', function (): void 
     $measure = static function () use ($reader, $table): int {
         DB::flushQueryLog();
         DB::enableQueryLog();
-        $page = $reader->paginate(nativeScheduledAdministrator(), ['perPage' => 100]);
+        $page = $reader->paginate(nativeScheduledAdministrator(), ['per_page' => 100]);
         $queries = DB::getQueryLog();
         DB::disableQueryLog();
         expect($page['items'])->toBeArray();

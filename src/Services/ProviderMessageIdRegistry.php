@@ -12,6 +12,8 @@ use UnexpectedValueException;
 
 /**
  * Selects an optional provider resolver before the standard Symfony fallback.
+ *
+ * @api
  */
 final class ProviderMessageIdRegistry
 {

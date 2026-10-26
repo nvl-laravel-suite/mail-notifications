@@ -10,6 +10,8 @@ use Nvl\MailNotifications\ValueObjects\ScheduledRecipients;
 
 /**
  * Bounds durable scheduled-mail input before host factory code can inspect it.
+ *
+ * @internal
  */
 final readonly class ScheduledMailInputGuard
 {

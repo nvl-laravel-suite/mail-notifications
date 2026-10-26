@@ -10,7 +10,11 @@ use Nvl\Support\Ownership\Contracts\OwnershipReadiness;
 use Nvl\Support\Ownership\Services\OwnershipConstraintInspector;
 use Nvl\Support\Ownership\Services\OwnershipResourceRegistry;
 
-/** Requires live producer and external-correlation constraints before native mail effects. @internal */
+/**
+ * Requires live producer and external-correlation constraints before native mail effects.
+ *
+ * @internal
+ */
 final readonly class MailIntegrityGuard
 {
     /** Retain neutral contracts so ordinary Mail never requires the optional ownership runtime. */

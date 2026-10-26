@@ -10,7 +10,9 @@ use Nvl\Support\Exceptions\ExceptionResponse;
 use Nvl\Support\Traits\InteractsWithPackageFailure;
 use RuntimeException;
 
-/** Base public MailNotifications runtime failure.
+/**
+ * Base public MailNotifications runtime failure.
+ *
  * @api
  */
 class MailNotificationsException extends RuntimeException implements RespondableException

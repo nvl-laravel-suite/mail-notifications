@@ -14,6 +14,8 @@ use Symfony\Component\Mime\Email;
 
 /**
  * Normalizes effective Symfony message addresses into package value objects.
+ *
+ * @internal
  */
 final readonly class MessageNormalizer
 {

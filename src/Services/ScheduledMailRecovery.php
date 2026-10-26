@@ -19,6 +19,8 @@ use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
  *
  * Transaction ownership is intentional because expired-claim recovery is a
  * reusable atomic persistence boundary.
+ *
+ * @api
  */
 final readonly class ScheduledMailRecovery
 {

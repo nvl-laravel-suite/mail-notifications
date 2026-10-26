@@ -5,7 +5,7 @@
 ## Install
 
 ```sh
-composer require nvl/mail-notifications:^6.0
+composer require nvl/mail-notifications:^7.0
 php artisan migrate
 ```
 
@@ -24,7 +24,6 @@ Laravel discovers `Nvl\MailNotifications\Providers\MailNotificationsServiceProvi
 | `WebhookProcessor` | Verify a named provider request before normalization and lifecycle persistence |
 | `DatabaseTrackingLifecycle` | Idempotent status transitions and provider event storage |
 | `MailTestingInterceptor` | Global testing-address redirection when explicitly enabled |
-| `MailAdoption` | Explicit legacy storage adoption, invoked by the package command |
 
 Host authorization is required for history and scheduled reads. Query filters are native shaped arrays with allowlisted keys and bounded pagination. Returned arrays exclude protected recipient lists, payloads, metadata, claim tokens, and raw provider event metadata. Keep raw package models inside trusted host code.
 

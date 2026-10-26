@@ -9,6 +9,8 @@ use Nvl\MailNotifications\Exceptions\ScheduledMailException;
 
 /**
  * Validates and exposes bounded scheduled-mail runtime settings.
+ *
+ * @internal
  */
 final readonly class ScheduledMailConfiguration
 {

@@ -10,6 +10,8 @@ use Nvl\MailNotifications\Exceptions\SensitiveStorageException;
 
 /**
  * Validates the opt-in host-owned sensitive-storage protection settings.
+ *
+ * @internal
  */
 final readonly class SensitiveStorageConfiguration
 {
