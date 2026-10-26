@@ -1,6 +1,6 @@
 {
     "name": "nvl/mail-notifications",
-    "description": "Provider-neutral Laravel mail tracking, scheduling, MailerSend integration, and tokenized presentation",
+    "description": "Provider-neutral Laravel mail tracking, scheduling, verified webhooks, and protected history",
     "type": "library",
     "license": "MIT",
     "keywords": [
@@ -16,7 +16,7 @@
         "ext-filter": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
-        "laravel/framework": "^12.0 || ^13.0",
+        "laravel/framework": "^13.0",
         "nesbot/carbon": "^2.72 || ^3.0",
         "nvl/core": "^6.0",
         "php": "^8.4",
@@ -29,11 +29,9 @@
         "mockery/mockery": "^1.6",
         "nvl/ownership": "^6.0.1",
         "nvl/settings": "^6.0",
-        "nvl/tenancy": "^6.0",
-        "orchestra/testbench": "^10.0 || ^11.0",
+        "orchestra/testbench": "^11.0",
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0",
-        "spatie/laravel-data": "^4.23",
         "symfony/process": "^7.0 || ^8.0"
     },
     "autoload": {
@@ -98,13 +96,11 @@
     "prefer-stable": true,
     "suggest": {
         "nvl/ownership": "Adds optional model-declared ownership, isolation, adoption and captured worker contexts.",
-        "nvl/settings": "Enables tenant-selected delivery profiles through the loaded Settings provider.",
-        "nvl/tenancy": "Temporary legacy tenancy bridge for existing tenant installations; native ownership does not require it."
+        "nvl/settings": "Enables configured delivery profiles through the loaded Settings provider."
     },
     "conflict": {
         "nvl/ownership": "<6.0.1 || >=7.0",
-        "nvl/settings": "<6.0 || >=7.0",
-        "nvl/tenancy": "<6.0 || >=7.0"
+        "nvl/settings": "<6.0 || >=7.0"
     },
     "homepage": "https://github.com/nvl-laravel-suite/mail-notifications",
     "authors": [

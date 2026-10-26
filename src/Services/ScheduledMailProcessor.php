@@ -7,6 +7,7 @@ namespace Nvl\MailNotifications\Services;
 use Illuminate\Contracts\Mail\Factory as MailFactory;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\SentMessage;
+use Nvl\MailNotifications\Contracts\DeliveryProfileResolver;
 use Nvl\MailNotifications\Exceptions\MailDeliveryCancelled;
 use Nvl\MailNotifications\Laravel\ScheduledMailFactory;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
@@ -32,7 +33,7 @@ final readonly class ScheduledMailProcessor
         private ScheduledMailInputGuard $input,
         private MailOwnershipEnvelope $tenantEnvelope,
         private OwnershipQueueContext $ownershipQueue,
-        private TenantDeliveryProfileResolver $deliveryProfiles,
+        private DeliveryProfileResolver $deliveryProfiles,
     ) {}
 
     /**

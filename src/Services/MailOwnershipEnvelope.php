@@ -21,7 +21,7 @@ final readonly class MailOwnershipEnvelope
 {
     public function __construct(private OwnershipBoundary $boundary, private OwnershipContextResolver $context,
         private OwnershipQueueContext $queue, private OwnershipReadiness $readiness, private OwnershipResourceRegistry $resources,
-        private MailTenantEnvelope $legacy, private MailIntegrityGuard $integrity) {}
+        private MailIntegrityGuard $integrity) {}
 
     /** @return array<string,mixed> */
     public function notificationAttributes(): array
@@ -36,7 +36,7 @@ final readonly class MailOwnershipEnvelope
     {
         $this->assertStorage('mail.scheduled');
         if ($this->resources->get('mail.scheduled')->ownership->strategy === 'unscoped') {
-            return $this->legacy->scheduledAttributes();
+            return [];
         }
 
         return [...$this->notificationAttributes(), 'ownership_envelope' => $this->capture()->toArray()];
@@ -46,7 +46,7 @@ final readonly class MailOwnershipEnvelope
     public function assertScheduled(ScheduledMailMessage $message, bool $requireProducer = true): void
     {
         if ($this->resources->get('mail.scheduled')->ownership->strategy === 'unscoped') {
-            $this->legacy->assertScheduled($message);
+            $this->boundary->assertRecord($message, 'mail.scheduled');
 
             return;
         }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Services;
 
-use Nvl\MailNotifications\Compatibility\LegacyMailWebhookOwnership;
 use Nvl\MailNotifications\Contracts\TrackingLifecycle;
 use Nvl\MailNotifications\Ownership\VerifiedDeliveryOwnerLocator;
 use Nvl\MailNotifications\ValueObjects\TransitionResult;
@@ -17,12 +16,12 @@ use Nvl\Support\Ownership\Services\OwnershipResourceRegistry;
 final readonly class MailDeliveryReconciler
 {
     public function __construct(private OwnershipResourceRegistry $resources, private VerifiedDeliveryOwnerLocator $locator,
-        private OwnershipSystemRunner $owners, private OwnershipQueueContext $queue, private LegacyMailWebhookOwnership $legacy) {}
+        private OwnershipSystemRunner $owners, private OwnershipQueueContext $queue) {}
 
     public function apply(VerifiedDeliveryEvent $event, TrackingLifecycle $lifecycle): TransitionResult
     {
         if ($this->resources->get('mail.notifications')->ownership->strategy === 'unscoped') {
-            return $this->legacy->apply($event, $lifecycle);
+            return $lifecycle->apply($event);
         }
         $owner = $this->locator->locate($event);
         if ($owner !== null) {

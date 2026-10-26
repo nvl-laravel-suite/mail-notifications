@@ -368,7 +368,7 @@ it('disables tracking globally without disabling Laravel Mail', function () {
         ->and($transport->messages())->toHaveCount(1);
 });
 
-it('disables tracking independently without disabling presentation or Laravel Mail', function () {
+it('disables tracking without disabling Laravel Mail', function () {
     config()->set('nvl-mail-notifications.tracking.enabled', false);
 
     Mail::to('recipient@example.test')->send(new TrackedMail);
@@ -378,7 +378,6 @@ it('disables tracking independently without disabling presentation or Laravel Ma
         ->getSymfonyTransport();
 
     expect(MailNotification::query()->count())->toBe(0)
-        ->and(config('nvl-mail-notifications.presentation.enabled'))->toBeTrue()
         ->and($transport->messages())->toHaveCount(1);
 });
 

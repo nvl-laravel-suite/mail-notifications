@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nvl\MailNotifications\Actions;
+namespace Nvl\MailNotifications\Services;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Query\Builder as QueryBuilder;
@@ -18,9 +18,6 @@ use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
-use Nvl\MailNotifications\Services\MailNotificationNotifiableTypeRegistry;
-use Nvl\MailNotifications\Services\MailNotificationsAdoptionManifest;
-use Nvl\MailNotifications\Services\ScheduledMessageFactoryRegistry;
 use Nvl\MailNotifications\Support\CanonicalMailNotificationSchema;
 use Nvl\MailNotifications\ValueObjects\LegacyMailForeignKey;
 use Nvl\MailNotifications\ValueObjects\LegacyMailNotificationMapping;
@@ -34,7 +31,7 @@ use stdClass;
  *
  * @internal
  */
-final readonly class AdoptMailNotificationsAction
+final readonly class MailAdoption
 {
     public function __construct(
         private MailNotificationsAdoptionManifest $manifests,

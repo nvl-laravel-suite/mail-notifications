@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Services;
 
 use Illuminate\Database\Eloquent\Model;
-use Nvl\MailNotifications\Compatibility\LegacyMailNotifiableAccess;
 use Nvl\MailNotifications\Contracts\MailTrackable;
 use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 use Nvl\Support\Ownership\Exceptions\OwnershipViolation;
@@ -15,16 +14,11 @@ use Nvl\Support\Ownership\Services\PersistedOwnershipStorage;
 /** Resolves persisted notifiables canonically without treating identity metadata as an owner grant. @internal */
 final readonly class MailNotifiableAccess
 {
-    public function __construct(private OwnershipResourceRegistry $resources, private OwnershipBoundary $boundary, private LegacyMailNotifiableAccess $legacy) {}
+    public function __construct(private OwnershipResourceRegistry $resources, private OwnershipBoundary $boundary) {}
 
     /** @param class-string<MailTrackable> $class */
     public function assert(string $class, string $identifier): void
     {
-        if (config('nvl-ownership.enabled') !== true) {
-            $this->legacy->assert($class, $identifier);
-
-            return;
-        }
         if (! is_subclass_of($class, Model::class)) {
             return;
         }

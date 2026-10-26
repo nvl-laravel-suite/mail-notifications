@@ -8,8 +8,7 @@ use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use InvalidArgumentException;
-use Nvl\Support\Tenancy\Contracts\TenantBoundary;
-use Nvl\Support\Tenancy\Services\TenantResourceRegistry;
+use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
  * Admits native Mail fixture owners and applies the current root ownership.
@@ -18,7 +17,7 @@ use Nvl\Support\Tenancy\Services\TenantResourceRegistry;
  */
 final class FactoryGuard
 {
-    /** Require the unchanged persisted parent on the fixture connection and in the current tenant. */
+    /** Require the unchanged persisted parent on the fixture connection. */
     public static function parent(Model $owner, Model $child): int|string
     {
         $key = $owner->getKey();
@@ -27,11 +26,6 @@ final class FactoryGuard
             || $owner->getConnection() !== $child->getConnection()) {
             throw new InvalidArgumentException('Mail fixture owners require a persisted native model on the fixture connection.');
         }
-        if (config('nvl-tenancy.enabled') === true) {
-            $container = Container::getInstance();
-            $resource = $container->make(TenantResourceRegistry::class)->forModel($owner);
-            $container->make(TenantBoundary::class)->assertRecord($owner, $resource->key);
-        }
 
         return $key;
     }
@@ -39,16 +33,17 @@ final class FactoryGuard
     /** Revalidate expanded native owner facts before applying admitted root attributes. */
     public static function prepare(Model $model, string $resource): void
     {
-        if (config('nvl-tenancy.enabled') !== true) {
-            return;
-        }
         $type = $model->getAttribute('notifiable_type');
         $key = $model->getAttribute('notifiable_id');
         if ($type !== null || $key !== null) {
             $class = is_string($type) ? (Relation::getMorphedModel($type) ?? $type) : null;
-            if ($class === null || ! is_a($class, Model::class, true) || $class === Model::class
-                || (! is_string($key) && ! is_int($key)) || $key === '') {
+            if ($class === null || (! is_string($key) && ! is_int($key)) || $key === '') {
                 throw new InvalidArgumentException('Mail fixture ownership requires a concrete native morph identity.');
+            }
+            if (! is_a($class, Model::class, true) || $class === Model::class) {
+                $model->forceFill(Container::getInstance()->make(OwnershipBoundary::class)->attributes($resource));
+
+                return;
             }
             $owner = new $class;
             if ($owner->getConnection() !== $model->getConnection()) {
@@ -60,7 +55,7 @@ final class FactoryGuard
                 throw new InvalidArgumentException('Mail fixture owners require their native morph identity.');
             }
         }
-        $model->forceFill(Container::getInstance()->make(TenantBoundary::class)->attributes($resource));
+        $model->forceFill(Container::getInstance()->make(OwnershipBoundary::class)->attributes($resource));
     }
 
     private function __construct() {}

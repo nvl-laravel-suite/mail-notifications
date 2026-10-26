@@ -7,20 +7,20 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use Nvl\MailNotifications\Actions\AdoptMailNotificationsAction;
 use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
+use Nvl\MailNotifications\Services\MailAdoption;
 use Nvl\MailNotifications\Services\MailNotificationNotifiableTypeRegistry;
 use Nvl\MailNotifications\Services\MailNotificationsAdoptionManifest;
 use Nvl\MailNotifications\Services\ScheduledMessageFactoryRegistry;
 use Nvl\MailNotifications\Tests\Fixtures\ScheduledTestFactory;
 
-function mailNotificationAdoptionAction(): AdoptMailNotificationsAction
+function mailNotificationAdoptionAction(): MailAdoption
 {
-    return new AdoptMailNotificationsAction(
+    return new MailAdoption(
         new MailNotificationsAdoptionManifest,
         new MailNotificationNotifiableTypeRegistry,
         new ScheduledMessageFactoryRegistry([new ScheduledTestFactory]),

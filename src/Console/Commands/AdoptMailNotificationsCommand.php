@@ -7,7 +7,7 @@ namespace Nvl\MailNotifications\Console\Commands;
 use Illuminate\Console\Command;
 use InvalidArgumentException;
 use JsonException;
-use Nvl\MailNotifications\Actions\AdoptMailNotificationsAction;
+use Nvl\MailNotifications\Services\MailAdoption;
 
 /**
  * Plans or applies manifest-driven legacy Mail Notifications adoption.
@@ -24,7 +24,7 @@ final class AdoptMailNotificationsCommand extends Command
     /** @var string */
     protected $description = 'Plan, stage, or apply a reconciled legacy Mail Notifications adoption';
 
-    public function handle(AdoptMailNotificationsAction $adopt): int
+    public function handle(MailAdoption $adopt): int
     {
         $format = $this->option('format');
 

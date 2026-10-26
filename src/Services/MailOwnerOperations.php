@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Services;
 
 use Closure;
-use Nvl\MailNotifications\Compatibility\LegacyMailTenantOperations;
 use Nvl\MailNotifications\Contracts\MailOwnerWorklist;
 use Nvl\MailNotifications\Enums\MailOwnerOperation;
 use Nvl\MailNotifications\Ownership\ScheduledMailCentralWorklist;
@@ -21,7 +20,7 @@ final readonly class MailOwnerOperations
 {
     public function __construct(private OwnershipResourceRegistry $resources, private OwnershipContextResolver $context,
         private OwnershipSystemRunner $owners, private MailOwnerWorklist $worklist, private ScheduledMailCentralWorklist $central,
-        private OwnershipQueueContext $queue, private LegacyMailTenantOperations $legacy) {}
+        private OwnershipQueueContext $queue) {}
 
     /** @template T
      * @param  Closure(): T  $callback
@@ -30,7 +29,7 @@ final readonly class MailOwnerOperations
     public function run(MailOwnerOperation $operation, Closure $callback): array
     {
         if ($this->resources->get('mail.notifications')->ownership->strategy === 'unscoped') {
-            return $this->legacy->run($callback);
+            return [$callback()];
         }
         $mode = $this->context->current()->snapshot()->mode;
         if (in_array($mode, [OwnershipContextMode::Owner, OwnershipContextMode::Central], true)) {

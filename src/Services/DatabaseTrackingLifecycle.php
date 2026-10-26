@@ -235,7 +235,6 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         $eventValues = [
             'id' => (string) Str::uuid(),
             'mail_notification_id' => $notification->id,
-            ...(config('nvl-tenancy.enabled') === true ? ['tenant_id' => $notification->tenant_id] : []),
             ...($notification->getRawOriginal('owner_scope_key') === null ? [] : ['owner_scope_key' => $notification->getRawOriginal('owner_scope_key')]),
             'provider' => $event->provider,
             'provider_event_id' => $event->eventId,

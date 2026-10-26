@@ -9,24 +9,10 @@ use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Foundation\Application;
-use Illuminate\Contracts\View\Factory as ViewFactory;
-use Illuminate\Contracts\View\View;
 use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Mail\Events\MessageSent;
-use Illuminate\Mail\Markdown;
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use LogicException;
-use Nvl\Data\Services\TypeScriptSourceRegistry;
-use Nvl\MailNotifications\Actions\GetMailNotificationStatisticsAction;
-use Nvl\MailNotifications\Actions\GetScheduledMailStatisticsAction;
-use Nvl\MailNotifications\Actions\ListMailNotificationsAction;
-use Nvl\MailNotifications\Actions\ListMailNotificationsForNotifiableAction;
-use Nvl\MailNotifications\Actions\ListScheduledMailMessagesAction;
-use Nvl\MailNotifications\Actions\ShowMailNotificationAction;
-use Nvl\MailNotifications\Actions\ShowMailNotificationByProviderMessageAction;
-use Nvl\MailNotifications\Actions\ShowScheduledMailMessageAction;
-use Nvl\MailNotifications\Actions\SuggestMailNotificationsAction;
 use Nvl\MailNotifications\Console\Commands\AdoptMailNotificationsCommand;
 use Nvl\MailNotifications\Console\Commands\AnonymizeMailNotificationsCommand;
 use Nvl\MailNotifications\Console\Commands\MailNotificationsDoctorCommand;
@@ -36,14 +22,8 @@ use Nvl\MailNotifications\Console\Commands\RecoverScheduledMailCommand;
 use Nvl\MailNotifications\Console\Commands\RemoveRemoteWebhooksCommand;
 use Nvl\MailNotifications\Console\Commands\SyncRemoteWebhooksCommand;
 use Nvl\MailNotifications\Contracts\DeliveryProfileResolver;
-use Nvl\MailNotifications\Contracts\GetMailNotificationStatisticsContract;
-use Nvl\MailNotifications\Contracts\GetScheduledMailStatisticsContract;
-use Nvl\MailNotifications\Contracts\ListMailNotificationsContract;
-use Nvl\MailNotifications\Contracts\ListMailNotificationsForNotifiableContract;
-use Nvl\MailNotifications\Contracts\ListScheduledMailMessagesContract;
 use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
 use Nvl\MailNotifications\Contracts\MailOwnerWorklist;
-use Nvl\MailNotifications\Contracts\MailTenantWorklist;
 use Nvl\MailNotifications\Contracts\ProviderAdapter;
 use Nvl\MailNotifications\Contracts\ProviderMessageIdResolver;
 use Nvl\MailNotifications\Contracts\ProvidesNotifiableTypes;
@@ -53,19 +33,15 @@ use Nvl\MailNotifications\Contracts\ScheduledMailSchedulerContract;
 use Nvl\MailNotifications\Contracts\ScheduledMessageFactory;
 use Nvl\MailNotifications\Contracts\SensitiveDataRedactor;
 use Nvl\MailNotifications\Contracts\SensitiveDataTransformer;
-use Nvl\MailNotifications\Contracts\ShowMailNotificationByProviderMessageContract;
-use Nvl\MailNotifications\Contracts\ShowMailNotificationContract;
-use Nvl\MailNotifications\Contracts\ShowScheduledMailMessageContract;
-use Nvl\MailNotifications\Contracts\SuggestMailNotificationsContract;
 use Nvl\MailNotifications\Contracts\TrackingLifecycle;
 use Nvl\MailNotifications\Laravel\Listeners\TrackMessageAfterSending;
 use Nvl\MailNotifications\Laravel\Listeners\TrackMessageBeforeSending;
 use Nvl\MailNotifications\Ownership\MailAdoptionAdapter;
 use Nvl\MailNotifications\Ownership\MailResourceRegistrar;
+use Nvl\MailNotifications\Ownership\MailTrackingContextParticipant;
 use Nvl\MailNotifications\Ownership\StoredMailOwnerWorklist;
 use Nvl\MailNotifications\Services\ConfiguredDeliveryProfileResolver;
 use Nvl\MailNotifications\Services\ConfiguredMailNotificationReadAuthorization;
-use Nvl\MailNotifications\Services\ConfiguredMailTenantWorklist;
 use Nvl\MailNotifications\Services\ConfiguredScheduledMailReadAuthorization;
 use Nvl\MailNotifications\Services\DatabaseTrackingLifecycle;
 use Nvl\MailNotifications\Services\DefaultSensitiveDataRedactor;
@@ -73,12 +49,9 @@ use Nvl\MailNotifications\Services\MailAnonymizationConfiguration;
 use Nvl\MailNotifications\Services\MailHistoryAnonymizer;
 use Nvl\MailNotifications\Services\MailNotificationNotifiableTypeRegistry;
 use Nvl\MailNotifications\Services\MailNotificationsDoctor;
-use Nvl\MailNotifications\Services\MailPresentation;
-use Nvl\MailNotifications\Services\MailPresentationContext;
 use Nvl\MailNotifications\Services\MailRetentionConfiguration;
 use Nvl\MailNotifications\Services\MailRetentionPruner;
 use Nvl\MailNotifications\Services\MailTestingInterceptor;
-use Nvl\MailNotifications\Services\MailTheme;
 use Nvl\MailNotifications\Services\MailTrackingEventDispatcher;
 use Nvl\MailNotifications\Services\ProviderMessageIdRegistry;
 use Nvl\MailNotifications\Services\ProviderRegistry;
@@ -101,8 +74,6 @@ use Nvl\MailNotifications\Services\TrackingRuntime;
 use Nvl\MailNotifications\Services\WebhookProcessor;
 use Nvl\MailNotifications\Support\SensitiveStorageBridge;
 use Nvl\MailNotifications\Support\TrackingRuntimeBridge;
-use Nvl\MailNotifications\Tenancy\MailNotificationsResourceRegistrar;
-use Nvl\MailNotifications\Tenancy\MailTrackingContextParticipant;
 use Nvl\Ownership\Services\OwnershipAdoptionRegistry;
 use Nvl\Settings\Providers\SettingsServiceProvider;
 use Nvl\Support\Doctor\PackageDoctorContributor;
@@ -113,15 +84,11 @@ use Nvl\Support\Ownership\Contracts\OwnershipIntegratedProvider;
 use Nvl\Support\Ownership\Services\OwnershipContextParticipants;
 use Nvl\Support\Ownership\Services\OwnershipResourceRegistry;
 use Nvl\Support\Providers\SupportServiceProvider;
-use Nvl\Support\Providers\TenantServiceProvider;
-use Nvl\Support\Tenancy\Services\TenantContextParticipants;
-use Nvl\Support\Tenancy\Services\TenantResourceRegistry;
 use Nvl\Support\Traits\MergesPackageConfiguration;
 use Nvl\Support\Traits\RegistersNamespacedResources;
-use Nvl\Tenancy\Services\TenantAdoptionRegistry;
 
 /**
- * Registers provider-neutral tracking and a configurable Laravel mail presentation.
+ * Registers provider-neutral tracking and scheduled delivery.
  */
 final class MailNotificationsServiceProvider extends ServiceProvider implements OwnershipIntegratedProvider
 {
@@ -133,36 +100,20 @@ final class MailNotificationsServiceProvider extends ServiceProvider implements 
      */
     public function register(): void
     {
-        $this->app->bindIf(GetMailNotificationStatisticsContract::class, GetMailNotificationStatisticsAction::class);
-        $this->app->bindIf(GetScheduledMailStatisticsContract::class, GetScheduledMailStatisticsAction::class);
-        $this->app->bindIf(ListMailNotificationsContract::class, ListMailNotificationsAction::class);
-        $this->app->bindIf(ListMailNotificationsForNotifiableContract::class, ListMailNotificationsForNotifiableAction::class);
-        $this->app->bindIf(ListScheduledMailMessagesContract::class, ListScheduledMailMessagesAction::class);
-        $this->app->bindIf(ShowMailNotificationContract::class, ShowMailNotificationAction::class);
-        $this->app->bindIf(ShowMailNotificationByProviderMessageContract::class, ShowMailNotificationByProviderMessageAction::class);
-        $this->app->bindIf(ShowScheduledMailMessageContract::class, ShowScheduledMailMessageAction::class);
-        $this->app->bindIf(SuggestMailNotificationsContract::class, SuggestMailNotificationsAction::class);
-
         $this->app->register(SupportServiceProvider::class);
         $this->app->bindIf(MailOwnerWorklist::class, StoredMailOwnerWorklist::class);
         PackageDoctorContributor::register($this->app, 'nvl/mail-notifications', fn (): array => $this->app->make(MailNotificationsDoctor::class)->inspect());
-
-        $this->app->register(TenantServiceProvider::class);
 
         $this->mergePackageConfiguration(
             dirname(__DIR__, 2).'/config/nvl-mail-notifications.php',
             'mail-notifications',
         );
-        (new MailNotificationsResourceRegistrar)->register($this->app->make(TenantResourceRegistry::class));
         $this->app->booted(function (): void {
             (new MailResourceRegistrar)->register($this->app->make(OwnershipResourceRegistry::class),
                 config('nvl-ownership.enabled') === true && config('nvl-mail-notifications.ownership.scoped', true) === true);
-            $this->app->make(OwnershipContextParticipants::class)->register(\Nvl\MailNotifications\Ownership\MailTrackingContextParticipant::class);
+            $this->app->make(OwnershipContextParticipants::class)->register(MailTrackingContextParticipant::class);
             if ($this->app->bound(OwnershipAdoptionRegistry::class)) {
                 $this->app->make(OwnershipAdoptionRegistry::class)->register('mail-notifications', MailAdoptionAdapter::class);
-            }
-            if ($this->app->bound(TenantAdoptionRegistry::class)) {
-                (new MailNotificationsResourceRegistrar)->register($this->app->make(TenantResourceRegistry::class), $this->app->make(TenantAdoptionRegistry::class));
             }
         });
         $this->app->bindIf(DeliveryProfileResolver::class, static function (Application $app): DeliveryProfileResolver {
@@ -173,8 +124,6 @@ final class MailNotificationsServiceProvider extends ServiceProvider implements 
 
             return $app->make($enabled ? SettingsDeliveryProfileResolver::class : ConfiguredDeliveryProfileResolver::class);
         });
-        $this->app->scoped(MailTrackingContextParticipant::class);
-        $this->app->make(TenantContextParticipants::class)->register(MailTrackingContextParticipant::class);
         $readAuthorization = config(
             'nvl-mail-notifications.management.authorization.class',
             ConfiguredMailNotificationReadAuthorization::class,
@@ -207,7 +156,6 @@ final class MailNotificationsServiceProvider extends ServiceProvider implements 
             ScheduledMailReadAuthorization::class,
             $scheduledReadAuthorization,
         );
-        $this->app->bindIf(MailTenantWorklist::class, ConfiguredMailTenantWorklist::class);
         $this->registerConfiguredExtensions(
             'nvl-mail-notifications.extensions.provider_adapters',
             ProviderAdapter::class,
@@ -235,7 +183,6 @@ final class MailNotificationsServiceProvider extends ServiceProvider implements 
         );
 
         $this->app->singleton(TrackingEligibility::class);
-        $this->app->singleton(MailTheme::class);
         $this->app->singleton(MailTestingInterceptor::class);
         $this->app->singleton(SymfonyMessageIdResolver::class);
         $this->app->singleton(
@@ -379,46 +326,11 @@ final class MailNotificationsServiceProvider extends ServiceProvider implements 
         $this->publishes([
             __DIR__.'/../../lang' => lang_path('vendor/nvl-mail-notifications'),
         ], 'nvl-mail-notifications-translations');
-        if ($this->app->bound(TypeScriptSourceRegistry::class)) {
-            $this->app->make(TypeScriptSourceRegistry::class)->register(
-                __DIR__.'/..',
-                'nvl/mail-notifications',
-            );
-        }
-
         TrackingRuntimeBridge::clear();
         SensitiveStorageBridge::clear();
         SensitiveStorageBridge::use(
             $this->app->make(SensitiveStorageCodec::class),
         );
-
-        if ($this->presentationEnabled()) {
-            $this->loadViewsFrom(dirname(__DIR__, 2).'/resources/views/mail/html', 'nvl-mail-notifications');
-            foreach (glob(dirname(__DIR__, 2).'/resources/views/mail/html/*.blade.php') ?: [] as $component) {
-                $name = basename($component, '.blade.php');
-                Blade::component('nvl-mail-notifications::'.$name, 'nvl-mail-notifications::'.$name);
-            }
-            $this->app->bind(MailPresentation::class);
-            $this->app->scoped(MailPresentationContext::class);
-            $views = $this->app->make(ViewFactory::class);
-            $views->composer(['nvl-mail-notifications::*', 'mail::*'], function (View $view): void {
-                if (! str_starts_with($view->name(), 'nvl-mail-notifications::')
-                    && ! $this->app->make(MailPresentationContext::class)->active()) {
-                    return;
-                }
-                $theme = $this->app->make(MailTheme::class);
-                $view->with('nvlMailTheme', $theme->tokens())->with('nvlMailBrand', $theme->brand());
-            });
-            if ($this->presentationAutoLoadEnabled()
-                && $this->configurationBoolean('nvl-mail-notifications.presentation.global_markdown', false)) {
-                $this->registerPresentationPath();
-            }
-            if ($this->configurationBoolean('nvl-mail-notifications.presentation.global_view_data', false)) {
-                $theme = $this->app->make(MailTheme::class);
-                $views->share('nvlMailTheme', $theme->tokens());
-                $views->share('nvlMailBrand', $theme->brand());
-            }
-        }
 
         if ($this->packageEnabled()) {
             $this->app->make(MailTestingInterceptor::class)->apply();
@@ -437,10 +349,6 @@ final class MailNotificationsServiceProvider extends ServiceProvider implements 
         $this->publishes([
             dirname(__DIR__, 2).'/resources/adoption/mail-notifications.v1.example.json' => base_path('nvl-mail-notifications.adoption.json'),
         ], 'mail-notifications-adoption');
-        $this->publishes([
-            dirname(__DIR__, 2).'/resources/views/mail' => resource_path('views/vendor/nvl-mail-notifications'),
-        ], 'mail-notifications-mail-views');
-
         if ($this->configurationBoolean(
             'nvl-mail-notifications.migrations.enabled',
             true,
@@ -459,26 +367,6 @@ final class MailNotificationsServiceProvider extends ServiceProvider implements 
                 RemoveRemoteWebhooksCommand::class,
                 SyncRemoteWebhooksCommand::class,
             ]);
-        }
-    }
-
-    /**
-     * Add package mail components after host paths while respecting Laravel mail configuration.
-     */
-    private function registerPresentationPath(): void
-    {
-        $configuredPaths = config('mail.markdown.paths', []);
-        $paths = is_array($configuredPaths)
-            ? array_values(array_filter($configuredPaths, 'is_string'))
-            : [];
-        $paths[] = dirname(__DIR__, 2).'/resources/views/mail';
-
-        $paths = array_values(array_unique($paths));
-
-        config(['mail.markdown.paths' => $paths]);
-
-        if ($this->app->resolved(Markdown::class)) {
-            $this->app->make(Markdown::class)->loadComponentsFrom($paths);
         }
     }
 
@@ -511,29 +399,6 @@ final class MailNotificationsServiceProvider extends ServiceProvider implements 
     {
         return $this->configurationBoolean(
             'nvl-mail-notifications.enabled',
-            true,
-        );
-    }
-
-    /**
-     * Determine whether package presentation configuration should be available.
-     */
-    private function presentationEnabled(): bool
-    {
-        return $this->packageEnabled()
-            && $this->configurationBoolean(
-                'nvl-mail-notifications.presentation.enabled',
-                true,
-            );
-    }
-
-    /**
-     * Determine whether package presentation components should load automatically.
-     */
-    private function presentationAutoLoadEnabled(): bool
-    {
-        return $this->configurationBoolean(
-            'nvl-mail-notifications.presentation.auto_load',
             true,
         );
     }

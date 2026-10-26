@@ -7,7 +7,6 @@ namespace Nvl\MailNotifications\Services;
 use Illuminate\Database\Eloquent\Builder;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Models\MailNotification;
-use Nvl\MailNotifications\ValueObjects\MailNotificationReadData;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadQuery;
 use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
@@ -25,7 +24,7 @@ final readonly class MailNotificationReadQueryBuilder
     public function build(MailNotificationReadQuery $filters): Builder
     {
         $query = $this->boundary->query(MailNotification::query(), 'mail.notifications')
-            ->select(MailNotificationReadData::COLUMNS);
+            ->select(MailHistory::COLUMNS);
 
         if ($filters->search !== null) {
             $term = "%{$filters->search}%";

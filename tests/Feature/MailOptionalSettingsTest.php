@@ -3,14 +3,12 @@
 declare(strict_types=1);
 
 use Nvl\MailNotifications\Contracts\DeliveryProfileResolver;
-use Nvl\MailNotifications\Services\TenantDeliveryProfileResolver;
 use Nvl\Settings\Contracts\SettingRepository;
 use Nvl\Settings\Providers\SettingsServiceProvider;
 
 it('boots mail scheduling without loading the optional Settings provider', function (): void {
     expect(app()->getLoadedProviders()[SettingsServiceProvider::class] ?? false)->toBeFalse()
-        ->and(app(DeliveryProfileResolver::class)->resolve())->toBeNull()
-        ->and(app(TenantDeliveryProfileResolver::class)->resolve())->toBeNull();
+        ->and(app(DeliveryProfileResolver::class)->resolve())->toBeNull();
 });
 
 it('selects deployment mail profiles from Laravel configuration without Settings', function (): void {
@@ -26,13 +24,13 @@ it('rejects explicitly selecting unavailable Settings', function (): void {
     expect(fn () => app(DeliveryProfileResolver::class))->toThrow(InvalidArgumentException::class, 'requires the loaded provider');
 });
 
-it('retains an explicit tenant setting selection as a required optional capability', function (): void {
+it('retains an explicit setting selection as a required optional capability', function (): void {
     config()->set('nvl-mail-notifications.scheduling.delivery_profile_setting', 'mail.profile');
 
     expect(fn () => app(DeliveryProfileResolver::class))->toThrow(InvalidArgumentException::class, 'requires the loaded provider');
 });
 
-it('uses tenant Settings only when its provider is loaded', function (): void {
+it('uses Settings only when its provider is loaded', function (): void {
     app()->register(SettingsServiceProvider::class);
     config()->set('nvl-mail-notifications.scheduling.delivery_profile_setting', 'mail.profile');
     config()->set('nvl-mail-notifications.scheduling.allowed_delivery_profiles', ['smtp-test']);
