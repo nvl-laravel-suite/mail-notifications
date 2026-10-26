@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Illuminate\Contracts\Console\Kernel;
-use Nvl\Data\Providers\DataServiceProvider;
 use Nvl\MailNotifications\Providers\MailNotificationsServiceProvider;
 use Nvl\MailNotifications\Tests\Fixtures\Ownership\WorkerProvider;
 use Nvl\Ownership\Providers\OwnershipServiceProvider;
 use Nvl\Support\Providers\SupportServiceProvider;
 use Orchestra\Testbench\Foundation\Application as TestbenchApplication;
 use Spatie\LaravelData\LaravelDataServiceProvider;
+use Spatie\LaravelData\LaravelDataServiceProvider as DataServiceProvider;
 
 require dirname(__DIR__, 6).'/vendor/autoload.php';
 

@@ -6,146 +6,11 @@
         "Nvl\\MailNotifications\\Database\\Factories\\": "database/factories"
     },
     "symbols": {
-        "Nvl\\MailNotifications\\Actions\\GetMailNotificationStatisticsAction": {
-            "kind": "class",
-            "file": "src/Actions/GetMailNotificationStatisticsAction.php",
-            "methods": [
-                "__construct",
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Actions\\GetScheduledMailStatisticsAction": {
-            "kind": "class",
-            "file": "src/Actions/GetScheduledMailStatisticsAction.php",
-            "methods": [
-                "__construct",
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Actions\\ListMailNotificationsAction": {
-            "kind": "class",
-            "file": "src/Actions/ListMailNotificationsAction.php",
-            "methods": [
-                "__construct",
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Actions\\ListMailNotificationsForNotifiableAction": {
-            "kind": "class",
-            "file": "src/Actions/ListMailNotificationsForNotifiableAction.php",
-            "methods": [
-                "__construct",
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Actions\\ListScheduledMailMessagesAction": {
-            "kind": "class",
-            "file": "src/Actions/ListScheduledMailMessagesAction.php",
-            "methods": [
-                "__construct",
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Actions\\ShowMailNotificationAction": {
-            "kind": "class",
-            "file": "src/Actions/ShowMailNotificationAction.php",
-            "methods": [
-                "__construct",
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Actions\\ShowMailNotificationByProviderMessageAction": {
-            "kind": "class",
-            "file": "src/Actions/ShowMailNotificationByProviderMessageAction.php",
-            "methods": [
-                "__construct",
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Actions\\ShowScheduledMailMessageAction": {
-            "kind": "class",
-            "file": "src/Actions/ShowScheduledMailMessageAction.php",
-            "methods": [
-                "__construct",
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Actions\\SuggestMailNotificationsAction": {
-            "kind": "class",
-            "file": "src/Actions/SuggestMailNotificationsAction.php",
-            "methods": [
-                "__construct",
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
         "Nvl\\MailNotifications\\Contracts\\DeliveryProfileResolver": {
             "kind": "interface",
             "file": "src/Contracts/DeliveryProfileResolver.php",
             "methods": [
                 "resolve"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Contracts\\GetMailNotificationStatisticsContract": {
-            "kind": "interface",
-            "file": "src/Contracts/GetMailNotificationStatisticsContract.php",
-            "methods": [
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Contracts\\GetScheduledMailStatisticsContract": {
-            "kind": "interface",
-            "file": "src/Contracts/GetScheduledMailStatisticsContract.php",
-            "methods": [
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Contracts\\ListMailNotificationsContract": {
-            "kind": "interface",
-            "file": "src/Contracts/ListMailNotificationsContract.php",
-            "methods": [
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Contracts\\ListMailNotificationsForNotifiableContract": {
-            "kind": "interface",
-            "file": "src/Contracts/ListMailNotificationsForNotifiableContract.php",
-            "methods": [
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Contracts\\ListScheduledMailMessagesContract": {
-            "kind": "interface",
-            "file": "src/Contracts/ListScheduledMailMessagesContract.php",
-            "methods": [
-                "execute"
             ],
             "properties": [],
             "constants": []
@@ -286,42 +151,6 @@
             "methods": [
                 "restore",
                 "transform"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Contracts\\ShowMailNotificationByProviderMessageContract": {
-            "kind": "interface",
-            "file": "src/Contracts/ShowMailNotificationByProviderMessageContract.php",
-            "methods": [
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Contracts\\ShowMailNotificationContract": {
-            "kind": "interface",
-            "file": "src/Contracts/ShowMailNotificationContract.php",
-            "methods": [
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Contracts\\ShowScheduledMailMessageContract": {
-            "kind": "interface",
-            "file": "src/Contracts/ShowScheduledMailMessageContract.php",
-            "methods": [
-                "execute"
-            ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Contracts\\SuggestMailNotificationsContract": {
-            "kind": "interface",
-            "file": "src/Contracts/SuggestMailNotificationsContract.php",
-            "methods": [
-                "execute"
             ],
             "properties": [],
             "constants": []
@@ -944,60 +773,144 @@
             "kind": "class",
             "file": "src/Models/MailNotification.php",
             "methods": [
-                "getKey",
-                "getKeyName",
-                "getMorphClass",
-                "getRouteKey",
-                "getRouteKeyName",
-                "is",
-                "isNot",
-                "relationLoaded"
+                "bootHasOwnership",
+                "delete",
+                "fresh",
+                "freshTimestamp",
+                "getConnectionName",
+                "getTable",
+                "newQueryForRestoration",
+                "ownershipDefinition",
+                "providerEvents",
+                "refresh",
+                "refreshForUpdate",
+                "save"
             ],
-            "properties": [],
-            "constants": []
+            "properties": [
+                "accepted_at",
+                "bcc_recipients",
+                "cc_recipients",
+                "correlation_id",
+                "created_at",
+                "delivered_at",
+                "failed_at",
+                "from_email",
+                "from_name",
+                "id",
+                "mailer",
+                "message_category",
+                "metadata",
+                "notifiable_id",
+                "notifiable_type",
+                "owner_reference",
+                "owner_scope_key",
+                "ownership_key",
+                "primary_recipient_email",
+                "provider",
+                "provider_message_id",
+                "provider_occurred_at",
+                "queue_reference",
+                "redacted_at",
+                "status",
+                "status_changed_at",
+                "subject",
+                "tenant_id",
+                "to_recipients",
+                "updated_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
         },
         "Nvl\\MailNotifications\\Models\\MailNotificationEvent": {
             "kind": "class",
             "file": "src/Models/MailNotificationEvent.php",
             "methods": [
-                "getKey",
-                "getKeyName",
-                "getMorphClass",
-                "getRouteKey",
-                "getRouteKeyName",
-                "is",
-                "isNot",
-                "relationLoaded"
+                "bootHasOwnership",
+                "delete",
+                "fresh",
+                "freshTimestamp",
+                "getConnectionName",
+                "getTable",
+                "mailNotification",
+                "newQueryForRestoration",
+                "ownershipDefinition",
+                "refresh",
+                "refreshForUpdate",
+                "save"
             ],
-            "properties": [],
-            "constants": []
+            "properties": [
+                "created_at",
+                "id",
+                "mail_notification_id",
+                "metadata",
+                "normalized_type",
+                "occurred_at",
+                "owner_scope_key",
+                "processed_at",
+                "provider",
+                "provider_event_id",
+                "provider_message_id",
+                "redacted_at",
+                "tenant_id",
+                "updated_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
         },
         "Nvl\\MailNotifications\\Models\\ScheduledMailMessage": {
             "kind": "class",
             "file": "src/Models/ScheduledMailMessage.php",
             "methods": [
-                "getKey",
-                "getKeyName",
-                "getMorphClass",
-                "getRouteKey",
-                "getRouteKeyName",
-                "is",
-                "isNot",
-                "relationLoaded"
+                "bootHasOwnership",
+                "delete",
+                "fresh",
+                "freshTimestamp",
+                "getConnectionName",
+                "getTable",
+                "newQueryForRestoration",
+                "ownershipDefinition",
+                "refresh",
+                "refreshForUpdate",
+                "save"
             ],
-            "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\Services\\MailPresentation": {
-            "kind": "class",
-            "file": "src/Services/MailPresentation.php",
-            "methods": [
-                "__construct",
-                "render",
-                "renderText"
+            "properties": [
+                "attempts",
+                "available_at",
+                "bcc_recipients",
+                "cancelled_at",
+                "cc_recipients",
+                "claim_token",
+                "created_at",
+                "factory_alias",
+                "failed_at",
+                "id",
+                "last_attempt_at",
+                "last_error",
+                "locked_until",
+                "max_attempts",
+                "metadata",
+                "notifiable_id",
+                "notifiable_type",
+                "owner_reference",
+                "owner_scope_key",
+                "ownership_envelope",
+                "ownership_key",
+                "payload",
+                "payload_version",
+                "redacted_at",
+                "scheduled_for",
+                "sent_at",
+                "status",
+                "tenant_envelope",
+                "tenant_id",
+                "to_recipients",
+                "updated_at"
             ],
-            "properties": [],
-            "constants": []
+            "constants": [
+                "TABLE"
+            ]
         },
         "Nvl\\MailNotifications\\Services\\ScheduledMailScheduler": {
             "kind": "class",
@@ -1010,90 +923,6 @@
                 "schedule"
             ],
             "properties": [],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\ValueObjects\\MailNotificationAggregate": {
-            "kind": "class",
-            "file": "src/ValueObjects/MailNotificationAggregate.php",
-            "methods": [
-                "__construct",
-                "toArray"
-            ],
-            "properties": [
-                "count",
-                "key"
-            ],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\ValueObjects\\MailNotificationEventReadData": {
-            "kind": "class",
-            "file": "src/ValueObjects/MailNotificationEventReadData.php",
-            "methods": [
-                "__construct",
-                "toArray"
-            ],
-            "properties": [
-                "id",
-                "occurredAt",
-                "processedAt",
-                "provider",
-                "providerEventId",
-                "providerMessageId",
-                "redactedAt",
-                "type"
-            ],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\ValueObjects\\MailNotificationReadData": {
-            "kind": "class",
-            "file": "src/ValueObjects/MailNotificationReadData.php",
-            "methods": [
-                "__construct",
-                "toArray"
-            ],
-            "properties": [
-                "acceptedAt",
-                "correlationId",
-                "createdAt",
-                "deliveredAt",
-                "events",
-                "failedAt",
-                "fromEmail",
-                "fromName",
-                "id",
-                "mailer",
-                "messageCategory",
-                "notifiableId",
-                "notifiableType",
-                "primaryRecipientEmail",
-                "provider",
-                "providerMessageId",
-                "providerOccurredAt",
-                "queueReference",
-                "redactedAt",
-                "status",
-                "statusChangedAt",
-                "subject",
-                "updatedAt"
-            ],
-            "constants": [
-                "COLUMNS"
-            ]
-        },
-        "Nvl\\MailNotifications\\ValueObjects\\MailNotificationReadPage": {
-            "kind": "class",
-            "file": "src/ValueObjects/MailNotificationReadPage.php",
-            "methods": [
-                "__construct",
-                "toArray"
-            ],
-            "properties": [
-                "currentPage",
-                "items",
-                "lastPage",
-                "perPage",
-                "total"
-            ],
             "constants": []
         },
         "Nvl\\MailNotifications\\ValueObjects\\MailNotificationReadQuery": {
@@ -1115,43 +944,6 @@
                 "sort",
                 "status",
                 "to"
-            ],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\ValueObjects\\MailNotificationStatistics": {
-            "kind": "class",
-            "file": "src/ValueObjects/MailNotificationStatistics.php",
-            "methods": [
-                "__construct",
-                "toArray"
-            ],
-            "properties": [
-                "accepted",
-                "categories",
-                "failed",
-                "failureRate",
-                "mailers",
-                "recent",
-                "statuses",
-                "successRate",
-                "successful",
-                "total"
-            ],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\ValueObjects\\MailNotificationSuggestion": {
-            "kind": "class",
-            "file": "src/ValueObjects/MailNotificationSuggestion.php",
-            "methods": [
-                "__construct",
-                "toArray"
-            ],
-            "properties": [
-                "createdAt",
-                "id",
-                "primaryRecipientEmail",
-                "status",
-                "subject"
             ],
             "constants": []
         },
@@ -1286,79 +1078,6 @@
             ],
             "constants": []
         },
-        "Nvl\\MailNotifications\\ValueObjects\\ScheduledMailDetailData": {
-            "kind": "class",
-            "file": "src/ValueObjects/ScheduledMailDetailData.php",
-            "methods": [
-                "__construct",
-                "toArray"
-            ],
-            "properties": [
-                "attempts",
-                "availableAt",
-                "cancelledAt",
-                "createdAt",
-                "factoryAlias",
-                "failedAt",
-                "id",
-                "lastAttemptAt",
-                "maxAttempts",
-                "notifiableId",
-                "notifiableType",
-                "payloadVersion",
-                "primaryRecipient",
-                "redactedAt",
-                "scheduledFor",
-                "sentAt",
-                "status",
-                "updatedAt"
-            ],
-            "constants": [
-                "COLUMNS"
-            ]
-        },
-        "Nvl\\MailNotifications\\ValueObjects\\ScheduledMailListData": {
-            "kind": "class",
-            "file": "src/ValueObjects/ScheduledMailListData.php",
-            "methods": [
-                "__construct",
-                "toArray"
-            ],
-            "properties": [
-                "attempts",
-                "availableAt",
-                "cancelledAt",
-                "createdAt",
-                "factoryAlias",
-                "failedAt",
-                "id",
-                "maxAttempts",
-                "payloadVersion",
-                "primaryRecipient",
-                "scheduledFor",
-                "sentAt",
-                "status"
-            ],
-            "constants": [
-                "COLUMNS"
-            ]
-        },
-        "Nvl\\MailNotifications\\ValueObjects\\ScheduledMailReadPage": {
-            "kind": "class",
-            "file": "src/ValueObjects/ScheduledMailReadPage.php",
-            "methods": [
-                "__construct",
-                "toArray"
-            ],
-            "properties": [
-                "currentPage",
-                "items",
-                "lastPage",
-                "perPage",
-                "total"
-            ],
-            "constants": []
-        },
         "Nvl\\MailNotifications\\ValueObjects\\ScheduledMailReadQuery": {
             "kind": "class",
             "file": "src/ValueObjects/ScheduledMailReadQuery.php",
@@ -1376,21 +1095,6 @@
                 "sort",
                 "status",
                 "to"
-            ],
-            "constants": []
-        },
-        "Nvl\\MailNotifications\\ValueObjects\\ScheduledMailStatistics": {
-            "kind": "class",
-            "file": "src/ValueObjects/ScheduledMailStatistics.php",
-            "methods": [
-                "__construct",
-                "toArray"
-            ],
-            "properties": [
-                "due",
-                "recent",
-                "statuses",
-                "total"
             ],
             "constants": []
         },
@@ -1546,55 +1250,5 @@
             ],
             "constants": []
         }
-    },
-    "models": {
-        "Nvl\\MailNotifications\\Models\\MailNotification": {
-            "read": [],
-            "identity_methods": [
-                "getKey",
-                "getKeyName",
-                "getMorphClass",
-                "getRouteKey",
-                "getRouteKeyName",
-                "is",
-                "isNot",
-                "relationLoaded"
-            ],
-            "capability_relations": []
-        },
-        "Nvl\\MailNotifications\\Models\\MailNotificationEvent": {
-            "read": [],
-            "identity_methods": [
-                "getKey",
-                "getKeyName",
-                "getMorphClass",
-                "getRouteKey",
-                "getRouteKeyName",
-                "is",
-                "isNot",
-                "relationLoaded"
-            ],
-            "capability_relations": []
-        },
-        "Nvl\\MailNotifications\\Models\\ScheduledMailMessage": {
-            "read": [],
-            "identity_methods": [
-                "getKey",
-                "getKeyName",
-                "getMorphClass",
-                "getRouteKey",
-                "getRouteKeyName",
-                "is",
-                "isNot",
-                "relationLoaded"
-            ],
-            "capability_relations": []
-        }
-    },
-    "capability_relations": {},
-    "tables": {
-        "events": "nvl_mail_notifications_events",
-        "notifications": "nvl_mail_notifications_notifications",
-        "scheduled_messages": "nvl_mail_notifications_scheduled_messages"
     }
 }

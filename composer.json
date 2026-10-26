@@ -18,7 +18,7 @@
         "ext-mbstring": "*",
         "laravel/framework": "^13.0",
         "nesbot/carbon": "^2.72 || ^3.0",
-        "nvl/core": "^6.0",
+        "nvl/core": "^7.0",
         "php": "^8.4",
         "symfony/mailer": "^7.0 || ^8.0",
         "symfony/mime": "^7.0 || ^8.0"
@@ -27,8 +27,8 @@
         "larastan/larastan": "^3.10",
         "laravel/pint": "^1.27",
         "mockery/mockery": "^1.6",
-        "nvl/ownership": "^6.0.1",
-        "nvl/settings": "^6.0",
+        "nvl/ownership": "^7.0",
+        "nvl/settings": "^7.0",
         "orchestra/testbench": "^11.0",
         "pestphp/pest": "^4.0",
         "pestphp/pest-plugin-laravel": "^4.0",
@@ -58,7 +58,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-main": "6.x-dev"
+            "dev-main": "7.x-dev"
         },
         "laravel": {
             "providers": [
@@ -89,7 +89,8 @@
             "/**/.gitattributes",
             "/.gitignore",
             "/**/.gitignore",
-            "/**/.gitkeep"
+            "/**/.gitkeep",
+            ".DS_Store"
         ]
     },
     "minimum-stability": "stable",
@@ -99,8 +100,8 @@
         "nvl/settings": "Enables configured delivery profiles through the loaded Settings provider."
     },
     "conflict": {
-        "nvl/ownership": "<6.0.1 || >=7.0",
-        "nvl/settings": "<6.0 || >=7.0"
+        "nvl/ownership": "<7.0 || >=8.0",
+        "nvl/settings": "<7.0 || >=8.0"
     },
     "homepage": "https://github.com/nvl-laravel-suite/mail-notifications",
     "authors": [
