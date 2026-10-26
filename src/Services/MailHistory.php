@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Services;
 
+use Carbon\CarbonImmutable;
 use DomainException;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
@@ -36,7 +37,8 @@ final readonly class MailHistory
         private OwnershipBoundary $boundary,
     ) {}
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed> */
     public function get(Authenticatable $actor, string $id): array
     {
         $notification = $this->boundary->query(MailNotification::query(), 'mail.notifications')
@@ -50,7 +52,8 @@ final readonly class MailHistory
         return $this->project($notification);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed> */
     public function getByProviderMessage(Authenticatable $actor, ProviderMessageId $messageId): array
     {
         $this->providers->resolve($messageId->provider);
@@ -61,7 +64,9 @@ final readonly class MailHistory
         return $this->get($actor, $notification->id);
     }
 
-    /** @param array<string, mixed> $filters @return array<string, mixed> */
+    /**
+     * @param array<string, mixed> $filters
+     * @return array<string, mixed> */
     public function paginate(Authenticatable $actor, array $filters = []): array
     {
         $this->authorization->authorize(MailNotificationReadAbility::List, $actor);
@@ -70,7 +75,9 @@ final readonly class MailHistory
         return $this->page($this->queries->build($query), $query);
     }
 
-    /** @param array<string, mixed> $filters @return array<string, mixed> */
+    /**
+     * @param array<string, mixed> $filters
+     * @return array<string, mixed> */
     public function forNotifiable(Authenticatable $actor, NotifiableReference $notifiable, array $filters = []): array
     {
         $this->authorization->authorize(MailNotificationReadAbility::List, $actor);
@@ -84,7 +91,9 @@ final readonly class MailHistory
             ->where('notifiable_id', $notifiable->identifier), $query);
     }
 
-    /** @param array<string, mixed> $filters @return array<string, mixed> */
+    /**
+     * @param array<string, mixed> $filters
+     * @return array<string, mixed> */
     public function statistics(Authenticatable $actor, array $filters = []): array
     {
         $this->authorization->authorize(MailNotificationReadAbility::Statistics, $actor);
@@ -116,7 +125,8 @@ final readonly class MailHistory
         ];
     }
 
-    /** @return list<array<string, mixed>> */
+    /**
+     * @return list<array<string, mixed>> */
     public function suggest(
         Authenticatable $actor,
         string $search,
@@ -149,18 +159,19 @@ final readonly class MailHistory
             $query->where('mailer', trim($mailer));
         }
 
-        return $query->latest('created_at')->orderByDesc('id')
+        return array_values($query->latest('created_at')->orderByDesc('id')
             ->limit(max(1, min($limit ?? $maximum, $maximum)))->get()
             ->map(static fn (MailNotification $notification): array => [
                 'id' => $notification->id,
                 'subject' => $notification->subject,
                 'primary_recipient_email' => $notification->primary_recipient_email,
                 'status' => $notification->status->value,
-                'created_at' => $notification->created_at?->toISOString(),
-            ])->values()->all();
+                'created_at' => $notification->created_at->toISOString(),
+            ])->values()->all());
     }
 
-    /** @param array<string, mixed> $filters */
+    /**
+     * @param array<string, mixed> $filters */
     private function filter(array $filters): MailNotificationReadQuery
     {
         $allowed = ['search', 'status', 'mailer', 'messageCategory', 'from', 'to', 'acceptedOnly',
@@ -169,23 +180,74 @@ final readonly class MailHistory
             throw new InvalidArgumentException('Unknown mail notification filter.');
         }
 
+        $search = $filters['search'] ?? null;
+        if ($search !== null && (! is_string($search))) {
+            throw new InvalidArgumentException('Invalid search mail filter.');
+        }
+        $status = $filters['status'] ?? null;
+        if ($status !== null && (! $status instanceof MailDeliveryStatus)) {
+            throw new InvalidArgumentException('Invalid status mail filter.');
+        }
+        $mailer = $filters['mailer'] ?? null;
+        if ($mailer !== null && (! is_string($mailer))) {
+            throw new InvalidArgumentException('Invalid mailer mail filter.');
+        }
+        $messageCategory = $filters['messageCategory'] ?? null;
+        if ($messageCategory !== null && (! is_string($messageCategory))) {
+            throw new InvalidArgumentException('Invalid messageCategory mail filter.');
+        }
+        $from = $filters['from'] ?? null;
+        if ($from !== null && (! $from instanceof CarbonImmutable)) {
+            throw new InvalidArgumentException('Invalid from mail filter.');
+        }
+        $to = $filters['to'] ?? null;
+        if ($to !== null && (! $to instanceof CarbonImmutable)) {
+            throw new InvalidArgumentException('Invalid to mail filter.');
+        }
+        $acceptedOnly = $filters['acceptedOnly'] ?? false;
+        if (! is_bool($acceptedOnly)) {
+            throw new InvalidArgumentException('Invalid acceptedOnly mail filter.');
+        }
+        $failedOnly = $filters['failedOnly'] ?? false;
+        if (! is_bool($failedOnly)) {
+            throw new InvalidArgumentException('Invalid failedOnly mail filter.');
+        }
+        $sort = $filters['sort'] ?? 'created_at';
+        if (! is_string($sort)) {
+            throw new InvalidArgumentException('Invalid sort mail filter.');
+        }
+        $direction = $filters['direction'] ?? 'desc';
+        if (! is_string($direction)) {
+            throw new InvalidArgumentException('Invalid direction mail filter.');
+        }
+        $page = $filters['page'] ?? 1;
+        if (! is_int($page)) {
+            throw new InvalidArgumentException('Invalid page mail filter.');
+        }
+        $perPage = $filters['perPage'] ?? 25;
+        if (! is_int($perPage)) {
+            throw new InvalidArgumentException('Invalid perPage mail filter.');
+        }
+
         return new MailNotificationReadQuery(
-            search: $filters['search'] ?? null,
-            status: $filters['status'] ?? null,
-            mailer: $filters['mailer'] ?? null,
-            messageCategory: $filters['messageCategory'] ?? null,
-            from: $filters['from'] ?? null,
-            to: $filters['to'] ?? null,
-            acceptedOnly: $filters['acceptedOnly'] ?? false,
-            failedOnly: $filters['failedOnly'] ?? false,
-            sort: $filters['sort'] ?? 'created_at',
-            direction: $filters['direction'] ?? 'desc',
-            page: $filters['page'] ?? 1,
-            perPage: $filters['perPage'] ?? 25,
+            search: $search,
+            status: $status,
+            mailer: $mailer,
+            messageCategory: $messageCategory,
+            from: $from,
+            to: $to,
+            acceptedOnly: $acceptedOnly,
+            failedOnly: $failedOnly,
+            sort: $sort,
+            direction: $direction,
+            page: $page,
+            perPage: $perPage,
         );
     }
 
-    /** @param Builder<MailNotification> $builder @return array<string, mixed> */
+    /**
+     * @param Builder<MailNotification> $builder
+     * @return array<string, mixed> */
     private function page(Builder $builder, MailNotificationReadQuery $filters): array
     {
         $maximum = config('nvl-mail-notifications.management.maximum_per_page', 100);
@@ -203,7 +265,10 @@ final readonly class MailHistory
         ];
     }
 
-    /** @param Builder<MailNotification> $query @param 'mailer'|'message_category' $column @return list<array{key: string, count: int}> */
+    /**
+     * @param Builder<MailNotification> $query
+     * @param 'mailer'|'message_category' $column
+     * @return list<array{key: string, count: int}> */
     private function aggregate(Builder $query, string $column): array
     {
         $selection = match ($column) {
@@ -233,7 +298,8 @@ final readonly class MailHistory
         return is_int($validated) ? $validated : 0;
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed> */
     private function project(MailNotification $notification): array
     {
         return [

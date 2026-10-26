@@ -61,3 +61,10 @@ it('keeps scheduled page data queries constant as rows grow', function (): void 
     expect($small)->toBe(2)
         ->and($large)->toBe($small);
 });
+
+it('rejects a raw notifiable identifier at the direct scheduled reader boundary', function (): void {
+    config()->set('nvl-mail-notifications.management.scheduled_authorization.callback', static fn (): bool => true);
+
+    expect(fn () => app(ScheduledMailReader::class)->paginate(nativeScheduledAdministrator(), ['notifiable' => 'untrusted-id']))
+        ->toThrow(InvalidArgumentException::class);
+});

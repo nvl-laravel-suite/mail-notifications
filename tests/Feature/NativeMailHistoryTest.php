@@ -145,3 +145,10 @@ it('returns bounded normalized statistics with grammar-quoted aggregate queries'
         expect($query['query'])->toContain($group);
     }
 });
+
+it('rejects wrongly typed history filters at the direct service boundary', function (): void {
+    config()->set('nvl-mail-notifications.management.authorization.callback', static fn (): bool => true);
+
+    expect(fn () => app(MailHistory::class)->paginate(nativeMailAdministrator(), ['acceptedOnly' => 'yes']))
+        ->toThrow(InvalidArgumentException::class);
+});

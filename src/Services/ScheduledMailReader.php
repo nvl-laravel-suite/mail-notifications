@@ -12,6 +12,7 @@ use Nvl\MailNotifications\Enums\ScheduledMailReadAbility;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
+use Nvl\MailNotifications\ValueObjects\NotifiableReference;
 use Nvl\MailNotifications\ValueObjects\Recipient;
 use Nvl\MailNotifications\ValueObjects\ScheduledMailReadQuery;
 use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
@@ -34,7 +35,9 @@ final readonly class ScheduledMailReader
         private OwnershipBoundary $boundary,
     ) {}
 
-    /** @param array<string, mixed> $filters @return array<string, mixed> */
+    /**
+     * @param array<string, mixed> $filters
+     * @return array<string, mixed> */
     public function paginate(Authenticatable $actor, array $filters = []): array
     {
         $this->authorization->authorize(ScheduledMailReadAbility::List, $actor);
@@ -54,7 +57,8 @@ final readonly class ScheduledMailReader
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed> */
     public function get(Authenticatable $actor, string $id): array
     {
         $message = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
@@ -71,7 +75,9 @@ final readonly class ScheduledMailReader
         ];
     }
 
-    /** @param array<string, mixed> $filters @return array<string, mixed> */
+    /**
+     * @param array<string, mixed> $filters
+     * @return array<string, mixed> */
     public function statistics(Authenticatable $actor, array $filters = []): array
     {
         $this->authorization->authorize(ScheduledMailReadAbility::Statistics, $actor);
@@ -94,7 +100,8 @@ final readonly class ScheduledMailReader
         return ['total' => $total, 'statuses' => $statuses, 'due' => $due, 'recent' => $recent];
     }
 
-    /** @param array<string, mixed> $filters */
+    /**
+     * @param array<string, mixed> $filters */
     private function filter(array $filters): ScheduledMailReadQuery
     {
         $allowed = ['status', 'factoryAlias', 'notifiable', 'from', 'to', 'dueOnly', 'sort', 'direction', 'page', 'perPage'];
@@ -102,35 +109,85 @@ final readonly class ScheduledMailReader
             throw new InvalidArgumentException('Unknown scheduled mail filter.');
         }
 
+        $status = $filters['status'] ?? null;
+        if ($status !== null && (! $status instanceof ScheduledMailStatus)) {
+            throw new InvalidArgumentException('Invalid status mail filter.');
+        }
+        $factoryAlias = $filters['factoryAlias'] ?? null;
+        if ($factoryAlias !== null && (! is_string($factoryAlias))) {
+            throw new InvalidArgumentException('Invalid factoryAlias mail filter.');
+        }
+        $notifiable = $filters['notifiable'] ?? null;
+        if ($notifiable !== null && (! $notifiable instanceof NotifiableReference)) {
+            throw new InvalidArgumentException('Invalid notifiable mail filter.');
+        }
+        $from = $filters['from'] ?? null;
+        if ($from !== null && (! $from instanceof CarbonImmutable)) {
+            throw new InvalidArgumentException('Invalid from mail filter.');
+        }
+        $to = $filters['to'] ?? null;
+        if ($to !== null && (! $to instanceof CarbonImmutable)) {
+            throw new InvalidArgumentException('Invalid to mail filter.');
+        }
+        $dueOnly = $filters['dueOnly'] ?? false;
+        if (! is_bool($dueOnly)) {
+            throw new InvalidArgumentException('Invalid dueOnly mail filter.');
+        }
+        $sort = $filters['sort'] ?? 'scheduled_for';
+        if (! is_string($sort)) {
+            throw new InvalidArgumentException('Invalid sort mail filter.');
+        }
+        $direction = $filters['direction'] ?? 'asc';
+        if (! is_string($direction)) {
+            throw new InvalidArgumentException('Invalid direction mail filter.');
+        }
+        $page = $filters['page'] ?? 1;
+        if (! is_int($page)) {
+            throw new InvalidArgumentException('Invalid page mail filter.');
+        }
+        $perPage = $filters['perPage'] ?? 25;
+        if (! is_int($perPage)) {
+            throw new InvalidArgumentException('Invalid perPage mail filter.');
+        }
+
         return new ScheduledMailReadQuery(
-            status: $filters['status'] ?? null,
-            factoryAlias: $filters['factoryAlias'] ?? null,
-            notifiable: $filters['notifiable'] ?? null,
-            from: $filters['from'] ?? null,
-            to: $filters['to'] ?? null,
-            dueOnly: $filters['dueOnly'] ?? false,
-            sort: $filters['sort'] ?? 'scheduled_for',
-            direction: $filters['direction'] ?? 'asc',
-            page: $filters['page'] ?? 1,
-            perPage: $filters['perPage'] ?? 25,
+            status: $status,
+            factoryAlias: $factoryAlias,
+            notifiable: $notifiable,
+            from: $from,
+            to: $to,
+            dueOnly: $dueOnly,
+            sort: $sort,
+            direction: $direction,
+            page: $page,
+            perPage: $perPage,
         );
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed> */
     private function project(ScheduledMailMessage $message): array
     {
         $recipients = $message->getAttribute('to_recipients');
         $primary = is_array($recipients) ? ($recipients[0] ?? null) : null;
-        if ($primary !== null && (! is_array($primary) || ! isset($primary['email'])
-            || ! is_string($primary['email']) || (isset($primary['name']) && ! is_string($primary['name'])))) {
-            throw new InvalidArgumentException('Persisted scheduled mail primary recipient is invalid.');
+        $recipient = null;
+        if ($primary !== null) {
+            if (! is_array($primary)) {
+                throw new InvalidArgumentException('Persisted scheduled mail primary recipient is invalid.');
+            }
+            $email = $primary['email'] ?? null;
+            $name = $primary['name'] ?? null;
+            if (! is_string($email) || ($name !== null && ! is_string($name))) {
+                throw new InvalidArgumentException('Persisted scheduled mail primary recipient is invalid.');
+            }
+            $recipient = (new Recipient($email, $name))->toArray();
         }
 
         return [
             'id' => $message->id,
             'factory_alias' => $message->factory_alias,
             'payload_version' => $message->payload_version,
-            'primary_recipient' => is_array($primary) ? (new Recipient($primary['email'], $primary['name'] ?? null))->toArray() : null,
+            'primary_recipient' => $recipient,
             'status' => $message->status->value,
             'scheduled_for' => $message->scheduled_for->toISOString(),
             'available_at' => $message->available_at->toISOString(),
