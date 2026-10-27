@@ -6,7 +6,7 @@ namespace Nvl\MailNotifications\Ownership;
 
 use Carbon\CarbonImmutable;
 use Nvl\MailNotifications\Enums\MailOwnerOperation;
-use Nvl\MailNotifications\Models\ScheduledMailMessage;
+use Nvl\MailNotifications\Services\MailModelRegistry;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
 use Nvl\Support\Ownership\Contracts\OwnershipReadiness;
 use Nvl\Support\Ownership\Enums\OwnershipContextMode;
@@ -29,7 +29,7 @@ final readonly class ScheduledMailCentralWorklist
             return;
         }
         $this->readiness->assertActive('mail.scheduled');
-        $model = new ScheduledMailMessage;
+        $model = MailModelRegistry::scheduled();
         $query = $model->getConnection()->table($model->getTable())->useWritePdo()->where('owner_scope_key', 'central')->whereNull('owner_reference')
             ->where('ownership_envelope->mode', 'central');
         $query->where('status', 'pending')->where('available_at', '<=', DatabaseTimestamp::format(CarbonImmutable::now('UTC')));

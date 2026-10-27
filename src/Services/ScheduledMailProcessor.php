@@ -9,6 +9,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\SentMessage;
 use Nvl\MailNotifications\Contracts\DeliveryProfileResolver;
 use Nvl\MailNotifications\Exceptions\MailDeliveryCancelled;
+use Nvl\MailNotifications\Exceptions\ScheduledMailException;
 use Nvl\MailNotifications\Laravel\ScheduledMailFactory;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\ValueObjects\ScheduledMessageData;
@@ -45,6 +46,10 @@ final readonly class ScheduledMailProcessor
     {
         if (! $this->configuration->enabled()) {
             return 0;
+        }
+
+        if ((MailModelRegistry::scheduled())->getConnection()->transactionLevel() !== 0) {
+            throw new ScheduledMailException('Scheduled mail processing must start outside an existing database transaction.');
         }
 
         $batchSize = $this->configuration->batchSize($limit);
@@ -119,6 +124,9 @@ final readonly class ScheduledMailProcessor
         }
 
         try {
+            if ($message->getConnection()->transactionLevel() !== 0) {
+                throw new ScheduledMailException('Scheduled mail transport must run outside an existing database transaction.');
+            }
             $sentMessage = $mailable->send(new ScheduledMailFactory(
                 $this->mail,
                 $data->recipients,

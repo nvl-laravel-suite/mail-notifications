@@ -65,7 +65,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
     public function begin(PreparedMessage $message): TrackingAttempt
     {
         $this->assertNotifiableTypeIsRegistered($message);
-        $model = new MailNotification;
+        $model = MailModelRegistry::notification();
 
         return $model->getConnection()->transaction(function () use ($message): TrackingAttempt {
             $now = CarbonImmutable::now('UTC');
@@ -89,7 +89,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
      */
     public function accepted(TrackingAttempt $attempt, ProviderAcceptance $acceptance): void
     {
-        $model = new MailNotification;
+        $model = MailModelRegistry::notification();
 
         $model->getConnection()->transaction(function () use ($attempt, $acceptance): void {
             $notification = $this->notifications()
@@ -144,7 +144,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
      */
     public function failed(TrackingAttempt $attempt, Throwable $exception): void
     {
-        $model = new MailNotification;
+        $model = MailModelRegistry::notification();
 
         $model->getConnection()->transaction(function () use ($attempt, $exception): void {
             $notification = $this->notifications()
@@ -175,7 +175,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             );
         }
 
-        $model = new MailNotification;
+        $model = MailModelRegistry::notification();
         $connection = $model->getConnection();
 
         try {
@@ -216,7 +216,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
      */
     public function apply(VerifiedDeliveryEvent $event): TransitionResult
     {
-        $model = new MailNotification;
+        $model = MailModelRegistry::notification();
 
         return $model->getConnection()->transaction(
             fn (): TransitionResult => $this->applyWithinTransaction($event),
@@ -793,9 +793,9 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
     private function notifications(): Builder
     {
         if (! $this->tenantEnvelope->globalTracking()) {
-            return $this->boundary->query(MailNotification::query(), 'mail.notifications');
+            return $this->boundary->query(MailModelRegistry::notificationsQuery(), 'mail.notifications');
         }
-        $model = new MailNotification;
+        $model = MailModelRegistry::notification();
 
         return (new Builder($model->getConnection()->query()))->setModel($model)->where('owner_scope_key', 'central');
     }
@@ -821,7 +821,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
         if (! $this->tenantEnvelope->globalTracking()) {
             return $this->notifications()->create($attributes);
         }
-        $model = new MailNotification;
+        $model = MailModelRegistry::notification();
         $model->forceFill([...$attributes, 'owner_scope_key' => 'central', 'owner_reference' => null]);
         $now = $model->freshTimestamp();
         $model->setCreatedAt($now)->setUpdatedAt($now);

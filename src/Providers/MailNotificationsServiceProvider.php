@@ -47,6 +47,7 @@ use Nvl\MailNotifications\Services\DatabaseTrackingLifecycle;
 use Nvl\MailNotifications\Services\DefaultSensitiveDataRedactor;
 use Nvl\MailNotifications\Services\MailAnonymizationConfiguration;
 use Nvl\MailNotifications\Services\MailHistoryAnonymizer;
+use Nvl\MailNotifications\Services\MailModelRegistry;
 use Nvl\MailNotifications\Services\MailNotificationNotifiableTypeRegistry;
 use Nvl\MailNotifications\Services\MailNotificationsDoctor;
 use Nvl\MailNotifications\Services\MailRetentionConfiguration;
@@ -108,8 +109,10 @@ final class MailNotificationsServiceProvider extends ServiceProvider implements 
             dirname(__DIR__, 2).'/config/nvl-mail-notifications.php',
             'mail-notifications',
         );
+        $this->app->singleton(MailModelRegistry::class);
+        $this->app->booting(fn () => $this->app->make(MailModelRegistry::class)->prepare());
         $this->app->booted(function (): void {
-            (new MailResourceRegistrar)->register($this->app->make(OwnershipResourceRegistry::class),
+            $this->app->make(MailResourceRegistrar::class)->register($this->app->make(OwnershipResourceRegistry::class),
                 config('nvl-ownership.enabled') === true && config('nvl-mail-notifications.ownership.scoped', true) === true);
             $this->app->make(OwnershipContextParticipants::class)->register(MailTrackingContextParticipant::class);
             if ($this->app->bound(OwnershipAdoptionRegistry::class)) {

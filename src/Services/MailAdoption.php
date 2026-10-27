@@ -15,9 +15,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
-use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
-use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\CanonicalMailNotificationSchema;
 use Nvl\MailNotifications\ValueObjects\LegacyMailForeignKey;
 use Nvl\MailNotifications\ValueObjects\LegacyMailNotificationMapping;
@@ -164,7 +162,7 @@ final readonly class MailAdoption
             ): void {
                 $this->insertChunks(
                     $connection,
-                    (new MailNotification)->getTable(),
+                    (MailModelRegistry::notification())->getTable(),
                     $notifications,
                 );
                 $this->insertChunks(
@@ -174,7 +172,7 @@ final readonly class MailAdoption
                 );
                 $this->insertChunks(
                     $connection,
-                    (new ScheduledMailMessage)->getTable(),
+                    (MailModelRegistry::scheduled())->getTable(),
                     $scheduled,
                 );
             });
@@ -217,7 +215,7 @@ final readonly class MailAdoption
 
     private function assertStorageConnection(MailNotificationsAdoptionPlan $plan): void
     {
-        $configured = (new MailNotification)->getConnectionName()
+        $configured = (MailModelRegistry::notification())->getConnectionName()
             ?? config('database.default');
         $source = $plan->connection ?? config('database.default');
 
@@ -232,9 +230,9 @@ final readonly class MailAdoption
     {
         $schema = Schema::connection($plan->connection);
         $tables = [
-            (new MailNotification)->getTable() => CanonicalMailNotificationSchema::notifications(),
+            (MailModelRegistry::notification())->getTable() => CanonicalMailNotificationSchema::notifications(),
             (new MailNotificationEvent)->getTable() => CanonicalMailNotificationSchema::events(),
-            (new ScheduledMailMessage)->getTable() => CanonicalMailNotificationSchema::scheduled(),
+            (MailModelRegistry::scheduled())->getTable() => CanonicalMailNotificationSchema::scheduled(),
         ];
 
         foreach ($tables as $table => $columns) {
@@ -595,8 +593,8 @@ final readonly class MailAdoption
     ): void {
         $connection = DB::connection($plan->connection);
         $targets = [
-            (new MailNotification)->getTable() => array_column($notifications, 'id'),
-            (new ScheduledMailMessage)->getTable() => array_column($scheduled, 'id'),
+            (MailModelRegistry::notification())->getTable() => array_column($notifications, 'id'),
+            (MailModelRegistry::scheduled())->getTable() => array_column($scheduled, 'id'),
         ];
 
         foreach ($targets as $table => $identities) {
@@ -623,9 +621,9 @@ final readonly class MailAdoption
     ): void {
         $connection = DB::connection($plan->connection);
         $targets = [
-            (new MailNotification)->getTable() => array_column($notifications, 'id'),
+            (MailModelRegistry::notification())->getTable() => array_column($notifications, 'id'),
             (new MailNotificationEvent)->getTable() => array_column($events, 'id'),
-            (new ScheduledMailMessage)->getTable() => array_column($scheduled, 'id'),
+            (MailModelRegistry::scheduled())->getTable() => array_column($scheduled, 'id'),
         ];
 
         foreach ($targets as $table => $identities) {
@@ -649,7 +647,7 @@ final readonly class MailAdoption
     private function restoreForeignKeys(MailNotificationsAdoptionPlan $plan): void
     {
         $schema = Schema::connection($plan->connection);
-        $target = (new MailNotification)->getTable();
+        $target = (MailModelRegistry::notification())->getTable();
 
         foreach ($plan->foreignKeys as $foreignKey) {
             $this->assertHostForeignKeyTable($schema, $foreignKey);

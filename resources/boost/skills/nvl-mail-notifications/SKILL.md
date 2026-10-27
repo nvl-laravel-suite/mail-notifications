@@ -7,6 +7,12 @@ description: Use for native NVL mail tracking, history, scheduling, verified web
 
 Use complete package services for domain operations. Host applications own mailables, localized copy, Markdown or HTML themes, controllers, routes, request validation, admin resources, and frontend types. The package does not publish a presentation UI, Actions, or HTTP endpoints.
 
+## Configured models
+
+Configure `nvl-mail-notifications.models.notification` and `models.scheduled_message` before providers boot with concrete subclasses of `MailNotification` and `ScheduledMailMessage`. `MailModelRegistry` freezes both classes while preserving native morph identities, UUID keys, required casts, ownership scope, persistence hooks and UTC timestamps. Native tracking, scheduling, reads, maintenance, factories, relations and queued restoration use the configured roots. `MailNotificationEvent` and technical receipt, delivery identity and lock rows remain fixed package records; the event's `mailNotification` relation targets the configured notification.
+
+Both roots must retain the package-configured table and actual connection so each operation and its technical records share one transaction source. Configure `storage.connection` and `storage.tables` for the complete package graph; an individual subclass that selects divergent storage is rejected before persistence. Compatible extra columns and host presentation methods are supported, while native mutation payloads retain their existing allowlists. Resource classifications remain package controlled (`mail.notifications`, `mail.scheduled`, inherited `mail.events`); background identity alone still grants no host authorization.
+
 ## Native operations
 
 - `MailHistory`: authorized `get`, `getByProviderMessage`, `paginate`, `forNotifiable`, `statistics`, `suggest`. Results are bounded safe arrays. Accept allowlisted filter arrays and an explicit `Authenticatable` actor.

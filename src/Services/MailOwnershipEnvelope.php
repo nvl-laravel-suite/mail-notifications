@@ -155,7 +155,7 @@ final readonly class MailOwnershipEnvelope
     /** Require unchanged canonical stored global identity before a claim or finalization. */
     private function assertGlobalScheduledIdentity(ScheduledMailMessage $message): void
     {
-        $canonical = new ScheduledMailMessage;
+        $canonical = MailModelRegistry::scheduled();
         $key = $message->getRawOriginal('id');
         if (! is_string($key) || ! $message->exists || $message->isDirty(['id', 'owner_scope_key', 'owner_reference', 'ownership_envelope'])
             || $message->getTable() !== $canonical->getTable() || $message->getConnection() !== $canonical->getConnection()

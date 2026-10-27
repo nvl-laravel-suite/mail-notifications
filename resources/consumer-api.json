@@ -229,6 +229,7 @@
                 "delivered",
                 "failed",
                 "forOwner",
+                "modelName",
                 "opened",
                 "pending",
                 "rejected",
@@ -246,6 +247,7 @@
                 "due",
                 "failed",
                 "forOwner",
+                "modelName",
                 "pending",
                 "processing",
                 "retrying",
@@ -946,6 +948,17 @@
             "methods": [
                 "__construct",
                 "anonymize"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\MailModelRegistry": {
+            "kind": "class",
+            "file": "src/Services/MailModelRegistry.php",
+            "methods": [
+                "__construct",
+                "notificationClass",
+                "scheduledClass"
             ],
             "properties": [],
             "constants": []

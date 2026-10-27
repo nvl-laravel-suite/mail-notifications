@@ -48,9 +48,9 @@ trait QueriesMailHistory
         if (! $this->ownership->globalTracking()) {
             return $model->save();
         }
-        $fields = match ($model::class) {
-            MailNotification::class => ['subject', 'from_email', 'from_name', 'to_recipients', 'cc_recipients', 'bcc_recipients', 'primary_recipient_email', 'notifiable_type', 'notifiable_id', 'metadata', 'redacted_at', 'updated_at'],
-            MailNotificationEvent::class => ['metadata', 'redacted_at', 'updated_at'],
+        $fields = match (true) {
+            $model instanceof MailNotification => ['subject', 'from_email', 'from_name', 'to_recipients', 'cc_recipients', 'bcc_recipients', 'primary_recipient_email', 'notifiable_type', 'notifiable_id', 'metadata', 'redacted_at', 'updated_at'],
+            $model instanceof MailNotificationEvent => ['metadata', 'redacted_at', 'updated_at'],
             default => ['payload', 'to_recipients', 'cc_recipients', 'bcc_recipients', 'last_error', 'notifiable_type', 'notifiable_id', 'metadata', 'redacted_at', 'updated_at'],
         };
         $canonical = new ($model::class);

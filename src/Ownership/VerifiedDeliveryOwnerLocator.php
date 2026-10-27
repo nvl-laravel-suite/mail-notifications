@@ -7,7 +7,7 @@ namespace Nvl\MailNotifications\Ownership;
 use DomainException;
 use Nvl\MailNotifications\Exceptions\AmbiguousDeliveryEventException;
 use Nvl\MailNotifications\Exceptions\UnmatchedDeliveryEventException;
-use Nvl\MailNotifications\Models\MailNotification;
+use Nvl\MailNotifications\Services\MailModelRegistry;
 use Nvl\MailNotifications\ValueObjects\VerifiedDeliveryEvent;
 use Nvl\Support\Ownership\Exceptions\OwnershipViolation;
 use Nvl\Support\Ownership\ValueObjects\OwnerReference;
@@ -25,7 +25,7 @@ final readonly class VerifiedDeliveryOwnerLocator
     public function locate(VerifiedDeliveryEvent $event): ?OwnerReference
     {
         $this->readiness->assertReady('mail.notifications');
-        $model = new MailNotification;
+        $model = MailModelRegistry::notification();
         $query = $model->getConnection()->table($model->getTable())->useWritePdo()
             ->select(['id', 'provider', 'provider_message_id', 'owner_scope_key', 'owner_reference']);
         if ($event->correlationId !== null) {

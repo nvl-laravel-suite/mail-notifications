@@ -7,8 +7,7 @@ namespace Nvl\MailNotifications\Ownership;
 use Carbon\CarbonImmutable;
 use Nvl\MailNotifications\Contracts\MailOwnerWorklist;
 use Nvl\MailNotifications\Enums\MailOwnerOperation;
-use Nvl\MailNotifications\Models\MailNotification;
-use Nvl\MailNotifications\Models\ScheduledMailMessage;
+use Nvl\MailNotifications\Services\MailModelRegistry;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
 use Nvl\Support\Ownership\Contracts\OwnershipReadiness;
 use Nvl\Support\Ownership\Exceptions\OwnershipViolation;
@@ -27,8 +26,8 @@ final readonly class StoredMailOwnerWorklist implements MailOwnerWorklist
     public function owners(MailOwnerOperation $operation): iterable
     {
         $models = match ($operation) {
-            MailOwnerOperation::ProcessScheduled, MailOwnerOperation::RecoverScheduled => ['mail.scheduled' => ScheduledMailMessage::class],
-            default => ['mail.notifications' => MailNotification::class, 'mail.scheduled' => ScheduledMailMessage::class],
+            MailOwnerOperation::ProcessScheduled, MailOwnerOperation::RecoverScheduled => ['mail.scheduled' => app(MailModelRegistry::class)->scheduledClass()],
+            default => ['mail.notifications' => app(MailModelRegistry::class)->notificationClass(), 'mail.scheduled' => app(MailModelRegistry::class)->scheduledClass()],
         };
         $seen = [];
         foreach ($models as $resource => $class) {

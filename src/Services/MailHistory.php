@@ -45,7 +45,7 @@ final readonly class MailHistory
      * @return array<string, mixed> */
     public function get(Authenticatable $actor, string $id): array
     {
-        $notification = $this->boundary->query(MailNotification::query(), 'mail.notifications')
+        $notification = $this->boundary->query(MailModelRegistry::notificationsQuery(), 'mail.notifications')
             ->select(self::COLUMNS)->findOrFail($id);
         $this->authorization->authorize(MailNotificationReadAbility::View, $actor, $notification);
         $notification->setRelation('providerEvents', $notification->providerEvents()
@@ -61,7 +61,7 @@ final readonly class MailHistory
     public function getByProviderMessage(Authenticatable $actor, ProviderMessageId $messageId): array
     {
         $this->providers->resolve($messageId->provider);
-        $notification = $this->boundary->query(MailNotification::query(), 'mail.notifications')
+        $notification = $this->boundary->query(MailModelRegistry::notificationsQuery(), 'mail.notifications')
             ->select('id')->where('provider', $messageId->provider)
             ->where('provider_message_id', $messageId->value)->firstOrFail();
 
@@ -149,7 +149,7 @@ final readonly class MailHistory
         $maximum = config('nvl-mail-notifications.management.suggestion_limit', 20);
         $maximum = is_int($maximum) && $maximum > 0 ? $maximum : 20;
         $term = "%{$search}%";
-        $query = $this->boundary->query(MailNotification::query(), 'mail.notifications')
+        $query = $this->boundary->query(MailModelRegistry::notificationsQuery(), 'mail.notifications')
             ->select(['id', 'subject', 'primary_recipient_email', 'status', 'created_at'])
             ->where(static function (Builder $query) use ($term): void {
                 $query->where('subject', 'like', $term)

@@ -18,7 +18,6 @@ use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Exceptions\MailTrackingException;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
-use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\ForeignKeyInspector;
 use Nvl\MailNotifications\Support\StatusConstraintDatabase;
 use Nvl\MailNotifications\Support\StatusConstraintInspector;
@@ -544,9 +543,9 @@ final readonly class MailNotificationsDoctor
      */
     private function creatorOwnsExistingTable(string $migration): bool
     {
-        $notification = new MailNotification;
+        $notification = MailModelRegistry::notification();
         $event = new MailNotificationEvent;
-        $scheduled = new ScheduledMailMessage;
+        $scheduled = MailModelRegistry::scheduled();
         $schema = Schema::connection($notification->getConnectionName());
 
         return match ($migration) {
@@ -803,7 +802,7 @@ final readonly class MailNotificationsDoctor
      */
     private function schemaChecks(): array
     {
-        $notification = new MailNotification;
+        $notification = MailModelRegistry::notification();
         $event = new MailNotificationEvent;
 
         try {

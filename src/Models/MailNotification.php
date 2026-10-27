@@ -56,7 +56,7 @@ use Nvl\Support\Ownership\Contracts\Ownable;
  *
  * @api
  */
-final class MailNotification extends Model implements Ownable
+class MailNotification extends Model implements Ownable
 {
     /** @use HasFactory<MailNotificationFactory> */
     use HasFactory;
@@ -147,7 +147,7 @@ final class MailNotification extends Model implements Ownable
      */
     public function providerEvents(): HasMany
     {
-        return $this->hasMany(MailNotificationEvent::class);
+        return $this->hasMany(MailNotificationEvent::class, 'mail_notification_id');
     }
 
     /**

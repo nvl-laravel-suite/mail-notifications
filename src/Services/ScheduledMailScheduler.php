@@ -55,7 +55,7 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
     {
         $this->ensureEnabled();
         $attributes = $this->validatedAttributes($data);
-        $message = new ScheduledMailMessage;
+        $message = MailModelRegistry::scheduled();
 
         return $message->getConnection()->transaction(
             function () use ($attributes): ScheduledMailMessage {
@@ -83,7 +83,7 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
     public function cancel(string $messageId): ScheduledMailMessage
     {
         $this->ensureEnabled();
-        $message = new ScheduledMailMessage;
+        $message = MailModelRegistry::scheduled();
 
         return $message->getConnection()->transaction(function () use (
             $messageId,
@@ -122,7 +122,7 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
     ): ScheduledMailMessage {
         $this->ensureEnabled();
         $timing = $this->normalizeTiming($scheduledFor, $availableAt);
-        $message = new ScheduledMailMessage;
+        $message = MailModelRegistry::scheduled();
 
         return $message->getConnection()->transaction(function () use (
             $messageId,
@@ -181,7 +181,7 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
     ): ScheduledMailMessage {
         $this->ensureEnabled();
         $attributes = $this->validatedAttributes($data);
-        $model = new ScheduledMailMessage;
+        $model = MailModelRegistry::scheduled();
 
         return $model->getConnection()->transaction(function () use (
             $messageId,
@@ -371,7 +371,7 @@ final readonly class ScheduledMailScheduler implements ScheduledMailSchedulerCon
      */
     private function createScheduled(array $attributes): ScheduledMailMessage
     {
-        $message = new ScheduledMailMessage;
+        $message = MailModelRegistry::scheduled();
         $message->forceFill($attributes);
         if (! $this->tenantEnvelope->globalScheduling()) {
             $message->save();

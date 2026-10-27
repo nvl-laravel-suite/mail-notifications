@@ -9,9 +9,7 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Exceptions\MailRetentionException;
-use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
-use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
 use Nvl\MailNotifications\Traits\QueriesMailHistory;
 use Nvl\MailNotifications\ValueObjects\MailRetentionResult;
@@ -72,7 +70,7 @@ final readonly class MailRetentionPruner
         $scheduledMessageStatuses = $scheduledMessagePruningEnabled
             ? $this->configuration->scheduledMessageStatuses()
             : [];
-        $connection = (new MailNotification)->getConnection();
+        $connection = (MailModelRegistry::notification())->getConnection();
 
         return $connection->transaction(function () use (
             $batchSize,
@@ -135,7 +133,7 @@ final readonly class MailRetentionPruner
         bool $lock,
     ): array {
         $databaseCutoff = DatabaseTimestamp::format($cutoff);
-        $query = $this->historyQuery(MailNotification::query(), 'mail.notifications')
+        $query = $this->historyQuery(MailModelRegistry::notificationsQuery(), 'mail.notifications')
             ->whereIn('status', $statuses)
             ->where(static function (EloquentBuilder $query) use (
                 $databaseCutoff,
@@ -178,7 +176,7 @@ final readonly class MailRetentionPruner
         bool $lock,
     ): array {
         $databaseCutoff = DatabaseTimestamp::format($cutoff);
-        $query = $this->historyQuery(ScheduledMailMessage::query(), 'mail.scheduled')
+        $query = $this->historyQuery(MailModelRegistry::scheduledQuery(), 'mail.scheduled')
             ->where(static function (EloquentBuilder $query) use (
                 $databaseCutoff,
                 $statuses,
@@ -290,7 +288,7 @@ final readonly class MailRetentionPruner
                 ->whereIn('mail_notification_id', $ids)
                 ->delete();
 
-            $deleted = $this->historyQuery(MailNotification::query(), 'mail.notifications')->whereKey($ids)->delete();
+            $deleted = $this->historyQuery(MailModelRegistry::notificationsQuery(), 'mail.notifications')->whereKey($ids)->delete();
 
             if ($deleted !== count($ids)) {
                 throw new MailRetentionException(
@@ -311,7 +309,7 @@ final readonly class MailRetentionPruner
         int $batchSize,
     ): void {
         foreach (array_chunk($scheduledMessageIds, $batchSize) as $ids) {
-            $deleted = $this->historyQuery(ScheduledMailMessage::query(), 'mail.scheduled')
+            $deleted = $this->historyQuery(MailModelRegistry::scheduledQuery(), 'mail.scheduled')
                 ->whereKey($ids)
                 ->delete();
 

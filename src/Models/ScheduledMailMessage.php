@@ -56,7 +56,7 @@ use Nvl\Support\Ownership\Contracts\Ownable;
  *
  * @api
  */
-final class ScheduledMailMessage extends Model implements Ownable
+class ScheduledMailMessage extends Model implements Ownable
 {
     /** @use HasFactory<ScheduledMailMessageFactory> */
     use HasFactory;

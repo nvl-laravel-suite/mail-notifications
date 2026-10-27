@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Models\MailNotification;
+use Nvl\MailNotifications\Services\MailModelRegistry;
 
 /**
  * Builds native package fixture rows and declared parents.
@@ -21,6 +22,14 @@ use Nvl\MailNotifications\Models\MailNotification;
 final class MailNotificationFactory extends Factory
 {
     protected $model = MailNotification::class;
+
+    /** Resolve the deployment root for native and inherited factories.
+     * @return class-string<MailNotification>
+     */
+    public function modelName(): string
+    {
+        return app(MailModelRegistry::class)->notificationClass();
+    }
 
     /** Prepare native owner and tenant facts after Laravel expands relationships.
      *
@@ -47,7 +56,7 @@ final class MailNotificationFactory extends Factory
      */
     public function forOwner(Model $owner): static
     {
-        $key = FactoryGuard::parent($owner, new MailNotification);
+        $key = FactoryGuard::parent($owner, MailModelRegistry::notification());
 
         return $this->state([
             'notifiable_type' => $owner->getMorphClass(),

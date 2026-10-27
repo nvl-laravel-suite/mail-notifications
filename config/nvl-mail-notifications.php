@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
+use Nvl\MailNotifications\Models\MailNotification;
+use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Services\ConfiguredMailNotificationReadAuthorization;
 use Nvl\MailNotifications\Services\ConfiguredScheduledMailReadAuthorization;
 use Nvl\MailNotifications\Services\DatabaseTrackingLifecycle;
@@ -11,6 +13,11 @@ use Nvl\Support\Config\PackageEnvironment;
 
 /** Complete runtime defaults; publication sections are declared in ../resources/config/sections.json. */
 return [
+    'models' => [
+        'notification' => MailNotification::class,
+        'scheduled_message' => ScheduledMailMessage::class,
+    ],
+
     'ownership' => ['scoped' => true],
     'enabled' => PackageEnvironment::get('NVL_MAIL_NOTIFICATIONS_ENABLED', true),
 

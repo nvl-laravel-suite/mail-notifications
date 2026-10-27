@@ -11,6 +11,8 @@
                 "management.scheduled_maximum_per_page",
                 "management.suggestion_limit",
                 "migrations.enabled",
+                "models.notification",
+                "models.scheduled_message",
                 "ownership.scoped",
                 "privacy.sensitive_storage.enabled",
                 "providers.default",

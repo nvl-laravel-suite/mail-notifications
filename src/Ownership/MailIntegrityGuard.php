@@ -4,8 +4,7 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Ownership;
 
-use Nvl\MailNotifications\Models\MailNotification;
-use Nvl\MailNotifications\Models\ScheduledMailMessage;
+use Nvl\MailNotifications\Services\MailModelRegistry;
 use Nvl\Support\Ownership\Contracts\OwnershipReadiness;
 use Nvl\Support\Ownership\Services\OwnershipConstraintInspector;
 use Nvl\Support\Ownership\Services\OwnershipResourceRegistry;
@@ -28,10 +27,10 @@ final readonly class MailIntegrityGuard
         }
         $this->readiness->assertActive($resource);
         if ($resource === 'mail.scheduled') {
-            $model = new ScheduledMailMessage;
+            $model = MailModelRegistry::scheduled();
             $purpose = 'freeze:'.hash('sha256', json_encode([['ownership_envelope'], 'status', [], [], false], JSON_THROW_ON_ERROR));
         } else {
-            $model = new MailNotification;
+            $model = MailModelRegistry::notification();
             $purpose = 'assigned:'.hash('sha256', json_encode(['provider', 'provider_message_id'], JSON_THROW_ON_ERROR));
         }
         $this->constraints->assertPresent($model->getConnection(), $model->getTable(), 'update', $purpose);

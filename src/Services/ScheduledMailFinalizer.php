@@ -43,7 +43,7 @@ final readonly class ScheduledMailFinalizer
      */
     public function markSent(string $messageId, string $claimToken): bool
     {
-        $model = new ScheduledMailMessage;
+        $model = MailModelRegistry::scheduled();
 
         return $model->getConnection()->transaction(function () use (
             $messageId,
@@ -87,7 +87,7 @@ final readonly class ScheduledMailFinalizer
         Throwable $exception,
         bool $terminal = false,
     ): bool {
-        $model = new ScheduledMailMessage;
+        $model = MailModelRegistry::scheduled();
 
         return $model->getConnection()->transaction(function () use (
             $messageId,

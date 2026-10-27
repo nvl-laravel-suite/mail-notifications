@@ -80,7 +80,7 @@ final readonly class MailHistoryAnonymizer
         $scheduledStatuses = $scheduledEnabled
             ? $this->configuration->scheduledMessageStatuses()
             : [];
-        $connection = (new MailNotification)->getConnection();
+        $connection = (MailModelRegistry::notification())->getConnection();
 
         return $connection->transaction(function () use (
             $batchSize,
@@ -180,7 +180,7 @@ final readonly class MailHistoryAnonymizer
     ): Builder {
         $databaseCutoff = DatabaseTimestamp::format($cutoff);
 
-        return $this->historyQuery(MailNotification::query(), 'mail.notifications')
+        return $this->historyQuery(MailModelRegistry::notificationsQuery(), 'mail.notifications')
             ->whereIn('status', $statuses)
             ->where(static function (Builder $query) use (
                 $databaseCutoff,
@@ -242,7 +242,7 @@ final readonly class MailHistoryAnonymizer
         bool $lock,
     ): array {
         $databaseCutoff = DatabaseTimestamp::format($cutoff);
-        $query = $this->historyQuery(ScheduledMailMessage::query(), 'mail.scheduled')
+        $query = $this->historyQuery(MailModelRegistry::scheduledQuery(), 'mail.scheduled')
             ->whereNull('redacted_at')
             ->where(static function (Builder $query) use (
                 $databaseCutoff,
@@ -348,7 +348,7 @@ final readonly class MailHistoryAnonymizer
         CarbonImmutable $redactedAt,
     ): void {
         foreach (array_chunk($ids, $batchSize) as $batch) {
-            $models = $this->historyQuery(MailNotification::query(), 'mail.notifications')->whereKey($batch)->get();
+            $models = $this->historyQuery(MailModelRegistry::notificationsQuery(), 'mail.notifications')->whereKey($batch)->get();
 
             if ($models->count() !== count($batch)) {
                 throw $this->candidateSetChanged('notification');
@@ -421,7 +421,7 @@ final readonly class MailHistoryAnonymizer
         CarbonImmutable $redactedAt,
     ): void {
         foreach (array_chunk($ids, $batchSize) as $batch) {
-            $models = $this->historyQuery(ScheduledMailMessage::query(), 'mail.scheduled')
+            $models = $this->historyQuery(MailModelRegistry::scheduledQuery(), 'mail.scheduled')
                 ->whereKey($batch)
                 ->get();
 

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
+use Nvl\MailNotifications\Services\MailModelRegistry;
 use RuntimeException;
 
 /**
@@ -22,6 +23,14 @@ use RuntimeException;
 final class ScheduledMailMessageFactory extends Factory
 {
     protected $model = ScheduledMailMessage::class;
+
+    /** Resolve the deployment root for native and inherited factories.
+     * @return class-string<ScheduledMailMessage>
+     */
+    public function modelName(): string
+    {
+        return app(MailModelRegistry::class)->scheduledClass();
+    }
 
     /** Prepare native owner and tenant facts after Laravel expands relationships.
      *
@@ -48,7 +57,7 @@ final class ScheduledMailMessageFactory extends Factory
      */
     public function forOwner(Model $owner): static
     {
-        $key = FactoryGuard::parent($owner, new ScheduledMailMessage);
+        $key = FactoryGuard::parent($owner, MailModelRegistry::scheduled());
 
         return $this->state([
             'notifiable_type' => $owner->getMorphClass(),

@@ -10,6 +10,7 @@ use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Database\DatabaseTransactionsManager;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Mail\Events\MessageSending;
+use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -842,7 +843,7 @@ it('dispatches scheduling events only after the owning transaction commits', fun
         'foreign_key_constraints' => true,
     ]);
     DB::purge($connectionName);
-    config()->set('nvl-mail-notifications.connection', $connectionName);
+    config()->set('nvl-mail-notifications.storage.connection', $connectionName);
     $migration = require dirname(__DIR__, 2)
         .'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
     $migration->up();
@@ -1552,3 +1553,55 @@ it('enforces persisted recipients after Mailable preparation callbacks', functio
     'tracked build' => ['build', true],
     'untracked build' => ['build', false],
 ]);
+
+it('refuses uncommitted source claims before factory or transport effects and sends once after rollback', function (): void {
+    $message = app(ScheduledMailScheduler::class)->schedule(scheduledMailRequest());
+    $connection = $message->getConnection();
+    $levels = [];
+    Event::listen(MessageSent::class, function () use ($connection, &$levels): void {
+        $levels[] = $connection->transactionLevel();
+    });
+    expect($connection->transactionLevel())->toBe(0);
+    $connection->beginTransaction();
+    try {
+        expect(fn () => app(ScheduledMailProcessor::class)->process(1))->toThrow(ScheduledMailException::class, 'outside an existing database transaction')
+            ->and(fn () => app(ScheduledMailClaimer::class)->claim(1))->toThrow(ScheduledMailException::class, 'outside an existing database transaction');
+    } finally {
+        $connection->rollBack();
+    }
+    expect($message->fresh()->status)->toBe(ScheduledMailStatus::Pending)
+        ->and($message->fresh()->attempts)->toBe(0)
+        ->and($levels)->toBe([])
+        ->and(app(ScheduledMailProcessor::class)->process(1))->toBe(1)
+        ->and($message->fresh()->status)->toBe(ScheduledMailStatus::Sent)
+        ->and($levels)->toBe([0])
+        ->and(app('mail.manager')->mailer('array')->getSymfonyTransport()->messages()->count())->toBe(1);
+});
+
+it('checks the configured scheduled source connection rather than an unrelated default transaction level', function (): void {
+    $name = 'scheduled-source-boundary';
+    config()->set('database.connections.'.$name, ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
+    config()->set('nvl-mail-notifications.storage.connection', $name);
+    $migration = require dirname(__DIR__, 2).'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
+    $migration->up();
+    $message = app(ScheduledMailScheduler::class)->schedule(scheduledMailRequest());
+    $connection = $message->getConnection();
+    expect($connection->getName())->toBe($name)->and(DB::connection()->transactionLevel())->toBe(0);
+    $connection->beginTransaction();
+    try {
+        expect(fn () => app(ScheduledMailProcessor::class)->process(1))->toThrow(ScheduledMailException::class)
+            ->and(fn () => app(ScheduledMailClaimer::class)->claim(1))->toThrow(ScheduledMailException::class);
+    } finally {
+        $connection->rollBack();
+    }
+    expect($message->fresh()->status)->toBe(ScheduledMailStatus::Pending)
+        ->and($message->fresh()->attempts)->toBe(0);
+    DB::beginTransaction();
+    try {
+        expect(app(ScheduledMailClaimer::class)->claim(1))->toHaveCount(1);
+    } finally {
+        DB::rollBack();
+    }
+    expect($message->fresh()->status)->toBe(ScheduledMailStatus::Processing)
+        ->and($message->fresh()->attempts)->toBe(1);
+});

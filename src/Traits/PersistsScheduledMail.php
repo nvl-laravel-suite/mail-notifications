@@ -6,6 +6,7 @@ namespace Nvl\MailNotifications\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
+use Nvl\MailNotifications\Services\MailModelRegistry;
 
 /**
  * Shares private fixed-partition persistence among the package's scheduled-mail workflows.
@@ -21,14 +22,14 @@ trait PersistsScheduledMail
     {
         $this->tenantEnvelope->assertStorage('mail.scheduled');
         if (! $this->tenantEnvelope->globalScheduling()) {
-            $query = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled');
+            $query = $this->boundary->query(MailModelRegistry::scheduledQuery(), 'mail.scheduled');
             if ($this->tenantEnvelope->centralScheduling()) {
                 $query->getQuery()->where('ownership_envelope->mode', 'central')->where($this->tenantEnvelope->centralProducerFilters());
             }
 
             return $query;
         }
-        $model = new ScheduledMailMessage;
+        $model = MailModelRegistry::scheduled();
 
         $query = (new Builder($model->getConnection()->query()))->setModel($model)->where('owner_scope_key', 'central')->whereNull('owner_reference');
         if (! $maintenance) {

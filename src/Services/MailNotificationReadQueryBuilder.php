@@ -25,7 +25,7 @@ final readonly class MailNotificationReadQueryBuilder
      */
     public function build(MailNotificationReadQuery $filters): Builder
     {
-        $query = $this->boundary->query(MailNotification::query(), 'mail.notifications')
+        $query = $this->boundary->query(MailModelRegistry::notificationsQuery(), 'mail.notifications')
             ->select(MailHistory::COLUMNS);
 
         if ($filters->search !== null) {

@@ -65,7 +65,7 @@ final readonly class ScheduledMailReader
      * @return array<string, mixed> */
     public function get(Authenticatable $actor, string $id): array
     {
-        $message = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled')
+        $message = $this->boundary->query(MailModelRegistry::scheduledQuery(), 'mail.scheduled')
             ->select(self::DETAIL_COLUMNS)->findOrFail($id);
         $this->authorization->authorize(ScheduledMailReadAbility::View, $actor, $message);
 

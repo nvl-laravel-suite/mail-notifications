@@ -30,7 +30,7 @@ final readonly class ScheduledMailReadQueryBuilder
      */
     public function build(ScheduledMailReadQuery $filters): Builder
     {
-        $query = $this->boundary->query(ScheduledMailMessage::query(), 'mail.scheduled');
+        $query = $this->boundary->query(MailModelRegistry::scheduledQuery(), 'mail.scheduled');
 
         if ($filters->status instanceof ScheduledMailStatus) {
             $query->where('status', $filters->status->value);

@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Events\ScheduledMailClaimed;
+use Nvl\MailNotifications\Exceptions\ScheduledMailException;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
 use Nvl\MailNotifications\Traits\PersistsScheduledMail;
@@ -51,7 +52,10 @@ final readonly class ScheduledMailClaimer
 
         $batchSize = $this->configuration->batchSize($limit);
         $leaseSeconds = $this->configuration->claimTtlSeconds();
-        $model = new ScheduledMailMessage;
+        $model = MailModelRegistry::scheduled();
+        if ($model->getConnection()->transactionLevel() !== 0) {
+            throw new ScheduledMailException('Scheduled mail claims must start outside an existing database transaction.');
+        }
 
         return $model->getConnection()->transaction(function () use (
             $batchSize,

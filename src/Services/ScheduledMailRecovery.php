@@ -9,7 +9,6 @@ use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Events\ScheduledMailFailed;
 use Nvl\MailNotifications\Events\ScheduledMailRecovered;
 use Nvl\MailNotifications\Events\ScheduledMailRetrying;
-use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
 use Nvl\MailNotifications\Traits\PersistsScheduledMail;
 use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
@@ -48,7 +47,7 @@ final readonly class ScheduledMailRecovery
         }
 
         $batchSize = $this->configuration->batchSize($limit);
-        $model = new ScheduledMailMessage;
+        $model = MailModelRegistry::scheduled();
 
         return $model->getConnection()->transaction(function () use (
             $batchSize,

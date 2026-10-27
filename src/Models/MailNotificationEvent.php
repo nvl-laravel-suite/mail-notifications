@@ -15,6 +15,7 @@ use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Laravel\Casts\SensitiveArrayCast;
 use Nvl\MailNotifications\Laravel\Casts\UtcImmutableDateTimeCast;
+use Nvl\MailNotifications\Services\MailModelRegistry;
 use Nvl\MailNotifications\Support\DatabaseTimestamp;
 use Nvl\MailNotifications\Traits\HasMailOwnership;
 use Nvl\Support\Config\PackageStorage;
@@ -107,7 +108,7 @@ final class MailNotificationEvent extends Model implements Ownable
      */
     public function mailNotification(): BelongsTo
     {
-        return $this->belongsTo(MailNotification::class);
+        return $this->belongsTo(app(MailModelRegistry::class)->notificationClass(), 'mail_notification_id');
     }
 
     /**

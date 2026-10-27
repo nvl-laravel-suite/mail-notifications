@@ -11,7 +11,7 @@ use Nvl\Support\Providers\LocaleServiceProvider;
 /**
  * Boots the package with opt-in host sensitive-storage protection.
  */
-abstract class SensitiveStorageTestCase extends TestCase
+abstract class SensitiveStorageTestCase extends CommittedEventTestCase
 {
     /**
      * Register host protection configuration before the package provider.

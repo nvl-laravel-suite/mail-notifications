@@ -11,7 +11,6 @@ use Illuminate\Database\Schema\Builder;
 use Illuminate\Support\Facades\Schema;
 use Nvl\MailNotifications\Enums\ScheduledMailStatus;
 use Nvl\MailNotifications\Exceptions\ScheduledMailException;
-use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Support\StatusConstraintInspector;
 use Nvl\MailNotifications\ValueObjects\MailNotificationsDoctorCheck;
 use Throwable;
@@ -290,7 +289,7 @@ final readonly class ScheduledMailReadiness
      */
     private function schemaCheck(): MailNotificationsDoctorCheck
     {
-        $message = new ScheduledMailMessage;
+        $message = MailModelRegistry::scheduled();
 
         try {
             $schema = Schema::connection($message->getConnectionName());
