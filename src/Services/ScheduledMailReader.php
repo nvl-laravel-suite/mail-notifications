@@ -15,6 +15,7 @@ use Nvl\MailNotifications\Support\DatabaseTimestamp;
 use Nvl\MailNotifications\ValueObjects\NotifiableReference;
 use Nvl\MailNotifications\ValueObjects\Recipient;
 use Nvl\MailNotifications\ValueObjects\ScheduledMailReadQuery;
+use Nvl\Support\Auth\CanonicalActorResolver;
 use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
@@ -37,6 +38,7 @@ final readonly class ScheduledMailReader
         private ScheduledMailReadAuthorization $authorization,
         private ScheduledMailReadQueryBuilder $queries,
         private OwnershipBoundary $boundary,
+        private CanonicalActorResolver $actors,
     ) {}
 
     /**
@@ -44,6 +46,7 @@ final readonly class ScheduledMailReader
      * @return array<string, mixed> */
     public function paginate(Authenticatable $actor, array $filters = []): array
     {
+        $actor = $this->actors->resolve($actor);
         $this->authorization->authorize(ScheduledMailReadAbility::List, $actor);
         $query = $this->filter($filters);
         $maximum = config('nvl-mail-notifications.management.scheduled_maximum_per_page', 100);
@@ -65,6 +68,7 @@ final readonly class ScheduledMailReader
      * @return array<string, mixed> */
     public function get(Authenticatable $actor, string $id): array
     {
+        $actor = $this->actors->resolve($actor);
         $message = $this->boundary->query(MailModelRegistry::scheduledQuery(), 'mail.scheduled')
             ->select(self::DETAIL_COLUMNS)->findOrFail($id);
         $this->authorization->authorize(ScheduledMailReadAbility::View, $actor, $message);
@@ -84,6 +88,7 @@ final readonly class ScheduledMailReader
      * @return array<string, mixed> */
     public function statistics(Authenticatable $actor, array $filters = []): array
     {
+        $actor = $this->actors->resolve($actor);
         $this->authorization->authorize(ScheduledMailReadAbility::Statistics, $actor);
         $query = $this->queries->build($this->filter($filters));
         $total = (clone $query)->count();

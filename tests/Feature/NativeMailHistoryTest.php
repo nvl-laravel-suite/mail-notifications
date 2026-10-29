@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\GenericUser;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
@@ -152,3 +156,31 @@ it('rejects wrongly typed history filters at the direct service boundary', funct
     expect(fn () => app(MailHistory::class)->paginate(nativeMailAdministrator(), ['acceptedOnly' => 'yes']))
         ->toThrow(InvalidArgumentException::class);
 });
+
+it('uses fresh canonical Eloquent actors for history authorization', function (string $operation): void {
+    Schema::create('users', static function (Blueprint $table): void {
+        $table->id();
+        $table->boolean('can_manage')->default(false);
+        $table->timestamps();
+    });
+    $actor = User::query()->forceCreate(['can_manage' => false]);
+    $actor->forceFill(['can_manage' => true]);
+    config()->set('nvl-mail-notifications.management.authorization.callback',
+        static fn ($ability, Authenticatable $candidate): bool => $candidate instanceof User && (bool) $candidate->getAttribute('can_manage'));
+    app()->instance(MailNotificationNotifiableTypeRegistry::class, new MailNotificationNotifiableTypeRegistry(configuredTypes: ['test-account' => TestTrackable::class]));
+    $notification = MailNotification::factory()->create();
+    $history = app(MailHistory::class);
+    $read = static fn () => match ($operation) {
+        'get' => $history->get($actor, $notification->id),
+        'paginate' => $history->paginate($actor),
+        'statistics' => $history->statistics($actor),
+        'suggest' => $history->suggest($actor, 'account'),
+        'forNotifiable' => $history->forNotifiable($actor, new NotifiableReference('test-account', 'account-123')),
+    };
+
+    expect($read)->toThrow(AuthorizationException::class);
+    $actor->newQuery()->whereKey($actor->getKey())->update(['can_manage' => true]);
+    expect($read())->toBeArray();
+    $actor->newQuery()->whereKey($actor->getKey())->update(['can_manage' => false]);
+    expect($read)->toThrow(AuthorizationException::class);
+})->with(['get', 'paginate', 'statistics', 'suggest', 'forNotifiable']);

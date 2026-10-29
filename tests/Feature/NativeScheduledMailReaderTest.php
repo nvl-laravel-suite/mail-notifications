@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\GenericUser;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Services\ScheduledMailReader;
 
@@ -68,3 +72,28 @@ it('rejects a raw notifiable identifier at the direct scheduled reader boundary'
     expect(fn () => app(ScheduledMailReader::class)->paginate(nativeScheduledAdministrator(), ['notifiable' => 'untrusted-id']))
         ->toThrow(InvalidArgumentException::class);
 });
+
+it('uses fresh canonical Eloquent actors for scheduled history authorization', function (string $operation): void {
+    Schema::create('users', static function (Blueprint $table): void {
+        $table->id();
+        $table->boolean('can_manage')->default(false);
+        $table->timestamps();
+    });
+    $actor = User::query()->forceCreate(['can_manage' => false]);
+    $actor->forceFill(['can_manage' => true]);
+    config()->set('nvl-mail-notifications.management.scheduled_authorization.callback',
+        static fn ($ability, Authenticatable $candidate): bool => $candidate instanceof User && (bool) $candidate->getAttribute('can_manage'));
+    $message = ScheduledMailMessage::factory()->create();
+    $reader = app(ScheduledMailReader::class);
+    $read = static fn () => match ($operation) {
+        'get' => $reader->get($actor, $message->id),
+        'paginate' => $reader->paginate($actor),
+        'statistics' => $reader->statistics($actor),
+    };
+
+    expect($read)->toThrow(AuthorizationException::class);
+    $actor->newQuery()->whereKey($actor->getKey())->update(['can_manage' => true]);
+    expect($read())->toBeArray();
+    $actor->newQuery()->whereKey($actor->getKey())->update(['can_manage' => false]);
+    expect($read)->toThrow(AuthorizationException::class);
+})->with(['get', 'paginate', 'statistics']);

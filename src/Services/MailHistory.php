@@ -18,6 +18,7 @@ use Nvl\MailNotifications\Models\MailNotificationEvent;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadQuery;
 use Nvl\MailNotifications\ValueObjects\NotifiableReference;
 use Nvl\MailNotifications\ValueObjects\ProviderMessageId;
+use Nvl\Support\Auth\CanonicalActorResolver;
 use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
@@ -39,12 +40,14 @@ final readonly class MailHistory
         private MailNotificationNotifiableTypeRegistry $notifiableTypes,
         private ProviderRegistry $providers,
         private OwnershipBoundary $boundary,
+        private CanonicalActorResolver $actors,
     ) {}
 
     /**
      * @return array<string, mixed> */
     public function get(Authenticatable $actor, string $id): array
     {
+        $actor = $this->actors->resolve($actor);
         $notification = $this->boundary->query(MailModelRegistry::notificationsQuery(), 'mail.notifications')
             ->select(self::COLUMNS)->findOrFail($id);
         $this->authorization->authorize(MailNotificationReadAbility::View, $actor, $notification);
@@ -73,6 +76,7 @@ final readonly class MailHistory
      * @return array<string, mixed> */
     public function paginate(Authenticatable $actor, array $filters = []): array
     {
+        $actor = $this->actors->resolve($actor);
         $this->authorization->authorize(MailNotificationReadAbility::List, $actor);
         $query = $this->filter($filters);
 
@@ -84,6 +88,7 @@ final readonly class MailHistory
      * @return array<string, mixed> */
     public function forNotifiable(Authenticatable $actor, NotifiableReference $notifiable, array $filters = []): array
     {
+        $actor = $this->actors->resolve($actor);
         $this->authorization->authorize(MailNotificationReadAbility::List, $actor);
         if ($this->notifiableTypes->resolve($notifiable->type) === null) {
             throw new DomainException(sprintf('Mail notification notifiable type [%s] is not registered.', $notifiable->type));
@@ -100,6 +105,7 @@ final readonly class MailHistory
      * @return array<string, mixed> */
     public function statistics(Authenticatable $actor, array $filters = []): array
     {
+        $actor = $this->actors->resolve($actor);
         $this->authorization->authorize(MailNotificationReadAbility::Statistics, $actor);
         $query = $this->queries->build($this->filter($filters));
         $total = (clone $query)->count();
@@ -138,6 +144,7 @@ final readonly class MailHistory
         ?string $mailer = null,
         ?int $limit = null,
     ): array {
+        $actor = $this->actors->resolve($actor);
         $this->authorization->authorize(MailNotificationReadAbility::Suggest, $actor);
         $search = trim($search);
         if ($search === '' || mb_strlen($search) > 160) {

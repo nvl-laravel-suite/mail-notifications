@@ -35,6 +35,8 @@ Both roots must retain the package-configured table and actual connection so eac
 
 Host authorization is required for history and scheduled reads. Query filters are native shaped arrays with allowlisted keys and bounded pagination. Returned arrays exclude protected recipient lists, payloads, metadata, claim tokens, and raw provider event metadata. Keep raw package models inside trusted host code.
 
+History and scheduled readers reload Eloquent actors from their canonical storage before host authorization. Caller attributes and loaded relations do not supply privileges. Non-Eloquent identities retain their provider-owned freshness contract; the host policy decides access.
+
 The scheduler accepts `ScheduleMailData`, which validates recipients, factory identity, timing, and payload before persistence. Host applications register `ScheduledMessageFactory` implementations to build their own mailables. Native ownership captures producer authority for scheduled work; claims, retries, and provider callbacks restore authority from verified persisted state. Background identity alone does not grant a host permission.
 
 Register provider adapters for message IDs and webhook verification. Pass a `WebhookRequest` built from the host request to `WebhookProcessor::process($provider, $request)`. Signature verification precedes normalization and database effects. Provider replay and out-of-order events follow the retained lifecycle rules. The package does not expose an HTTP endpoint.
