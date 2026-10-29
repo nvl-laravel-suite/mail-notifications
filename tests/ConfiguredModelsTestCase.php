@@ -34,7 +34,7 @@ abstract class ConfiguredModelsTestCase extends CommittedEventTestCase
     {
         parent::defineEnvironment($app);
         $app['config']->set('database.connections.mail-root', ['driver' => 'sqlite', 'database' => ':memory:', 'foreign_key_constraints' => true]);
-        $app['config']->set('nvl-mail-notifications.storage.connection', 'mail-root');
+        $app['config']->set('nvl-mail-notifications.connection', 'mail-root');
         $app['config']->set('nvl-mail-notifications.models.notification', ExtendedMailNotification::class);
         $app['config']->set('nvl-mail-notifications.models.scheduled_message', ExtendedScheduledMailMessage::class);
     }

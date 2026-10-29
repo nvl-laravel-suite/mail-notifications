@@ -68,19 +68,19 @@ function configureMailNotificationGuardStorage(string $prefix = ''): Builder
     );
     DB::purge(MAIL_NOTIFICATION_GUARD_CONNECTION);
     config()->set(
-        'nvl-mail-notifications.storage.connection',
+        'nvl-mail-notifications.connection',
         MAIL_NOTIFICATION_GUARD_CONNECTION,
     );
     config()->set(
-        'nvl-mail-notifications.storage.tables.notifications',
+        'nvl-mail-notifications.tables.notifications',
         MAIL_NOTIFICATION_GUARD_NOTIFICATIONS,
     );
     config()->set(
-        'nvl-mail-notifications.storage.tables.events',
+        'nvl-mail-notifications.tables.events',
         MAIL_NOTIFICATION_GUARD_EVENTS,
     );
     config()->set(
-        'nvl-mail-notifications.storage.tables.scheduled_messages',
+        'nvl-mail-notifications.tables.scheduled_messages',
         MAIL_NOTIFICATION_GUARD_SCHEDULED,
     );
 
@@ -529,7 +529,7 @@ it('leaves a drifted configured table untouched on preflight and rollback', func
         },
     );
     config()->set(
-        'nvl-mail-notifications.storage.tables.notifications',
+        'nvl-mail-notifications.tables.notifications',
         MAIL_NOTIFICATION_GUARD_DRIFTED_NOTIFICATIONS,
     );
 
@@ -757,19 +757,19 @@ it('accepts schema-qualified PostgreSQL ownership in the preflight and doctor', 
 
     try {
         config()->set(
-            'nvl-mail-notifications.storage.connection',
+            'nvl-mail-notifications.connection',
             $connectionName,
         );
         config()->set(
-            'nvl-mail-notifications.storage.tables.notifications',
+            'nvl-mail-notifications.tables.notifications',
             $notificationTable,
         );
         config()->set(
-            'nvl-mail-notifications.storage.tables.events',
+            'nvl-mail-notifications.tables.events',
             $eventTable,
         );
         config()->set(
-            'nvl-mail-notifications.storage.tables.scheduled_messages',
+            'nvl-mail-notifications.tables.scheduled_messages',
             $scheduledTable,
         );
 

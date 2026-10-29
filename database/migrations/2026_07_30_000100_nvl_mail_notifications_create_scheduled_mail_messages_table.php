@@ -140,7 +140,7 @@ return new class extends Migration
     private function tableName(): string
     {
         $configured = config(
-            'nvl-mail-notifications.storage.tables.scheduled_messages',
+            'nvl-mail-notifications.tables.scheduled_messages',
             MailNotificationsTables::get(MailNotificationsTables::ScheduledMessages),
         );
 

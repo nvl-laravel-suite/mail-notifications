@@ -103,7 +103,7 @@ final class MailNotificationsAdoptionManifest
             throw new InvalidArgumentException('Mail Notifications adoption manifest version must be 1.');
         }
 
-        $connection = $manifest['connection'] ?? config('nvl-mail-notifications.storage.connection');
+        $connection = $manifest['connection'] ?? config('nvl-mail-notifications.connection');
 
         if ($connection !== null && (! is_string($connection) || trim($connection) === '')) {
             throw new InvalidArgumentException('Mail Notifications adoption connection must be a name or null.');

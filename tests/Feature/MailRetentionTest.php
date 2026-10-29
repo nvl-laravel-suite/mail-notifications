@@ -526,7 +526,7 @@ it('returns failure for invalid configuration and database errors', function () 
         false,
     );
     config()->set(
-        'nvl-mail-notifications.storage.tables.notifications',
+        'nvl-mail-notifications.tables.notifications',
         'missing_retention_notifications',
     );
 

@@ -215,7 +215,7 @@ it('requires scheduled history schema for pruning while scheduling is disabled',
         true,
     );
     config()->set(
-        'nvl-mail-notifications.storage.tables.scheduled_messages',
+        'nvl-mail-notifications.tables.scheduled_messages',
         'missing_scheduled_history',
     );
     app()->forgetInstance(ScheduledMessageFactoryRegistry::class);
@@ -301,7 +301,7 @@ it('reports invalid recipient bounds as scheduling configuration failures', func
 
 it('detects wrong scheduled schema definitions and missing indexes', function () {
     config()->set(
-        'nvl-mail-notifications.storage.tables.scheduled_messages',
+        'nvl-mail-notifications.tables.scheduled_messages',
         'invalid_scheduled_mail_messages',
     );
     Schema::create(
@@ -379,7 +379,7 @@ it('rejects a recorded scheduled schema missing a retention index', function () 
 
 it('refuses to adopt a partially matching scheduled-mail table', function () {
     config()->set(
-        'nvl-mail-notifications.storage.tables.scheduled_messages',
+        'nvl-mail-notifications.tables.scheduled_messages',
         'partial_scheduled_mail_messages',
     );
     Schema::create(
@@ -419,11 +419,11 @@ it('refuses to adopt even a compatible unowned scheduled-mail table', function (
     ]);
     DB::purge($connectionName);
     config()->set(
-        'nvl-mail-notifications.storage.connection',
+        'nvl-mail-notifications.connection',
         $connectionName,
     );
     config()->set(
-        'nvl-mail-notifications.storage.tables.scheduled_messages',
+        'nvl-mail-notifications.tables.scheduled_messages',
         'host_owned_scheduled_mail_messages',
     );
     $migrationPath = dirname(__DIR__, 2)
@@ -843,7 +843,7 @@ it('dispatches scheduling events only after the owning transaction commits', fun
         'foreign_key_constraints' => true,
     ]);
     DB::purge($connectionName);
-    config()->set('nvl-mail-notifications.storage.connection', $connectionName);
+    config()->set('nvl-mail-notifications.connection', $connectionName);
     $migration = require dirname(__DIR__, 2)
         .'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
     $migration->up();
@@ -1581,7 +1581,7 @@ it('refuses uncommitted source claims before factory or transport effects and se
 it('checks the configured scheduled source connection rather than an unrelated default transaction level', function (): void {
     $name = 'scheduled-source-boundary';
     config()->set('database.connections.'.$name, ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
-    config()->set('nvl-mail-notifications.storage.connection', $name);
+    config()->set('nvl-mail-notifications.connection', $name);
     $migration = require dirname(__DIR__, 2).'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
     $migration->up();
     $message = app(ScheduledMailScheduler::class)->schedule(scheduledMailRequest());

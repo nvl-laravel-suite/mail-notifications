@@ -15,7 +15,7 @@ Laravel discovers `Nvl\MailNotifications\Providers\MailNotificationsServiceProvi
 
 Configure `nvl-mail-notifications.models.notification` and `models.scheduled_message` before providers boot with concrete subclasses of `MailNotification` and `ScheduledMailMessage`. `MailModelRegistry` freezes both classes while preserving native morph identities, UUID keys, required casts, ownership scope, persistence hooks and UTC timestamps. Native tracking, scheduling, reads, maintenance, factories, relations and queued restoration use the configured roots. `MailNotificationEvent` and technical receipt, delivery identity and lock rows remain fixed package records; the event's `mailNotification` relation targets the configured notification.
 
-Both roots must retain the package-configured table and actual connection so each operation and its technical records share one transaction source. Configure `storage.connection` and `storage.tables` for the complete package graph; an individual subclass that selects divergent storage is rejected before persistence. Compatible extra columns and host presentation methods are supported, while native mutation payloads retain their existing allowlists. Resource classifications remain package controlled (`mail.notifications`, `mail.scheduled`, inherited `mail.events`); background identity alone still grants no host authorization.
+Both roots must retain the package-configured table and actual connection so each operation and its technical records share one transaction source. Configure `connection` and `tables` for the complete package graph; an individual subclass that selects divergent storage is rejected before persistence. Compatible extra columns and host presentation methods are supported, while native mutation payloads retain their existing allowlists. Resource classifications remain package controlled (`mail.notifications`, `mail.scheduled`, inherited `mail.events`); background identity alone still grants no host authorization.
 
 ## Domain operations
 
@@ -42,3 +42,5 @@ Register provider adapters for message IDs and webhook verification. Pass a `Web
 Settings is optional. Configured delivery profiles work without its provider; an explicitly requested Settings-backed profile fails clearly if the provider is absent. Tracking and testing interception remain independent of host mail presentation. Sensitive storage can encrypt eligible persisted fields when explicitly enabled and configured.
 
 See [contributing](CONTRIBUTING.md) for package development and [events](docs/events.md) for lifecycle events.
+
+Shared [service contracts, model extensions and composition](https://github.com/nvl-laravel-suite/laravel-suite/blob/main/docs/consumer-api.md) apply alongside the package-specific rules above.

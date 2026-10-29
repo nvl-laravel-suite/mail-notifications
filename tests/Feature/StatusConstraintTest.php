@@ -147,19 +147,19 @@ function configureMailStatusCreatorStorage(): Connection
     );
     DB::purge(MAIL_STATUS_TEST_CONNECTION);
     config()->set(
-        'nvl-mail-notifications.storage.connection',
+        'nvl-mail-notifications.connection',
         MAIL_STATUS_TEST_CONNECTION,
     );
     config()->set(
-        'nvl-mail-notifications.storage.tables.notifications',
+        'nvl-mail-notifications.tables.notifications',
         MAIL_STATUS_TEST_NOTIFICATIONS,
     );
     config()->set(
-        'nvl-mail-notifications.storage.tables.events',
+        'nvl-mail-notifications.tables.events',
         MAIL_STATUS_TEST_EVENTS,
     );
     config()->set(
-        'nvl-mail-notifications.storage.tables.scheduled_messages',
+        'nvl-mail-notifications.tables.scheduled_messages',
         MAIL_STATUS_TEST_SCHEDULED,
     );
     mailStatusTrackingCreator()->up();
@@ -437,7 +437,7 @@ it('refuses to adopt a configuration-drifted scheduled table', function () {
         },
     );
     config()->set(
-        'nvl-mail-notifications.storage.tables.scheduled_messages',
+        'nvl-mail-notifications.tables.scheduled_messages',
         $driftedTable,
     );
 

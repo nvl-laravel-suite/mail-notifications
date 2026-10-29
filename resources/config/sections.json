@@ -3,6 +3,7 @@
     "configs": {
         "nvl-mail-notifications": {
             "common": [
+                "connection",
                 "enabled",
                 "management.authorization.callback",
                 "management.authorization.class",
@@ -36,10 +37,9 @@
                 "retention.anonymization.scheduled_messages.enabled",
                 "retention.scheduled_messages.enabled",
                 "scheduling.enabled",
-                "storage.connection",
-                "storage.tables.events",
-                "storage.tables.notifications",
-                "storage.tables.scheduled_messages",
+                "tables.events",
+                "tables.notifications",
+                "tables.scheduled_messages",
                 "testing.enabled",
                 "tracking.enabled",
                 "tracking.excluded_mailers",

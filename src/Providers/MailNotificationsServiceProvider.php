@@ -342,16 +342,16 @@ final class MailNotificationsServiceProvider extends ServiceProvider implements 
 
         $this->publishes([
             dirname(__DIR__, 2).'/config/nvl-mail-notifications.php' => config_path('nvl-mail-notifications.php'),
-        ], 'mail-notifications-config');
+        ], 'nvl-mail-notifications-config');
         $this->publishesMigrations([
             dirname(__DIR__, 2).'/database/migrations' => database_path('migrations'),
-        ], 'mail-notifications-migrations');
+        ], 'nvl-mail-notifications-migrations');
         $this->publishes([
             dirname(__DIR__, 2).'/resources/boost/skills' => base_path('.agents/skills'),
-        ], 'mail-notifications-skills');
+        ], 'nvl-mail-notifications-skills');
         $this->publishes([
             dirname(__DIR__, 2).'/resources/adoption/mail-notifications.v1.example.json' => base_path('nvl-mail-notifications.adoption.json'),
-        ], 'mail-notifications-adoption');
+        ], 'nvl-mail-notifications-adoption');
         if ($this->configurationBoolean(
             'nvl-mail-notifications.migrations.enabled',
             true,
