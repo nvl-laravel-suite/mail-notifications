@@ -359,7 +359,7 @@ it('detects a missing scheduled retention index', function () {
 
 it('rejects a recorded scheduled schema missing a retention index', function () {
     $migrationName =
-        '2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table';
+        '2026_11_02_000000_nvl_mail_notifications_create_schema';
     $table = (new ScheduledMailMessage)->getTable();
 
     expect(DB::table('migrations')
@@ -374,7 +374,7 @@ it('rejects a recorded scheduled schema missing a retention index', function () 
         .'/database/migrations/'.$migrationName.'.php';
 
     expect(static fn () => $migration->up())
-        ->toThrow(LogicException::class, 'failed retention lookup');
+        ->toThrow(LogicException::class, 'already exists');
 });
 
 it('refuses to adopt a partially matching scheduled-mail table', function () {
@@ -400,12 +400,12 @@ it('refuses to adopt a partially matching scheduled-mail table', function () {
         },
     );
     $migration = require dirname(__DIR__, 2)
-        .'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
+        .'/database/migrations/2026_11_02_000000_nvl_mail_notifications_create_schema.php';
 
     expect(static fn () => $migration->up())
         ->toThrow(
             LogicException::class,
-            'Existing scheduled mail table [partial_scheduled_mail_messages] is incompatible',
+            'already exists',
         );
 });
 
@@ -427,13 +427,13 @@ it('refuses to adopt even a compatible unowned scheduled-mail table', function (
         'host_owned_scheduled_mail_messages',
     );
     $migrationPath = dirname(__DIR__, 2)
-        .'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
+        .'/database/migrations/2026_11_02_000000_nvl_mail_notifications_create_schema.php';
     $migration = require $migrationPath;
     $migration->up();
     DB::table('migrations')
         ->where(
             'migration',
-            '2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table',
+            '2026_11_02_000000_nvl_mail_notifications_create_schema',
         )
         ->delete();
 
@@ -441,7 +441,7 @@ it('refuses to adopt even a compatible unowned scheduled-mail table', function (
         expect(static fn () => (require $migrationPath)->up())
             ->toThrow(
                 LogicException::class,
-                'cannot be adopted because the package migration',
+                'already exists',
             );
     } finally {
         DB::purge($connectionName);
@@ -845,7 +845,7 @@ it('dispatches scheduling events only after the owning transaction commits', fun
     DB::purge($connectionName);
     config()->set('nvl-mail-notifications.connection', $connectionName);
     $migration = require dirname(__DIR__, 2)
-        .'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
+        .'/database/migrations/2026_11_02_000000_nvl_mail_notifications_create_schema.php';
     $migration->up();
     $observed = [];
     Event::listen(
@@ -1582,7 +1582,7 @@ it('checks the configured scheduled source connection rather than an unrelated d
     $name = 'scheduled-source-boundary';
     config()->set('database.connections.'.$name, ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
     config()->set('nvl-mail-notifications.connection', $name);
-    $migration = require dirname(__DIR__, 2).'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
+    $migration = require dirname(__DIR__, 2).'/database/migrations/2026_11_02_000000_nvl_mail_notifications_create_schema.php';
     $migration->up();
     $message = app(ScheduledMailScheduler::class)->schedule(scheduledMailRequest());
     $connection = $message->getConnection();

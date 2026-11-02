@@ -12,6 +12,52 @@ use Nvl\MailNotifications\Services\DefaultSensitiveDataRedactor;
 
 /** Complete runtime defaults; publication sections are declared in ../resources/config/sections.json. */
 return [
+    'managed' => [
+        'enabled' => false,
+        'configuration_namespace' => 'nvl-mail-notifications.managed',
+        'delivery' => [
+            'enabled' => (bool) env('MAIL_DELIVERY_ENABLED', true),
+        ],
+        'content' => [
+            'max_html_bytes' => (int) env('MAIL_CONTENT_MAX_HTML_BYTES', 10 * 1024 * 1024),
+        ],
+        'webhooks' => [
+            'connection' => env('MAIL_WEBHOOK_QUEUE_CONNECTION'),
+            'queue' => env('MAIL_WEBHOOK_QUEUE', 'webhooks'),
+            'local_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env('MAIL_WEBHOOK_LOCAL_ORIGINS', ''))))),
+            'local_environments' => array_values(array_filter(array_map('trim', explode(',', (string) env('MAIL_WEBHOOK_LOCAL_ENVIRONMENTS', 'local,testing'))))),
+        ],
+        'authentication' => [
+            'requests_per_minute' => env('MAIL_AUTH_REQUESTS_PER_MINUTE', 600),
+        ],
+        'storage' => [
+            'disk' => env('MAIL_STORAGE_DISK', 'local'),
+            'public_disk' => env('MAIL_STORAGE_PUBLIC_DISK', 'public'),
+            'orphan_grace_hours' => (int) env('MAIL_ORPHAN_GRACE_HOURS', 24),
+        ],
+        'attachments' => [
+            'retention_hours' => (int) env('MAIL_ATTACHMENT_RETENTION_HOURS', 72),
+        ],
+        'maintenance' => [
+            'batch_size' => (int) env('MAIL_MAINTENANCE_BATCH_SIZE', 1000),
+            'max_seconds' => (int) env('MAIL_MAINTENANCE_MAX_SECONDS', 30),
+        ],
+        'sending_limits' => [
+            'providers' => [
+                'mailersend' => (int) env('MAIL_MAILERSEND_PER_MINUTE', 120),
+                'sendgrid' => (int) env('MAIL_SENDGRID_PER_MINUTE', 60),
+                'mailgun' => (int) env('MAIL_MAILGUN_PER_MINUTE', 60),
+                'smtp' => (int) env('MAIL_SMTP_PER_MINUTE', 60),
+            ],
+            'accounts' => [],
+        ],
+        'payload_limits' => [
+            'mailersend' => 35000000,
+            'sendgrid' => 20000000,
+            'mailgun' => 25000000,
+            'smtp' => 25000000,
+        ],
+    ],
     'models' => [
         'notification' => MailNotification::class,
         'scheduled_message' => ScheduledMailMessage::class,
@@ -295,6 +341,33 @@ return [
         MailNotificationsTables::Events,
     ), 'scheduled_messages' => env('NVL_MAIL_NOTIFICATIONS_SCHEDULED_MESSAGES_TABLE',
         MailNotificationsTables::ScheduledMessages,
-    )],
+    ),
+        'owners' => MailNotificationsTables::Owners,
+        'integrations' => MailNotificationsTables::Integrations,
+        'provider_accounts' => MailNotificationsTables::ProviderAccounts,
+        'sending_domains' => MailNotificationsTables::SendingDomains,
+        'sender_identities' => MailNotificationsTables::SenderIdentities,
+        'clients' => MailNotificationsTables::Clients,
+        'owner_mail_settings' => MailNotificationsTables::OwnerMailSettings,
+        'client_mail_settings' => MailNotificationsTables::ClientMailSettings,
+        'client_api_keys' => MailNotificationsTables::ClientApiKeys,
+        'assets' => MailNotificationsTables::Assets,
+        'email_messages' => MailNotificationsTables::EmailMessages,
+        'email_recipients' => MailNotificationsTables::EmailRecipients,
+        'email_attempts' => MailNotificationsTables::EmailAttempts,
+        'webhook_receipts' => MailNotificationsTables::WebhookReceipts,
+        'email_events' => MailNotificationsTables::EmailEvents,
+        'recipient_suppressions' => MailNotificationsTables::RecipientSuppressions,
+        'message_assets' => MailNotificationsTables::MessageAssets,
+        'email_flag_rules' => MailNotificationsTables::EmailFlagRules,
+        'email_message_flags' => MailNotificationsTables::EmailMessageFlags,
+        'provider_sync_runs' => MailNotificationsTables::ProviderSyncRuns,
+        'provider_sync_pages' => MailNotificationsTables::ProviderSyncPages,
+        'staged_mail_files' => MailNotificationsTables::StagedMailFiles,
+        'email_message_references' => MailNotificationsTables::EmailMessageReferences,
+        'client_webhook_endpoints' => MailNotificationsTables::ClientWebhookEndpoints,
+        'client_webhook_deliveries' => MailNotificationsTables::ClientWebhookDeliveries,
+        'marketing_opt_outs' => MailNotificationsTables::MarketingOptOuts,
+    ],
 
 ];

@@ -14,12 +14,21 @@ use Spatie\LaravelData\LaravelDataServiceProvider as DataServiceProvider;
 
 require dirname(__DIR__, 6).'/vendor/autoload.php';
 
-$connection = json_decode($argv[1], true, flags: JSON_THROW_ON_ERROR);
+$arguments = $_SERVER['argv'] ?? [];
+if (! is_array($arguments)) {
+    throw new RuntimeException('The worker requires CLI arguments.');
+}
+$source = $arguments[1] ?? null;
+if (! is_string($source)) {
+    throw new RuntimeException('The worker requires a native persistence source argument.');
+}
+$connection = json_decode($source, true, flags: JSON_THROW_ON_ERROR);
 if (! is_array($connection) || ! in_array($connection['driver'] ?? null, ['pgsql', 'mysql', 'mariadb'], true)
     || ! is_string($connection['database'] ?? null) || preg_match('/^nvl_own_test_[a-z0-9_]+$/D', $connection['database']) !== 1) {
     throw new RuntimeException('The worker requires an explicitly dedicated native persistence source.');
 }
-$options = isset($argv[2]) ? json_decode($argv[2], true, flags: JSON_THROW_ON_ERROR) : [];
+$optionsSource = $arguments[2] ?? null;
+$options = is_string($optionsSource) ? json_decode($optionsSource, true, flags: JSON_THROW_ON_ERROR) : [];
 if (! is_array($options) || ! in_array($options['driver'] ?? 'database', ['database', 'redis'], true)) {
     throw new RuntimeException('Unsupported native persistence worker transport.');
 }

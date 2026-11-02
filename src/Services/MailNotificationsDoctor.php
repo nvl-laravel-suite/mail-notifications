@@ -34,16 +34,6 @@ use Throwable;
 final readonly class MailNotificationsDoctor
 {
     /**
-     * Migrations that establish ownership of the package storage tables.
-     *
-     * @var list<string>
-     */
-    private const array SCHEMA_CREATOR_MIGRATIONS = [
-        '2026_07_29_000000_nvl_mail_notifications_create_mail_notification_tables',
-        '2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table',
-    ];
-
-    /**
      * Columns required by the notification lifecycle.
      *
      * @var list<string>
@@ -271,6 +261,7 @@ final readonly class MailNotificationsDoctor
             $this->migrationHistoryCheck(),
             ...$this->schemaChecks(),
             ...$this->scheduledMail->inspect(),
+            ...(config('nvl-mail-notifications.managed.enabled', false) === true ? app(ManagedDoctor::class)->inspect() : []),
         ];
     }
 
@@ -487,45 +478,16 @@ final readonly class MailNotificationsDoctor
                 $expectedMigrations,
                 $ranMigrations,
             ));
-            $missingCreatorMigrations = array_values(array_intersect(
-                self::SCHEMA_CREATOR_MIGRATIONS,
-                $missingMigrations,
-            ));
-            $retainedCreatorMigrations = array_values(array_filter(
-                $missingCreatorMigrations,
-                $this->creatorOwnsExistingTable(...),
-            ));
-            $pendingCreatorMigrations = array_values(array_diff(
-                $missingCreatorMigrations,
-                $retainedCreatorMigrations,
-            ));
-            $allSchemaCreatorsPending = array_diff(
-                self::SCHEMA_CREATOR_MIGRATIONS,
-                $missingMigrations,
-            ) === [];
 
             return new MailNotificationsDoctorCheck(
                 key: 'schema.migrations',
                 severity: 'error',
                 passed: $missingMigrations === [],
                 message: $missingMigrations === []
-                    ? 'Every enabled package migration has an exact repository ownership record.'
+                    ? 'The complete alpha schema migration has an exact repository ownership record.'
                     : sprintf(
-                        'Missing exact package migration ownership records: %s. %s',
+                        'The alpha schema migration is not recorded: %s. Run the pending migration on fresh package tables, or disable package migrations when the host owns the complete schema.',
                         implode(', ', $missingMigrations),
-                        match (true) {
-                            $retainedCreatorMigrations !== [] => sprintf(
-                                'Retained tables owned by missing creator record(s) [%s] cannot be reclaimed by rerunning those migrations; restore only independently verified exact repository records, or disable package migrations and adopt the schema with host-owned migrations.',
-                                implode(', ', $retainedCreatorMigrations),
-                            ),
-                            $missingCreatorMigrations === [] => 'Only read-only package compatibility preflight history is missing; run the pending package migrations to revalidate the creator-owned schema.',
-                            $allSchemaCreatorsPending => 'No package tables or creator ownership records are present; run the pending package migrations, or disable package migrations and create the schema with host-owned migrations.',
-                            $pendingCreatorMigrations !== [] => sprintf(
-                                'Missing creator migration(s) [%s] own no existing configured tables; run the pending package migrations to complete this interrupted or incremental install.',
-                                implode(', ', $pendingCreatorMigrations),
-                            ),
-                            default => 'Package tables are missing while one or more creator ownership records remain; restore the owned schema or reconcile independently verified history before migrating.',
-                        },
                     ),
             );
         } catch (Throwable $exception) {
@@ -536,26 +498,6 @@ final readonly class MailNotificationsDoctor
                 message: 'Package migration history is unavailable: '.$exception->getMessage(),
             );
         }
-    }
-
-    /**
-     * Determine whether any configured package table survives without history.
-     */
-    private function creatorOwnsExistingTable(string $migration): bool
-    {
-        $notification = MailModelRegistry::notification();
-        $event = new MailNotificationEvent;
-        $scheduled = MailModelRegistry::scheduled();
-        $schema = Schema::connection($notification->getConnectionName());
-
-        return match ($migration) {
-            '2026_07_29_000000_nvl_mail_notifications_create_mail_notification_tables' => $schema
-                ->hasTable($notification->getTable())
-                || $schema->hasTable($event->getTable()),
-            '2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table' => $schema
-                ->hasTable($scheduled->getTable()),
-            default => false,
-        };
     }
 
     /**

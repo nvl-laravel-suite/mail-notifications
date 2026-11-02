@@ -145,11 +145,13 @@ final readonly class MailTestingInterceptor
     }
 
     /**
-     * Resolve host mail.testing settings before package fallbacks.
+     * Resolve live host mail.testing settings before package fallbacks for both delivery paths.
      *
      * @return array<string, mixed>
+     *
+     * @internal Shared configuration resolution, not a consumer operation.
      */
-    private function settings(): array
+    public function settings(): array
     {
         $hostTesting = $this->config->get('mail.testing');
 

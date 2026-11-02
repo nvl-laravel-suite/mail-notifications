@@ -1,68 +1,32 @@
 ---
 name: nvl-mail-notifications
-description: Use when integrating tracked Laravel mail, scheduled mail factories, verified provider webhooks, authorized delivery history, privacy retention, testing interception or mail model extensions with nvl/mail-notifications.
+description: Use when embedding nvl/mail-notifications in Laravel for prepared HTML/CSS, Mailables, client-scoped delivery, attachments, providers, event tracking and callbacks, or selecting its separate remote consumer bridge.
 ---
 
 # NVL Mail Notifications
 
-The package targets PHP 8.4 and Laravel 13 and exposes complete native services.
-The host owns mailables, localized copy, Markdown/HTML themes, routes and response projections.
-No presentation UI, Actions, controllers or HTTP endpoints are installed by the package.
+PHP 8.4+, Laravel 13. This Composer package embeds the delivery engine. Hosts own HTTP authentication, routes, admin UI, customer permissions and content rendering. A remote consumer uses `nvl/mail-notification-bridge` with a service-issued client ID/API token and service URL; it does not install this engine or receive provider credentials.
 
-## Portable references
+## Read by task
 
-- [Installation](references/installation.md): provider, publish tags, migration ownership and configuration sections.
-- [Native API](references/api.md): every public contract, signature, value object and result shape.
-- [Usage](references/usage.md): tracking/factory setup, native examples, safe reads, replay and maintenance.
+- [Start and choose a capability](references/usage.md): engine versus bridge, minimal setup and operator prerequisites.
+- [Native delivery and Mailable recipes](references/delivery.md): accepted fields, live authorization, localization, attachments and prepared-payload reuse.
+- [Architecture](references/architecture.md): boundaries, optional capabilities and standard namespaces.
+- [Database](references/database.md): single initial alpha migration, destructive rollback, connection/table ownership and Media links.
+- [Operations](references/operations.md): workers, provider inventory sync, verified inbound webhooks, signed outbound callbacks, pause/recovery and retention.
+- [Optional Laravel tracking/scheduling](references/laravel-tracking.md): use only when explicitly requested; real scheduler values and protected read policies.
+- [Installation/publication](references/installation.md) and [public API lookup](references/api.md): exact provider, tags, command names, signatures and shapes. Search the relevant symbols instead of reading the entire catalogue.
 
-Read usage for capability selection and the API before constructing provider/factory data.
-Read installation for new hosts or schema/adoption changes.
-All references remain local to the skill after Laravel Boost publication.
+All references travel with the published skill. They require no monorepo or application fixtures.
 
-## Choose the capability
+## Prepared-delivery invariants
 
-- `TrackableMessage` plus `TracksMailDelivery`: opt host Laravel mailables into tracking.
-- `DatabaseTrackingLifecycle`: native delivery identities, transitions and event replay.
-- `MailHistory`: authorized delivery detail, pages, notifiable history, statistics and suggestions.
-- `ScheduledMailScheduler`: schedule, cancel, reschedule or replace pending messages.
-- `ScheduledMailReader`: authorized bounded scheduled detail/pages/statistics.
-- `ScheduledMailProcessor` / `ScheduledMailRecovery`: committed claim, transport, retry and stale-claim recovery.
-- `WebhookProcessor`: verify a named provider request before normalization/persistence.
-- `MailHistoryAnonymizer` / `MailRetentionPruner`: bounded privacy preview/apply operations.
-- Provider/message-ID/notifiable/factory/webhook-manager registries: explicit host extensions.
+Use `Services\ManagedDelivery::send` or `Laravel\Concerns\SubmitsMailDelivery` with an existing `Models\Client`. For delivery-only hosts enable `managed.enabled` and disable ordinary `tracking.enabled` and older `scheduling.enabled`; prepared `send_at` still works. Do not add templates, campaign orchestration, broker identity management or package HTTP routes.
 
-## Preserve real scheduling types
+Authorize the current client through an explicit host check that throws or returns false, or the documented authenticated Gate. Null/background execution never grants access. Caller input cannot choose provider credentials or override client/owner authority. Owner defaults and client settings select an eligible verified sender.
 
-`ScheduledMailScheduler::schedule` accepts `ScheduleMailData`, not an invented array replacement.
-That domain value validates alias/version/attempt/timing semantics.
-Use `ScheduledRecipients` and `Recipient` for normalized deduplicated TO/CC/BCC envelopes.
-Register stable `ScheduledMessageFactory` aliases and explicitly supported payload versions.
-Factories build mailables without choosing recipients; the native scheduler owns the envelope.
-Unknown payload fields are the host factory's validated schema responsibility.
+Prepare once when previewing and sending the same input; acceptance applies CSS and sender resolution. Reuse that payload and a stable client-scoped idempotency key for retries. Sender/body/attachment snapshots survive later host edits. Acceptance and SMTP/provider submission do not prove inbox delivery.
 
-## Authority and privacy
+Use native Media storage and an explicit host authorization/scanner policy. Keep private bytes private; retained attachment evidence survives byte expiry. Respect actual source transactions and outer-commit dispatch. An interrupted submission can be `unknown`: reconcile evidence before any resend. Preserve callback event IDs, exact signed body bytes, receiver deduplication and durable retry/recovery.
 
-Bind host history and scheduled-read policies; defaults deny.
-Readers reload canonical Eloquent actors before host permission checks.
-Other principal providers retain their freshness contract.
-Registered notifiable identity and live native owner scope remain authoritative.
-Never infer permission from null, current guard or historical/background identity.
-Return bounded safe reader arrays, not payloads, full recipients, metadata, claim tokens or raw errors.
-
-## Transactions and integrations
-
-Scheduling mutations own actual source transactions and publish events after outer commit.
-Processing/claim/transport must start outside an ambient ScheduledMailMessage source transaction.
-Preserve fenced claims, stored delivery identity, retries and recovery.
-Transport acceptance is not a distributed exactly-once guarantee.
-Settings-backed profiles require the selected provider; ordinary configured profiles work without it.
-Testing interception is independent of tracking and remains a global delivery safety control.
-Keep sensitive-storage encryption, status replay and worker state restoration intact.
-
-## Configured models and maintenance
-
-Set `models.notification` and `models.scheduled_message` before boot to concrete native subclasses.
-Retain UUIDs, casts, UTC timestamps, ownership, query/persistence hooks and native resource classification.
-Both roots and fixed technical rows share package-configured table/connection storage.
-Subclass-only storage splits reject; configure the whole package graph instead.
-The usage reference includes exact command names, factory/schedule/read examples and webhook handling.
+Canonical implementations use normal `src/Models/`, `src/Services/`, `src/Jobs/`, `src/Enums/` and `src/Contracts/` directories. Previous names and persisted morph identities are compatibility data, not an alternative implementation tree. Do not rewrite IDs, queued payloads or applied migration history during upgrades.

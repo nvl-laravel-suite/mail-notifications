@@ -22,7 +22,11 @@ final readonly class StoredMailOwnerWorklist implements MailOwnerWorklist
 {
     public function __construct(private OwnershipReadiness $readiness) {}
 
-    /** @return iterable<OwnerReference> */
+    /**
+     * Enumerate explicitly stored owner identities for a bounded trusted maintenance worklist.
+     *
+     * @return iterable<OwnerReference>
+     */
     public function owners(MailOwnerOperation $operation): iterable
     {
         $models = match ($operation) {

@@ -1,6 +1,8 @@
-# NVL mail-notifications events
+# NVL Mail Notifications PHP domain events
 
-This document describes the implemented source behavior. Acceptance is exercised by the owning package suites and Core committed-event regression tests; current release execution evidence is tracked in consumer-readiness.md. The authoritative machine-readable schema is [event-catalog.json](../resources/event-catalog.json), catalog version `1`. Event `schemaVersion` is independent of catalog version.
+This guide covers the optional Laravel transport-tracking and factory-based scheduling PHP events. Prepared-content delivery uses persisted provider receipts and the durable signed HTTP client-callback outbox described in [operations](operations.md); those are separate protocols. The local PHP publication limitations below do not describe the HTTP callback outbox.
+
+This document describes the implemented source behavior. Acceptance is exercised by the owning package suites and Core committed-event regression tests; the installed tests and event catalogue define the supported publication contract. The authoritative machine-readable schema is [event-catalog.json](../resources/event-catalog.json), catalog version `1`. Event `schemaVersion` is independent of catalog version.
 
 ## Publication and listener timing
 

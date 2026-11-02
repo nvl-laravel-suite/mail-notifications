@@ -23,6 +23,8 @@ final class MailNotificationEventFactory extends Factory
     protected $model = MailNotificationEvent::class;
 
     /**
+     * Define isolated persisted attributes without initiating delivery or external provider calls.
+     *
      * @return array<model-property<MailNotificationEvent>, mixed>
      */
     public function definition(): array

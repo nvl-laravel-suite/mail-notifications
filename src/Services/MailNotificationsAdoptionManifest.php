@@ -85,6 +85,8 @@ final class MailNotificationsAdoptionManifest
     ];
 
     /**
+     * Validate and normalize the explicit legacy-to-native mail adoption manifest before any mutation.
+     *
      * @param  array<array-key, mixed>  $manifest
      */
     public function normalize(array $manifest): MailNotificationsAdoptionPlan

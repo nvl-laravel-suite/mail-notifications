@@ -44,7 +44,10 @@ final readonly class MailHistory
     ) {}
 
     /**
-     * @return array<string, mixed> */
+     * Read one tracked record through live actor, ownership and host read-authorization checks.
+     *
+     * @return array<string, mixed>
+     */
     public function get(Authenticatable $actor, string $id): array
     {
         $actor = $this->actors->resolve($actor);
@@ -60,7 +63,10 @@ final readonly class MailHistory
     }
 
     /**
-     * @return array<string, mixed> */
+     * Resolve provider tracking identity through the same protected history read boundary.
+     *
+     * @return array<string, mixed>
+     */
     public function getByProviderMessage(Authenticatable $actor, ProviderMessageId $messageId): array
     {
         $this->providers->resolve($messageId->provider);
@@ -72,8 +78,11 @@ final readonly class MailHistory
     }
 
     /**
-     * @param array<string, mixed> $filters
-     * @return array<string, mixed> */
+     * Return bounded, deterministically ordered tracked history with protected fields omitted.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
     public function paginate(Authenticatable $actor, array $filters = []): array
     {
         $actor = $this->actors->resolve($actor);
@@ -84,8 +93,11 @@ final readonly class MailHistory
     }
 
     /**
-     * @param array<string, mixed> $filters
-     * @return array<string, mixed> */
+     * Read history for the explicit business reference after authorizing both the actor and notifiable access.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
     public function forNotifiable(Authenticatable $actor, NotifiableReference $notifiable, array $filters = []): array
     {
         $actor = $this->actors->resolve($actor);
@@ -101,8 +113,11 @@ final readonly class MailHistory
     }
 
     /**
-     * @param array<string, mixed> $filters
-     * @return array<string, mixed> */
+     * Aggregate only the tracked history visible through the caller's validated read scope.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
     public function statistics(Authenticatable $actor, array $filters = []): array
     {
         $actor = $this->actors->resolve($actor);
@@ -136,7 +151,10 @@ final readonly class MailHistory
     }
 
     /**
-     * @return list<array<string, mixed>> */
+     * Return bounded safe history suggestions under the same live authorization predicates.
+     *
+     * @return list<array<string, mixed>>
+     */
     public function suggest(
         Authenticatable $actor,
         string $search,

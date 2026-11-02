@@ -14,6 +14,10 @@ use Nvl\Support\Ownership\ValueObjects\OwnerReference;
  */
 interface MailOwnerWorklist
 {
-    /** @return iterable<OwnerReference> */
+    /**
+     * Provide authorized owner contexts for trusted bounded background work; null is not a grant.
+     *
+     * @return iterable<OwnerReference>
+     */
     public function owners(MailOwnerOperation $operation): iterable;
 }

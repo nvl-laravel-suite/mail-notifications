@@ -66,6 +66,8 @@ final class ScheduledMailMessageFactory extends Factory
     }
 
     /**
+     * Define isolated persisted attributes without initiating delivery or external provider calls.
+     *
      * @return array<model-property<ScheduledMailMessage>, mixed>
      */
     public function definition(): array

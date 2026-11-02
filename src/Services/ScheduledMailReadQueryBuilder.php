@@ -26,6 +26,8 @@ final readonly class ScheduledMailReadQueryBuilder
     ) {}
 
     /**
+     * Apply validated schedule filters at the already authorized scheduled-intent read boundary.
+     *
      * @return Builder<ScheduledMailMessage>
      */
     public function build(ScheduledMailReadQuery $filters): Builder

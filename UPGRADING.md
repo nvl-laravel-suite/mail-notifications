@@ -1,10 +1,23 @@
 # Upgrading NVL Mail Notifications
 
-## NVL Light: planned family 7
+## Current 7.x alpha: delivery engine and native contracts
 
 Light requires PHP 8.4 and Laravel 13. Replace retired package Actions, transport DTOs, HTTP endpoints and generated frontend types with host-owned adapters around the native services documented in [README.md](README.md). Models remain ordinary Eloquent models; domain operations retain their documented policies, validation, locks and lifecycle guarantees. Pass explicit admitted actors and configure optional integrations deliberately.
 
 Upgrade the selected family together. Preserve stored identities, migration ownership, source connections, queue state and operation recovery journals. Review and apply the relevant storage/adoption procedure before accepting writes; installing new code alone does not migrate existing data.
+
+## Current schema and capability decision
+
+| Situation | Required approach |
+| --- | --- |
+| Fresh embedded delivery install | Configure canonical storage and native Media/policies; choose one migration owner and apply the single initial alpha schema |
+| Existing host tables or an older released tracker | Review schema/data adoption explicitly; the new initial migration rejects existing package tables and is not an automatic upgrader |
+| Namespace-only source update on a compatible schema | Keep data, applied migrations and serialized jobs; update imports, Composer metadata/config caches and restart workers |
+| Remote consuming application | Use `nvl/mail-notification-bridge`; do not install this engine or copy its database/provider credentials |
+
+For a delivery-only host enable `managed.enabled`, disable ordinary `tracking.enabled` and the older `scheduling.enabled`, and keep the prepared `send_at` workflow. Runtime disabling does not uninstall schema or erase history. The current mail migration’s rollback drops mail tables and data; historical retained-table rollback advice below applies to the named old releases only. A Laravel batch rollback can also execute other packages’ migration downs.
+
+Use [architecture](docs/architecture.md), [delivery](docs/delivery.md), [database](docs/database.md) and [operations](docs/operations.md) as the current setup/behavior source. The final [namespace section](#conventional-delivery-namespaces) records current aliases and stable Media uploader identities. Preserve the existing HTTP/native contracts and already accepted bodies/attachments when moving an application onto the package; the package installs no HTTP routes or template catalogue.
 
 ## Historical upgrade notes
 
@@ -142,44 +155,13 @@ php artisan nvl:mail-notifications:doctor --strict --format=json
 php artisan nvl:mail-notifications:prune --dry-run
 ```
 
-### Adopting status invariants and privacy markers
+### Alpha schema
 
-The published creator migrations include queue identity, status invariants
-and privacy markers. Keep these released migrations immutable; retained
-installations require reviewed forward migrations instead of editing creators. `2026_07_29_000000` creates complete notification and
-provider-event storage. `2026_07_30_000100` creates complete scheduled-message
-storage. Fresh installs therefore receive `queue_reference`, nullable
-`redacted_at` markers, their exact candidate indexes, and database allowlists
-for `mail_notifications.status`,
-`mail_notification_events.normalized_type`, and
-`scheduled_mail_messages.status`.
+This unreleased alpha has one initial schema migration, `2026_11_02_000000_nvl_mail_notifications_create_schema`. It creates tracking, scheduling and managed delivery tables together with Media links, nullable ownership columns, privacy markers, exact indexes and status invariants. There are no old compatibility or corrective migrations to replay.
 
-PostgreSQL, MySQL 8.0.16+, and MariaDB 10.3+ use named `CHECK` constraints.
-MariaDB must use Laravel's `mariadb` connection driver and keep the session
-`check_constraint_checks` variable enabled. SQLite uses paired named `INSERT`
-and `UPDATE` triggers. The preflight and creators reject an unsupported or
-unenforced database before mutating schema. If a non-production environment
-ran an earlier unpublished migration snapshot, recreate that schema from the
-current creators instead of retaining or replaying removed corrective
-migrations. Creator `down()` methods remain intentional no-ops.
+Use fresh package tables. Configure the package connection and table mappings before migration. Set `migrations.enabled=false` only when a reviewed host-owned copy creates the complete schema. `managed.enabled` controls runtime behavior without changing schema shape. Rollback drops mail-owned tables and data; recreate only disposable alpha databases or follow an explicitly reviewed backup/restore procedure. Native Media schema and physical files belong to `nvl/media`.
 
-Laravel connection prefixes and PostgreSQL schema-qualified table names are
-supported and are part of physical foreign-key ownership inspection. Keep
-those settings stable after migration. Package services and model timestamps
-normalize to UTC with microsecond precision regardless of the host application
-timezone; the database/session timezone must remain UTC.
-
-Hosts with package migrations disabled must reproduce the documented
-notification/event column, index, and invariant names and semantics in forward
-application migrations. They must do the same for scheduled-message storage
-when scheduling, scheduled retention, or scheduled anonymization is enabled.
-When importing a host-owned legacy schema, repair invalid statuses before
-installing equivalent checks, keep the configured table names stable, and
-require this command to pass before deploying workers:
-
-```bash
-php artisan nvl:mail-notifications:doctor --strict --format=json
-```
+PostgreSQL, MySQL 8.0.16+ and MariaDB 10.3+ retain named status checks; SQLite uses paired INSERT/UPDATE triggers. Unsupported database enforcement is refused before schema mutation.
 
 ### Adopting sensitive storage and anonymization
 
@@ -571,3 +553,12 @@ internal workflow chains are unchanged. Register host implementations before
 package discovery or replace the contract before resolving a new host service.
 See [Testing your app](README.md#testing-your-app) for native fixtures and the
 shipped consumer-audit PHPStan configuration.
+
+
+## Conventional delivery namespaces
+
+Update `Nvl\MailNotifications\Managed\Models\Client` to `Nvl\MailNotifications\Models\Client`, `Managed\Services\ManagedDelivery` to `Services\ManagedDelivery`, and equivalent Enums/Contracts/Jobs/Support imports. Factories and seeders now use `Nvl\MailNotifications\Database` under the conventional `database/` directories. Implementations no longer live in `src/Managed`.
+
+The original names remain Composer autoload aliases and resolve to the same container services. Existing models, enum values, serialized jobs, client/owner IDs, table names, configuration keys, Gate names and HTTP contracts are retained. No data migration is required for this namespace move. Restart long-lived workers after updating code and Composer metadata; do not modify serialized payloads or recreate applied tables. See [architecture](docs/architecture.md) and [operations](docs/operations.md).
+
+The default `Client::getMorphClass()` retains its previous persisted uploader identity so existing native Media rows keep the same owner and authorization checks. Explicit host morph aliases remain authoritative. Namespace cleanup requires no uploader data rewrite.

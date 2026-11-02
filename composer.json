@@ -1,6 +1,6 @@
 {
     "name": "nvl/mail-notifications",
-    "description": "Provider-neutral Laravel mail tracking, scheduling, verified webhooks, and protected history",
+    "description": "Embeddable Laravel email delivery, provider sync, private attachments, event tracking and signed callbacks",
     "type": "library",
     "license": "MIT",
     "keywords": [
@@ -10,18 +10,37 @@
         "tracking",
         "notifications",
         "scheduling",
-        "mailersend"
+        "mailersend",
+        "delivery",
+        "attachments",
+        "webhooks",
+        "callbacks",
+        "sendgrid",
+        "mailgun"
     ],
     "require": {
+        "ext-ctype": "*",
+        "ext-curl": "*",
+        "ext-dom": "*",
+        "ext-fileinfo": "*",
         "ext-filter": "*",
         "ext-json": "*",
+        "ext-libxml": "*",
         "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "ext-pdo": "*",
+        "guzzlehttp/guzzle": "^7.8.2 || ^8.0",
+        "guzzlehttp/psr7": "^2.7 || ^3.0",
         "laravel/framework": "^13.0",
         "nesbot/carbon": "^2.72 || ^3.0",
         "nvl/core": "^7.0",
+        "nvl/media": "^7.0",
         "php": "^8.4",
+        "psr/http-message": "^2.0",
+        "symfony/http-foundation": "^7.4.19 || ^8.1.7",
         "symfony/mailer": "^7.0 || ^8.0",
-        "symfony/mime": "^7.0 || ^8.0"
+        "symfony/mime": "^7.0 || ^8.0",
+        "tijsverkoyen/css-to-inline-styles": "^2.4"
     },
     "require-dev": {
         "larastan/larastan": "^3.10",
@@ -37,8 +56,12 @@
     "autoload": {
         "psr-4": {
             "Nvl\\MailNotifications\\": "src/",
-            "Nvl\\MailNotifications\\Database\\Factories\\": "database/factories/"
-        }
+            "Nvl\\MailNotifications\\Database\\Factories\\": "database/factories/",
+            "Nvl\\MailNotifications\\Database\\Seeders\\": "database/seeders/"
+        },
+        "files": [
+            "src/Support/legacy-managed-namespaces.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

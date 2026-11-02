@@ -34,7 +34,11 @@ final readonly class MailAdoptionAdapter implements OwnershipAdoptionAdapter
         private OwnershipDatabaseConstraints $constraints,
     ) {}
 
-    /** @return list<string> */
+    /**
+     * Declare the mail resources and storage relationships participating in native ownership adoption.
+     *
+     * @return list<string>
+     */
     public function resources(): array
     {
         return ['mail.notifications', 'mail.scheduled', 'mail.events'];

@@ -3,7 +3,8 @@
     "package": "nvl/mail-notifications",
     "psr4": {
         "Nvl\\MailNotifications\\": "src",
-        "Nvl\\MailNotifications\\Database\\Factories\\": "database/factories"
+        "Nvl\\MailNotifications\\Database\\Factories\\": "database/factories",
+        "Nvl\\MailNotifications\\Database\\Seeders\\": "database/seeders"
     },
     "symbols": {
         "Nvl\\MailNotifications\\Contracts\\DeliveryProfileResolver": {
@@ -256,6 +257,77 @@
             "properties": [],
             "constants": []
         },
+        "Nvl\\MailNotifications\\Enums\\AccountStatus": {
+            "kind": "enum",
+            "file": "src/Enums/AccountStatus.php",
+            "methods": [
+                "cases",
+                "from",
+                "tryFrom"
+            ],
+            "properties": [
+                "name",
+                "value"
+            ],
+            "constants": [
+                "Active",
+                "Archived",
+                "Suspended"
+            ]
+        },
+        "Nvl\\MailNotifications\\Enums\\ClientAuthenticationMode": {
+            "kind": "enum",
+            "file": "src/Enums/ClientAuthenticationMode.php",
+            "methods": [
+                "cases",
+                "from",
+                "tryFrom"
+            ],
+            "properties": [
+                "name",
+                "value"
+            ],
+            "constants": [
+                "Broker",
+                "Dual",
+                "Legacy"
+            ]
+        },
+        "Nvl\\MailNotifications\\Enums\\EmailFlagType": {
+            "kind": "enum",
+            "file": "src/Enums/EmailFlagType.php",
+            "methods": [
+                "cases",
+                "from",
+                "tryFrom"
+            ],
+            "properties": [
+                "name",
+                "value"
+            ],
+            "constants": [
+                "Domain",
+                "Subject",
+                "User"
+            ]
+        },
+        "Nvl\\MailNotifications\\Enums\\EmailMessageType": {
+            "kind": "enum",
+            "file": "src/Enums/EmailMessageType.php",
+            "methods": [
+                "cases",
+                "from",
+                "tryFrom"
+            ],
+            "properties": [
+                "name",
+                "value"
+            ],
+            "constants": [
+                "Marketing",
+                "Transactional"
+            ]
+        },
         "Nvl\\MailNotifications\\Enums\\MailDeliveryStatus": {
             "kind": "enum",
             "file": "src/Enums/MailDeliveryStatus.php",
@@ -344,6 +416,27 @@
                 "ProcessScheduled",
                 "Prune",
                 "RecoverScheduled"
+            ]
+        },
+        "Nvl\\MailNotifications\\Enums\\ProviderSyncStatus": {
+            "kind": "enum",
+            "file": "src/Enums/ProviderSyncStatus.php",
+            "methods": [
+                "cases",
+                "from",
+                "isActive",
+                "tryFrom"
+            ],
+            "properties": [
+                "name",
+                "value"
+            ],
+            "constants": [
+                "Completed",
+                "Failed",
+                "Queued",
+                "Retrying",
+                "Running"
             ]
         },
         "Nvl\\MailNotifications\\Enums\\ScheduledMailReadAbility": {
@@ -692,6 +785,26 @@
             "properties": [],
             "constants": []
         },
+        "Nvl\\MailNotifications\\Exceptions\\ManagedDeliveryConflict": {
+            "kind": "class",
+            "file": "src/Exceptions/ManagedDeliveryConflict.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Exceptions\\ManagedProviderWebhookRejected": {
+            "kind": "class",
+            "file": "src/Exceptions/ManagedProviderWebhookRejected.php",
+            "methods": [
+                "__construct"
+            ],
+            "properties": [
+                "reason"
+            ],
+            "constants": []
+        },
         "Nvl\\MailNotifications\\Exceptions\\ScheduledMailException": {
             "kind": "class",
             "file": "src/Exceptions/ScheduledMailException.php",
@@ -753,6 +866,16 @@
             "properties": [],
             "constants": []
         },
+        "Nvl\\MailNotifications\\Laravel\\Concerns\\SubmitsMailDelivery": {
+            "kind": "trait",
+            "file": "src/Laravel/Concerns/SubmitsMailDelivery.php",
+            "methods": [
+                "submitMailDelivery",
+                "toMailDelivery"
+            ],
+            "properties": [],
+            "constants": []
+        },
         "Nvl\\MailNotifications\\Laravel\\Concerns\\TracksMailDelivery": {
             "kind": "trait",
             "file": "src/Laravel/Concerns/TracksMailDelivery.php",
@@ -770,6 +893,430 @@
             ],
             "properties": [],
             "constants": []
+        },
+        "Nvl\\MailNotifications\\Models\\Asset": {
+            "kind": "class",
+            "file": "src/Models/Asset.php",
+            "methods": [
+                "client",
+                "getConnectionName",
+                "getTable",
+                "media",
+                "registerNvlMedia",
+                "scopeHasNvlMedia"
+            ],
+            "properties": [
+                "archived_at",
+                "checksum",
+                "client_id",
+                "created_at",
+                "disk",
+                "id",
+                "is_public",
+                "media",
+                "media_id",
+                "mime_type",
+                "name",
+                "path",
+                "size",
+                "updated_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\Client": {
+            "kind": "class",
+            "file": "src/Models/Client.php",
+            "methods": [
+                "apiKeys",
+                "assets",
+                "effectiveMailSettings",
+                "flagRules",
+                "getConnectionName",
+                "getMorphClass",
+                "getTable",
+                "isActive",
+                "mailSettings",
+                "marketingOptOuts",
+                "messages",
+                "owner"
+            ],
+            "properties": [
+                "broker_revision",
+                "created_at",
+                "id",
+                "mailSettings",
+                "name",
+                "owner",
+                "owner_id",
+                "slug",
+                "status",
+                "updated_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\ClientApiKey": {
+            "kind": "class",
+            "file": "src/Models/ClientApiKey.php",
+            "methods": [
+                "allows",
+                "client",
+                "getConnectionName",
+                "getTable",
+                "isUsable"
+            ],
+            "properties": [
+                "abilities",
+                "client_id",
+                "created_at",
+                "expires_at",
+                "id",
+                "last_used_at",
+                "name",
+                "prefix",
+                "revoked_at",
+                "token_hash",
+                "updated_at"
+            ],
+            "constants": [
+                "ABILITIES",
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\ClientMailSettings": {
+            "kind": "class",
+            "file": "src/Models/ClientMailSettings.php",
+            "methods": [
+                "client",
+                "getConnectionName",
+                "getTable",
+                "providerAccount",
+                "senderIdentity"
+            ],
+            "properties": [
+                "authentication_mode",
+                "client_id",
+                "created_at",
+                "from_email",
+                "from_name",
+                "incrementing",
+                "owner_id",
+                "provider_account_id",
+                "rate_limit_per_minute",
+                "reply_to_email",
+                "reply_to_name",
+                "sender_identity_id",
+                "status",
+                "updated_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\ClientWebhookDelivery": {
+            "kind": "class",
+            "file": "src/Models/ClientWebhookDelivery.php",
+            "methods": [
+                "endpoint",
+                "getConnectionName",
+                "getTable"
+            ],
+            "properties": [
+                "attempts",
+                "client_webhook_endpoint_id",
+                "created_at",
+                "delivered_at",
+                "dispatched_at",
+                "error_code",
+                "event_id",
+                "event_key",
+                "event_type",
+                "http_status",
+                "id",
+                "last_attempt_at",
+                "lease_token",
+                "lease_until",
+                "next_attempt_at",
+                "payload",
+                "status",
+                "updated_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\ClientWebhookEndpoint": {
+            "kind": "class",
+            "file": "src/Models/ClientWebhookEndpoint.php",
+            "methods": [
+                "client",
+                "deliveries",
+                "getConnectionName",
+                "getTable",
+                "newSecret"
+            ],
+            "properties": [
+                "client_id",
+                "created_at",
+                "deleted_at",
+                "enabled",
+                "events",
+                "id",
+                "secret",
+                "updated_at",
+                "url"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\EmailAttempt": {
+            "kind": "class",
+            "file": "src/Models/EmailAttempt.php",
+            "methods": [
+                "emailMessage",
+                "getConnectionName",
+                "getTable",
+                "providerAccount"
+            ],
+            "properties": [
+                "completed_at",
+                "created_at",
+                "email_message_id",
+                "error_code",
+                "error_message",
+                "id",
+                "number",
+                "provider_account_id",
+                "provider_message_id",
+                "remote_message_ids",
+                "response",
+                "retryable",
+                "started_at",
+                "status",
+                "updated_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\EmailEvent": {
+            "kind": "class",
+            "file": "src/Models/EmailEvent.php",
+            "methods": [
+                "emailMessage",
+                "emailRecipient",
+                "getConnectionName",
+                "getTable",
+                "providerAccount",
+                "webhookReceipt"
+            ],
+            "properties": [
+                "created_at",
+                "email_message_id",
+                "email_recipient_id",
+                "id",
+                "metadata",
+                "occurred_at",
+                "provider_account_id",
+                "provider_event_id",
+                "type",
+                "webhook_receipt_id"
+            ],
+            "constants": [
+                "TABLE",
+                "UPDATED_AT"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\EmailFlagRule": {
+            "kind": "class",
+            "file": "src/Models/EmailFlagRule.php",
+            "methods": [
+                "client",
+                "getConnectionName",
+                "getTable",
+                "messageFlags"
+            ],
+            "properties": [
+                "client_id",
+                "color",
+                "created_at",
+                "enabled",
+                "id",
+                "label",
+                "type",
+                "updated_at",
+                "value"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\EmailMessage": {
+            "kind": "class",
+            "file": "src/Models/EmailMessage.php",
+            "methods": [
+                "attempts",
+                "client",
+                "events",
+                "flags",
+                "getConnectionName",
+                "getTable",
+                "messageAssets",
+                "providerAccount",
+                "recipients",
+                "references"
+            ],
+            "properties": [
+                "cancelled_at",
+                "category",
+                "client_id",
+                "completed_at",
+                "composition_render_id",
+                "composition_revision_id",
+                "created_at",
+                "data",
+                "dispatched_at",
+                "email_template_version_id",
+                "error_code",
+                "error_message",
+                "external_reference",
+                "from_email",
+                "from_name",
+                "html",
+                "id",
+                "idempotency_key",
+                "language",
+                "lease_until",
+                "metadata",
+                "next_attempt_at",
+                "original_css",
+                "original_html",
+                "original_subject",
+                "original_text",
+                "provider_account_id",
+                "reply_to_email",
+                "reply_to_name",
+                "request_hash",
+                "send_at",
+                "sender_identity_id",
+                "status",
+                "subject",
+                "submitted_at",
+                "tags",
+                "testing_interception",
+                "text",
+                "type",
+                "updated_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\EmailMessageFlag": {
+            "kind": "class",
+            "file": "src/Models/EmailMessageFlag.php",
+            "methods": [
+                "client",
+                "emailMessage",
+                "getConnectionName",
+                "getTable",
+                "rule"
+            ],
+            "properties": [
+                "client_id",
+                "color",
+                "created_at",
+                "email_flag_rule_id",
+                "email_message_id",
+                "id",
+                "label",
+                "type",
+                "updated_at",
+                "value"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\EmailMessageReference": {
+            "kind": "class",
+            "file": "src/Models/EmailMessageReference.php",
+            "methods": [
+                "client",
+                "emailMessage",
+                "getConnectionName",
+                "getTable"
+            ],
+            "properties": [
+                "client_id",
+                "email_message_id",
+                "id",
+                "reference_id",
+                "timestamps",
+                "type"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\EmailRecipient": {
+            "kind": "class",
+            "file": "src/Models/EmailRecipient.php",
+            "methods": [
+                "emailMessage",
+                "events",
+                "getConnectionName",
+                "getTable"
+            ],
+            "properties": [
+                "bounced_at",
+                "click_count",
+                "clicked_at",
+                "complained_at",
+                "created_at",
+                "delivered_at",
+                "delivery_event_at",
+                "delivery_status",
+                "email",
+                "email_message_id",
+                "id",
+                "name",
+                "open_count",
+                "opened_at",
+                "suppressed_at",
+                "type",
+                "unsubscribed_at",
+                "updated_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\Integration": {
+            "kind": "class",
+            "file": "src/Models/Integration.php",
+            "methods": [
+                "getConnectionName",
+                "getTable",
+                "providerAccounts"
+            ],
+            "properties": [
+                "capabilities",
+                "created_at",
+                "icon",
+                "id",
+                "key",
+                "name",
+                "updated_at"
+            ],
+            "constants": [
+                "SUPPORTED_KEYS",
+                "TABLE"
+            ]
         },
         "Nvl\\MailNotifications\\Models\\MailNotification": {
             "kind": "class",
@@ -859,6 +1406,209 @@
                 "TABLE"
             ]
         },
+        "Nvl\\MailNotifications\\Models\\MarketingOptOut": {
+            "kind": "class",
+            "file": "src/Models/MarketingOptOut.php",
+            "methods": [
+                "client",
+                "getConnectionName",
+                "getTable"
+            ],
+            "properties": [
+                "client_id",
+                "created_at",
+                "email",
+                "id",
+                "released_at",
+                "updated_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\MessageAsset": {
+            "kind": "class",
+            "file": "src/Models/MessageAsset.php",
+            "methods": [
+                "asset",
+                "downloadStatus",
+                "durableMetadata",
+                "emailMessage",
+                "getConnectionName",
+                "getTable",
+                "media",
+                "registerNvlMedia",
+                "scopeHasNvlMedia"
+            ],
+            "properties": [
+                "asset_id",
+                "bytes_deleted_at",
+                "bytes_expires_at",
+                "checksum",
+                "content_id",
+                "created_at",
+                "disk",
+                "disposition",
+                "email_message_id",
+                "id",
+                "media",
+                "media_id",
+                "mime_type",
+                "name",
+                "owns_file",
+                "path",
+                "size",
+                "source_kind",
+                "updated_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\Owner": {
+            "kind": "class",
+            "file": "src/Models/Owner.php",
+            "methods": [
+                "clients",
+                "getConnectionName",
+                "getTable",
+                "isActive",
+                "mailSettings",
+                "providerAccounts",
+                "senderIdentities"
+            ],
+            "properties": [
+                "broker_revision",
+                "created_at",
+                "id",
+                "mailSettings",
+                "name",
+                "slug",
+                "status",
+                "updated_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\OwnerMailSettings": {
+            "kind": "class",
+            "file": "src/Models/OwnerMailSettings.php",
+            "methods": [
+                "defaultProviderAccount",
+                "getConnectionName",
+                "getTable",
+                "owner"
+            ],
+            "properties": [
+                "created_at",
+                "default_provider_account_id",
+                "from_email",
+                "from_name",
+                "incrementing",
+                "owner_id",
+                "reply_to_email",
+                "reply_to_name",
+                "status",
+                "updated_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\ProviderAccount": {
+            "kind": "class",
+            "file": "src/Models/ProviderAccount.php",
+            "methods": [
+                "getConnectionName",
+                "getTable",
+                "integration",
+                "isActive",
+                "owner",
+                "senderIdentities",
+                "sendingDomains",
+                "syncRuns"
+            ],
+            "properties": [
+                "created_at",
+                "credentials",
+                "id",
+                "integration_id",
+                "name",
+                "owner_id",
+                "provider",
+                "status",
+                "updated_at",
+                "webhook_public_key",
+                "webhook_secret"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\ProviderSyncRun": {
+            "kind": "class",
+            "file": "src/Models/ProviderSyncRun.php",
+            "methods": [
+                "getConnectionName",
+                "getTable",
+                "providerAccount"
+            ],
+            "properties": [
+                "active_provider_account_id",
+                "checkpoint",
+                "configuration_fingerprint",
+                "created_at",
+                "cursor",
+                "dispatched_at",
+                "domains_processed",
+                "domains_status",
+                "domains_total",
+                "error_code",
+                "error_message",
+                "finished_at",
+                "id",
+                "lease_token",
+                "lease_until",
+                "next_retry_at",
+                "page_attempts",
+                "pages_processed",
+                "phase",
+                "provider_account_id",
+                "queue_connection",
+                "retry_count",
+                "senders_processed",
+                "senders_status",
+                "senders_total",
+                "started_at",
+                "status",
+                "updated_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\RecipientSuppression": {
+            "kind": "class",
+            "file": "src/Models/RecipientSuppression.php",
+            "methods": [
+                "getConnectionName",
+                "getTable",
+                "providerAccount"
+            ],
+            "properties": [
+                "created_at",
+                "email",
+                "id",
+                "provider_account_id",
+                "reason",
+                "released_at",
+                "updated_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
         "Nvl\\MailNotifications\\Models\\ScheduledMailMessage": {
             "kind": "class",
             "file": "src/Models/ScheduledMailMessage.php",
@@ -911,6 +1661,116 @@
                 "TABLE"
             ]
         },
+        "Nvl\\MailNotifications\\Models\\SenderIdentity": {
+            "kind": "class",
+            "file": "src/Models/SenderIdentity.php",
+            "methods": [
+                "getConnectionName",
+                "getTable",
+                "isVerified",
+                "owner",
+                "providerAccount",
+                "sendingDomain"
+            ],
+            "properties": [
+                "created_at",
+                "email",
+                "id",
+                "last_seen_sync_run_id",
+                "last_synced_at",
+                "name",
+                "owner_id",
+                "provider_account_id",
+                "remote_id",
+                "reply_to_email",
+                "reply_to_name",
+                "sendingDomain",
+                "sending_domain_id",
+                "status",
+                "updated_at",
+                "verification_source",
+                "verified_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\SendingDomain": {
+            "kind": "class",
+            "file": "src/Models/SendingDomain.php",
+            "methods": [
+                "getConnectionName",
+                "getTable",
+                "isVerified",
+                "owner",
+                "providerAccount",
+                "senderIdentities"
+            ],
+            "properties": [
+                "created_at",
+                "dns_records",
+                "domain",
+                "id",
+                "last_seen_sync_run_id",
+                "last_synced_at",
+                "owner_id",
+                "provider_account_id",
+                "remote_id",
+                "status",
+                "updated_at",
+                "verification_source",
+                "verified_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\StagedMailFile": {
+            "kind": "class",
+            "file": "src/Models/StagedMailFile.php",
+            "methods": [
+                "client",
+                "getConnectionName",
+                "getTable"
+            ],
+            "properties": [
+                "client_id",
+                "created_at",
+                "disk",
+                "id",
+                "path"
+            ],
+            "constants": [
+                "TABLE",
+                "UPDATED_AT"
+            ]
+        },
+        "Nvl\\MailNotifications\\Models\\WebhookReceipt": {
+            "kind": "class",
+            "file": "src/Models/WebhookReceipt.php",
+            "methods": [
+                "getConnectionName",
+                "getTable",
+                "providerAccount"
+            ],
+            "properties": [
+                "created_at",
+                "error_code",
+                "id",
+                "next_attempt_at",
+                "payload",
+                "payload_hash",
+                "processed_at",
+                "processing_attempts",
+                "provider_account_id",
+                "status",
+                "updated_at",
+                "verified_at"
+            ],
+            "constants": [
+                "TABLE"
+            ]
+        },
         "Nvl\\MailNotifications\\Services\\DatabaseTrackingLifecycle": {
             "kind": "class",
             "file": "src/Services/DatabaseTrackingLifecycle.php",
@@ -921,6 +1781,25 @@
                 "begin",
                 "failed",
                 "queuedFailure"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\Delivery\\MailMediaAuthorization": {
+            "kind": "class",
+            "file": "src/Services/Delivery/MailMediaAuthorization.php",
+            "methods": [
+                "__construct",
+                "allows"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\Delivery\\ProviderWebhookAdapter": {
+            "kind": "class",
+            "file": "src/Services/Delivery/ProviderWebhookAdapter.php",
+            "methods": [
+                "normalize"
             ],
             "properties": [],
             "constants": []
@@ -991,6 +1870,27 @@
                 "__construct",
                 "apply",
                 "inspect"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\ManagedDelivery": {
+            "kind": "class",
+            "file": "src/Services/ManagedDelivery.php",
+            "methods": [
+                "__construct",
+                "send"
+            ],
+            "properties": [],
+            "constants": []
+        },
+        "Nvl\\MailNotifications\\Services\\MessageInputValidator": {
+            "kind": "class",
+            "file": "src/Services/MessageInputValidator.php",
+            "methods": [
+                "after",
+                "rules",
+                "validate"
             ],
             "properties": [],
             "constants": []

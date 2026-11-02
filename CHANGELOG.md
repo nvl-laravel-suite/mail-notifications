@@ -7,6 +7,11 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ### Changed
 
+- Ship a prepared-delivery-first agent skill with portable canonical guides, corrected alpha rollback semantics and tested localized private-attachment recipes.
+- Keep prepared delivery, ordinary Laravel transport tracking and the older Mailable scheduler explicitly independent; document the minimal delivery-only host profile.
+- Honor package/capability disable controls in both native acceptance and queued provider submission without discarding accepted intents or uncertain-claim evidence.
+- Reuse live host/package testing-setting precedence for prepared messages so package-only installations cannot bypass configured recipient interception.
+- Update schema diagnostics for the single initial alpha schema; retain existing APIs, tables, message identities and frozen content.
 - Align NVL peers and consumer contracts on the coordinated 7.x line. Review [UPGRADING.md](UPGRADING.md) for adoption and application-owned integration requirements.
 
 ## [6.0.1] - 2026-10-21

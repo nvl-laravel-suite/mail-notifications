@@ -24,6 +24,9 @@ final class AdoptMailNotificationsCommand extends Command
     /** @var string */
     protected $description = 'Plan, stage, or apply a reconciled legacy Mail Notifications adoption';
 
+    /**
+     * Validate and execute the explicitly requested legacy-to-native adoption operation.
+     */
     public function handle(MailAdoption $adopt): int
     {
         $format = $this->option('format');

@@ -21,6 +21,8 @@ final readonly class MailNotificationReadQueryBuilder
     public function __construct(private OwnershipBoundary $boundary) {}
 
     /**
+     * Apply the validated history query filters to the already authorized tracked-notification read boundary.
+     *
      * @return Builder<MailNotification>
      */
     public function build(MailNotificationReadQuery $filters): Builder
@@ -70,6 +72,8 @@ final readonly class MailNotificationReadQueryBuilder
     }
 
     /**
+     * Expose the failure states used consistently by history filters and summary counts.
+     *
      * @return list<string>
      */
     public static function failureStatuses(): array
@@ -83,6 +87,8 @@ final readonly class MailNotificationReadQueryBuilder
     }
 
     /**
+     * Expose the successful states used consistently by history filters and summary counts.
+     *
      * @return list<string>
      */
     public static function successfulStatuses(): array

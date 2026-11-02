@@ -32,7 +32,7 @@ const MAIL_STATUS_TEST_SCHEDULED = 'status_upgrade_scheduled_mail_messages';
 function mailStatusTrackingCreator(): Migration
 {
     return require dirname(__DIR__, 2)
-        .'/database/migrations/2026_07_29_000000_nvl_mail_notifications_create_mail_notification_tables.php';
+        .'/database/migrations/2026_11_02_000000_nvl_mail_notifications_create_schema.php';
 }
 
 /**
@@ -41,7 +41,7 @@ function mailStatusTrackingCreator(): Migration
 function mailStatusScheduledCreator(): Migration
 {
     return require dirname(__DIR__, 2)
-        .'/database/migrations/2026_07_30_000100_nvl_mail_notifications_create_scheduled_mail_messages_table.php';
+        .'/database/migrations/2026_11_02_000000_nvl_mail_notifications_create_schema.php';
 }
 
 /**
@@ -163,7 +163,6 @@ function configureMailStatusCreatorStorage(): Connection
         MAIL_STATUS_TEST_SCHEDULED,
     );
     mailStatusTrackingCreator()->up();
-    mailStatusScheduledCreator()->up();
 
     return DB::connection(MAIL_STATUS_TEST_CONNECTION);
 }
@@ -313,7 +312,7 @@ it('reports a missing scheduled message status invariant', function () {
         ->message->toContain('scheduled message status allowlist');
 });
 
-it('installs exact status invariants in creators and keeps them forward-only', function () {
+it('installs exact status invariants and removes them with the alpha schema', function () {
     $connection = configureMailStatusCreatorStorage();
 
     expect(StatusConstraintInspector::matches(
@@ -338,7 +337,6 @@ it('installs exact status invariants in creators and keeps them forward-only', f
             allowedValues: scheduledMailStatusValues(),
         ))->toBeTrue();
 
-    mailStatusScheduledCreator()->down();
     mailStatusTrackingCreator()->down();
 
     expect(StatusConstraintInspector::matches(
@@ -347,21 +345,21 @@ it('installs exact status invariants in creators and keeps them forward-only', f
         column: 'status',
         constraint: 'mail_notifications_status_check',
         allowedValues: mailDeliveryStatusValues(),
-    ))->toBeTrue()
+    ))->toBeFalse()
         ->and(StatusConstraintInspector::matches(
             connection: $connection,
             table: MAIL_STATUS_TEST_EVENTS,
             column: 'normalized_type',
             constraint: 'mail_notification_events_normalized_type_check',
             allowedValues: mailDeliveryStatusValues(),
-        ))->toBeTrue()
+        ))->toBeFalse()
         ->and(StatusConstraintInspector::matches(
             connection: $connection,
             table: MAIL_STATUS_TEST_SCHEDULED,
             column: 'status',
             constraint: 'scheduled_mail_messages_status_check',
             allowedValues: scheduledMailStatusValues(),
-        ))->toBeTrue();
+        ))->toBeFalse();
 });
 
 it('rejects invalid statuses immediately in a fresh creator schema', function () {

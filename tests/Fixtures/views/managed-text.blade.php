@@ -1,0 +1,1 @@
+{{ __('managed.body') }}

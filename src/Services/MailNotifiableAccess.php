@@ -20,7 +20,11 @@ final readonly class MailNotifiableAccess
 {
     public function __construct(private OwnershipResourceRegistry $resources, private OwnershipBoundary $boundary) {}
 
-    /** @param class-string<MailTrackable> $class */
+    /**
+     * Require the host's current authority for the referenced notifiable before exposing its history.
+     *
+     * @param  class-string<MailTrackable>  $class
+     */
     public function assert(string $class, string $identifier): void
     {
         if (! is_subclass_of($class, Model::class)) {

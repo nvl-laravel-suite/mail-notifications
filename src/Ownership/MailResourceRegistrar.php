@@ -19,6 +19,9 @@ final readonly class MailResourceRegistrar
 {
     public function __construct(private MailModelRegistry $models) {}
 
+    /**
+     * Register the package resource declarations without granting a host actor authority.
+     */
     public function register(OwnershipResourceRegistry $resources, bool $owned): void
     {
         $resources->register(new OwnershipResourceDefinition('mail.notifications', 'mail-notifications', $this->models->notificationClass(),

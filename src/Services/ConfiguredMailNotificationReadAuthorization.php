@@ -17,6 +17,9 @@ use Nvl\MailNotifications\Models\MailNotification;
  */
 final class ConfiguredMailNotificationReadAuthorization implements MailNotificationReadAuthorization
 {
+    /**
+     * Delegate tracked-history reads to the configured host policy and fail closed when authority is absent.
+     */
     public function authorize(
         MailNotificationReadAbility $ability,
         Authenticatable $actor,

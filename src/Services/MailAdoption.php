@@ -38,6 +38,8 @@ final readonly class MailAdoption
     ) {}
 
     /**
+     * Execute a validated adoption plan using the configured native storage and ownership boundaries.
+     *
      * @param  array<array-key, mixed>  $manifest
      * @return array<string, mixed>
      */

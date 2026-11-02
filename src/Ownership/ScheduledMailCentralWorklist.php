@@ -22,7 +22,11 @@ final readonly class ScheduledMailCentralWorklist
 {
     public function __construct(private OwnershipReadiness $readiness) {}
 
-    /** @return iterable<OwnershipJobEnvelope> */
+    /**
+     * Enumerate bounded captured owner contexts for scheduled work under the configured worklist policy.
+     *
+     * @return iterable<OwnershipJobEnvelope>
+     */
     public function envelopes(MailOwnerOperation $operation): iterable
     {
         if ($operation !== MailOwnerOperation::ProcessScheduled) {

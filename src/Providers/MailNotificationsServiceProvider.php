@@ -15,11 +15,20 @@ use Illuminate\Support\ServiceProvider;
 use LogicException;
 use Nvl\MailNotifications\Console\Commands\AdoptMailNotificationsCommand;
 use Nvl\MailNotifications\Console\Commands\AnonymizeMailNotificationsCommand;
+use Nvl\MailNotifications\Console\Commands\DispatchPendingMail;
 use Nvl\MailNotifications\Console\Commands\MailNotificationsDoctorCommand;
 use Nvl\MailNotifications\Console\Commands\ProcessScheduledMailCommand;
+use Nvl\MailNotifications\Console\Commands\PruneMailHistory;
 use Nvl\MailNotifications\Console\Commands\PruneMailNotificationsCommand;
+use Nvl\MailNotifications\Console\Commands\PruneMessageAttachments;
+use Nvl\MailNotifications\Console\Commands\PruneOrphanMailFiles;
+use Nvl\MailNotifications\Console\Commands\QuarantineRestoredMail;
+use Nvl\MailNotifications\Console\Commands\ReconcileMailWebhooks;
+use Nvl\MailNotifications\Console\Commands\RecoverClientWebhooks;
+use Nvl\MailNotifications\Console\Commands\RecoverProviderSyncs;
 use Nvl\MailNotifications\Console\Commands\RecoverScheduledMailCommand;
 use Nvl\MailNotifications\Console\Commands\RemoveRemoteWebhooksCommand;
+use Nvl\MailNotifications\Console\Commands\SyncMailIntegrations;
 use Nvl\MailNotifications\Console\Commands\SyncRemoteWebhooksCommand;
 use Nvl\MailNotifications\Contracts\DeliveryProfileResolver;
 use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
@@ -101,6 +110,10 @@ final class MailNotificationsServiceProvider extends ServiceProvider implements 
      */
     public function register(): void
     {
+        foreach (\Nvl\MailNotifications\Support\legacyManagedNamespaces() as $previous => $canonical) {
+            $this->app->alias($canonical, $previous);
+        }
+
         $this->app->register(SupportServiceProvider::class);
         $this->app->bindIf(MailOwnerWorklist::class, StoredMailOwnerWorklist::class);
         PackageDoctorContributor::register($this->app, 'nvl/mail-notifications', fn (): array => $this->app->make(MailNotificationsDoctor::class)->inspect());
@@ -109,6 +122,11 @@ final class MailNotificationsServiceProvider extends ServiceProvider implements 
             dirname(__DIR__, 2).'/config/nvl-mail-notifications.php',
             'mail-notifications',
         );
+        $this->app->booting(function (): void {
+            if (config('nvl-mail-notifications.managed.enabled') === true) {
+                $this->app->register(ManagedDeliveryServiceProvider::class);
+            }
+        });
         $this->app->singleton(MailModelRegistry::class);
         $this->app->booting(fn () => $this->app->make(MailModelRegistry::class)->prepare());
         $this->app->booted(function (): void {
@@ -350,6 +368,9 @@ final class MailNotificationsServiceProvider extends ServiceProvider implements 
             dirname(__DIR__, 2).'/resources/boost/skills' => base_path('.agents/skills'),
         ], 'nvl-mail-notifications-skills');
         $this->publishes([
+            dirname(__DIR__, 2).'/resources/images/integrations' => public_path('images/integrations'),
+        ], 'nvl-mail-notifications-assets');
+        $this->publishes([
             dirname(__DIR__, 2).'/resources/adoption/mail-notifications.v1.example.json' => base_path('nvl-mail-notifications.adoption.json'),
         ], 'nvl-mail-notifications-adoption');
         if ($this->configurationBoolean(
@@ -370,6 +391,19 @@ final class MailNotificationsServiceProvider extends ServiceProvider implements 
                 RemoveRemoteWebhooksCommand::class,
                 SyncRemoteWebhooksCommand::class,
             ]);
+            if (config('nvl-mail-notifications.managed.enabled') === true) {
+                $this->commands([
+                    DispatchPendingMail::class,
+                    ReconcileMailWebhooks::class,
+                    RecoverClientWebhooks::class,
+                    RecoverProviderSyncs::class,
+                    PruneMailHistory::class,
+                    PruneMessageAttachments::class,
+                    PruneOrphanMailFiles::class,
+                    QuarantineRestoredMail::class,
+                    SyncMailIntegrations::class,
+                ]);
+            }
         }
     }
 

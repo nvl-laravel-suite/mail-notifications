@@ -26,7 +26,11 @@ final readonly class MailOwnerOperations
         private OwnershipSystemRunner $owners, private MailOwnerWorklist $worklist, private ScheduledMailCentralWorklist $central,
         private OwnershipQueueContext $queue) {}
 
-    /** @template T
+    /**
+     * Run one operation under the supplied native owner context and restore the previous context on every exit.
+     *
+     * @template T
+     *
      * @param  Closure(): T  $callback
      * @return list<T>
      */

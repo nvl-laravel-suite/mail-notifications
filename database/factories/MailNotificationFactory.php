@@ -65,6 +65,8 @@ final class MailNotificationFactory extends Factory
     }
 
     /**
+     * Define isolated persisted attributes without initiating delivery or external provider calls.
+     *
      * @return array<model-property<MailNotification>, mixed>
      */
     public function definition(): array

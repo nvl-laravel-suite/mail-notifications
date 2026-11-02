@@ -11,7 +11,11 @@ namespace Nvl\MailNotifications\Support;
  */
 final class CanonicalMailNotificationSchema
 {
-    /** @return list<string> */
+    /**
+     * Declare the canonical tracked-notification columns and constraints for a fresh schema.
+     *
+     * @return list<string>
+     */
     public static function notifications(): array
     {
         return [
@@ -25,7 +29,11 @@ final class CanonicalMailNotificationSchema
         ];
     }
 
-    /** @return list<string> */
+    /**
+     * Declare the canonical tracked-event columns and constraints for a fresh schema.
+     *
+     * @return list<string>
+     */
     public static function events(): array
     {
         return [
@@ -35,7 +43,11 @@ final class CanonicalMailNotificationSchema
         ];
     }
 
-    /** @return list<string> */
+    /**
+     * Declare the canonical scheduled-intent columns and constraints for a fresh schema.
+     *
+     * @return list<string>
+     */
     public static function scheduled(): array
     {
         return [

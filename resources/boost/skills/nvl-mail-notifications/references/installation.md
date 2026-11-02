@@ -35,6 +35,7 @@ That group copies the full skill tree to `.agents/skills`. Avoid force-overwriti
 ## Publishable groups
 
 - `nvl-mail-notifications-adoption`
+- `nvl-mail-notifications-assets`
 - `nvl-mail-notifications-config`
 - `nvl-mail-notifications-migrations`
 - `nvl-mail-notifications-skills`
@@ -63,7 +64,7 @@ Publish migrations once during initial setup. Laravel retimestamps published mig
 
 Configure `nvl-mail-notifications.connection` and supported table mappings before migrations, together with any host model declarations. Publication does not create tables, establish actor policy, admit an owner or prove native Ownership adoption.
 
-**Mail defaults:** `nvl-mail-notifications.enabled`, `.tracking.enabled` and `.migrations.enabled` default to true. Configure them before provider boot if installation must preserve host mail behavior without tracking or vendor-loaded schema. Choose the migration owner before the first run. Tracking and scheduled-mail creator rollbacks intentionally retain their tables and history; rollback is not an uninstall or schema reset. Reapplying an unrecorded creator over retained tables fails closed. Retire retained data only through an explicitly reviewed host migration after recovery/retention planning.
+**Mail defaults:** `nvl-mail-notifications.enabled`, `.tracking.enabled` and `.migrations.enabled` default to true; `.managed.enabled` and `.scheduling.enabled` default to false. Prepared-content hosts enable managed delivery and explicitly disable ordinary tracking and the older scheduler unless needed. The single initial alpha schema is independent of managed runtime selection. Its rollback drops every mail-owned table and its data; this file does not delete Media-owned schema or physical files. A Laravel batch rollback may also invoke other packages’ migrations. Choose one migration owner and review [database](database.md) before destructive operations; follow [delivery](delivery.md) for the native setup.
 
 ## Artisan operations
 
@@ -71,11 +72,20 @@ These commands are registered by Composer-discovered package providers. Feature-
 
 - `php artisan nvl:mail-notifications:adopt --help`
 - `php artisan nvl:mail-notifications:anonymize --help`
+- `php artisan nvl:mail-notifications:delivery:dispatch-pending --help`
 - `php artisan nvl:mail-notifications:doctor --help`
 - `php artisan nvl:mail-notifications:process-scheduled --help`
+- `php artisan nvl:mail-notifications:delivery:prune --help`
 - `php artisan nvl:mail-notifications:prune --help`
+- `php artisan nvl:mail-notifications:delivery:prune-attachments --help`
+- `php artisan nvl:mail-notifications:delivery:prune-orphan-files --help`
+- `php artisan nvl:mail-notifications:delivery:quarantine-restored --help`
+- `php artisan nvl:mail-notifications:delivery:reconcile-webhooks --help`
+- `php artisan nvl:mail-notifications:delivery:recover-client-webhooks --help`
+- `php artisan nvl:mail-notifications:delivery:recover-provider-syncs --help`
 - `php artisan nvl:mail-notifications:recover-scheduled --help`
 - `php artisan nvl:mail-notifications:webhooks:remove --help`
+- `php artisan nvl:mail-notifications:delivery:integrations:sync --help`
 - `php artisan nvl:mail-notifications:webhooks:sync --help`
 
 ## Optional packages

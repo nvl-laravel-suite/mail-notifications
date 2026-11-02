@@ -17,6 +17,9 @@ use Nvl\MailNotifications\Models\ScheduledMailMessage;
  */
 final class ConfiguredScheduledMailReadAuthorization implements ScheduledMailReadAuthorization
 {
+    /**
+     * Delegate scheduled reads to the configured host policy and fail closed when authority is absent.
+     */
     public function authorize(
         ScheduledMailReadAbility $ability,
         Authenticatable $actor,

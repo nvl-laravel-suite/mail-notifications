@@ -544,7 +544,7 @@ it('detects multiple provider identity candidates in a broken schema', function 
     DB::purge($connectionName);
     config()->set('nvl-mail-notifications.connection', $connectionName);
     $migration = require dirname(__DIR__, 2)
-        .'/database/migrations/2026_07_29_000000_nvl_mail_notifications_create_mail_notification_tables.php';
+        .'/database/migrations/2026_11_02_000000_nvl_mail_notifications_create_schema.php';
     $migration->up();
     Schema::connection($connectionName)->table(
         MailNotificationsTables::Notifications,

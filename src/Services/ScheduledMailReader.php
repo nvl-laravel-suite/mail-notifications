@@ -42,8 +42,11 @@ final readonly class ScheduledMailReader
     ) {}
 
     /**
-     * @param array<string, mixed> $filters
-     * @return array<string, mixed> */
+     * Return bounded scheduled-intent projections through live ownership and host authorization checks.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
     public function paginate(Authenticatable $actor, array $filters = []): array
     {
         $actor = $this->actors->resolve($actor);
@@ -65,7 +68,10 @@ final readonly class ScheduledMailReader
     }
 
     /**
-     * @return array<string, mixed> */
+     * Read one authorized scheduled intent while excluding protected payload and claim fields.
+     *
+     * @return array<string, mixed>
+     */
     public function get(Authenticatable $actor, string $id): array
     {
         $actor = $this->actors->resolve($actor);
@@ -84,8 +90,11 @@ final readonly class ScheduledMailReader
     }
 
     /**
-     * @param array<string, mixed> $filters
-     * @return array<string, mixed> */
+     * Aggregate scheduled state only within the caller's authorized read scope.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
     public function statistics(Authenticatable $actor, array $filters = []): array
     {
         $actor = $this->actors->resolve($actor);

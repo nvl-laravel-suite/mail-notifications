@@ -47,7 +47,11 @@ final class MailModelRegistry
         $this->scheduled->prepare();
     }
 
-    /** @return class-string<MailNotification> */
+    /**
+     * Return the frozen configured tracked-notification root after validating its required storage contract.
+     *
+     * @return class-string<MailNotification>
+     */
     public function notificationClass(): string
     {
         $class = $this->notifications->modelClass();
@@ -56,7 +60,11 @@ final class MailModelRegistry
         return $class;
     }
 
-    /** @return class-string<ScheduledMailMessage> */
+    /**
+     * Return the frozen configured scheduled-intent root after validating its required storage contract.
+     *
+     * @return class-string<ScheduledMailMessage>
+     */
     public function scheduledClass(): string
     {
         $class = $this->scheduled->modelClass();
@@ -65,7 +73,11 @@ final class MailModelRegistry
         return $class;
     }
 
-    /** @internal */
+    /**
+     * Create a configured tracked-notification instance without persisting or granting read authority.
+     *
+     * @internal
+     */
     public static function notification(): MailNotification
     {
         $class = Container::getInstance()->make(self::class)->notificationClass();
@@ -73,7 +85,11 @@ final class MailModelRegistry
         return new $class;
     }
 
-    /** @internal */
+    /**
+     * Create a configured scheduled-intent instance without persisting or granting read authority.
+     *
+     * @internal
+     */
     public static function scheduled(): ScheduledMailMessage
     {
         $class = Container::getInstance()->make(self::class)->scheduledClass();
@@ -81,7 +97,11 @@ final class MailModelRegistry
         return new $class;
     }
 
-    /** @internal
+    /**
+     * Build a query on the configured tracked root; callers still apply their operation's authority predicates.
+     *
+     * @internal
+     *
      * @return Builder<MailNotification>
      */
     public static function notificationsQuery(): Builder
@@ -89,7 +109,11 @@ final class MailModelRegistry
         return self::notification()->newQuery();
     }
 
-    /** @internal
+    /**
+     * Build a query on the configured scheduled root; callers still apply their operation's authority predicates.
+     *
+     * @internal
+     *
      * @return Builder<ScheduledMailMessage>
      */
     public static function scheduledQuery(): Builder

@@ -22,6 +22,9 @@ final readonly class MailDeliveryReconciler
     public function __construct(private OwnershipResourceRegistry $resources, private VerifiedDeliveryOwnerLocator $locator,
         private OwnershipSystemRunner $owners, private OwnershipQueueContext $queue) {}
 
+    /**
+     * Apply a verified lifecycle observation without allowing duplicate or older activity to regress tracked state.
+     */
     public function apply(VerifiedDeliveryEvent $event, TrackingLifecycle $lifecycle): TransitionResult
     {
         if ($this->resources->get('mail.notifications')->ownership->strategy === 'unscoped') {

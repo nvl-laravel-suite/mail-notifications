@@ -27,7 +27,11 @@ final readonly class MailOwnershipEnvelope
         private OwnershipQueueContext $queue, private OwnershipReadiness $readiness, private OwnershipResourceRegistry $resources,
         private MailIntegrityGuard $integrity) {}
 
-    /** @return array<string,mixed> */
+    /**
+     * Capture the native ownership fields required for a newly tracked notification.
+     *
+     * @return array<string,mixed>
+     */
     public function notificationAttributes(): array
     {
         $this->assertStorage('mail.notifications');
@@ -35,7 +39,11 @@ final readonly class MailOwnershipEnvelope
         return $this->globalTracking() ? ['owner_scope_key' => 'central', 'owner_reference' => null] : $this->boundary->attributes('mail.notifications');
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * Capture the native ownership fields required for a new scheduled intent.
+     *
+     * @return array<string,mixed>
+     */
     public function scheduledAttributes(): array
     {
         $this->assertStorage('mail.scheduled');
@@ -82,6 +90,9 @@ final readonly class MailOwnershipEnvelope
         }
     }
 
+    /**
+     * Require a tracked notification's captured ownership to match the current explicit execution context.
+     */
     public function assertNotification(MailNotification $notification): void
     {
         $this->boundary->assertRecord($notification, 'mail.notifications');
