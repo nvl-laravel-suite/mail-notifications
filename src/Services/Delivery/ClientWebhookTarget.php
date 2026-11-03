@@ -9,6 +9,8 @@ use Nvl\MailNotifications\Support\ManagedConfiguration;
 
 /**
  * Resolves safe callback destinations, allowing local origins only through explicit development policy.
+ *
+ * @internal
  */
 class ClientWebhookTarget
 {

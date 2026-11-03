@@ -15,6 +15,8 @@ use Throwable;
 
 /**
  * Expires attachment bytes independently of durable attachment names, checksums and message evidence.
+ *
+ * @internal
  */
 class AttachmentRetention
 {

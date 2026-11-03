@@ -19,6 +19,8 @@ use Nvl\MailNotifications\Support\ManagedConfiguration;
  * Matches verified provider activity to delivery attempts and projects recipient/message state.
  *
  * @phpstan-type ProviderEventData array{id: string, message_id: string, recipient: string, correlation_id: string|null, tags: list<string>, meta: array<string, mixed>}
+ *
+ * @internal
  */
 class WebhookProcessor
 {

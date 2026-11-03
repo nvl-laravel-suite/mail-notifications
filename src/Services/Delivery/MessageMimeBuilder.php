@@ -14,6 +14,8 @@ use Throwable;
 
 /**
  * Builds provider-ready MIME from persisted content, recipients and retained attachments.
+ *
+ * @internal
  */
 class MessageMimeBuilder
 {

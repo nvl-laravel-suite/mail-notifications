@@ -10,6 +10,8 @@ use Nvl\MailNotifications\Models\SenderIdentity;
 
 /**
  * Combines owner defaults and client overrides without transferring provider ownership.
+ *
+ * @internal
  */
 class MailSettingsResolver
 {

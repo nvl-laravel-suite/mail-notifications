@@ -11,6 +11,8 @@ use Nvl\MailNotifications\Support\ManagedConfiguration;
 
 /**
  * Coordinates account/provider send budgets and persisted pauses before transport work.
+ *
+ * @internal
  */
 class ProviderSendingAllowance
 {

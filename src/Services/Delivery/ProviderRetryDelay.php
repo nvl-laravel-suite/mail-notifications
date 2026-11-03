@@ -11,6 +11,8 @@ use Throwable;
 
 /**
  * Derives bounded retry timing from provider responses and local policy.
+ *
+ * @internal
  */
 class ProviderRetryDelay
 {

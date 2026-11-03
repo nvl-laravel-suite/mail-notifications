@@ -21,6 +21,8 @@ use Throwable;
 
 /**
  * Prunes terminal delivery history and eligible bytes while retaining uncertain or active work.
+ *
+ * @internal
  */
 class MailHistoryPruner
 {

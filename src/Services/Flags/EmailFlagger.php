@@ -12,6 +12,8 @@ use Nvl\MailNotifications\Models\EmailRecipient;
 
 /**
  * Snapshots matching client rules onto a message without creating cross-client tags.
+ *
+ * @internal
  */
 class EmailFlagger
 {

@@ -17,6 +17,8 @@ use Throwable;
 
 /**
  * Submits the persisted envelope and attachments using the configured Mailgun account.
+ *
+ * @internal
  */
 class MailgunProvider implements EmailProvider
 {

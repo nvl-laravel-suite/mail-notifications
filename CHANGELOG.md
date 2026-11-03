@@ -5,6 +5,10 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+## [7.0.0] - 2026-11-03
+
+- Adopt the reviewed NVL 7 family for PHP 8.4+ and Laravel 13, with compatible required and optional NVL peers. Review the package upgrade guide before deployment.
+
 ### Changed
 
 - Ship a prepared-delivery-first agent skill with portable canonical guides, corrected alpha rollback semantics and tested localized private-attachment recipes.

@@ -12,6 +12,8 @@ use Throwable;
 
 /**
  * Claims accepted delivery work for the queue and recovers uncertain expired submission leases.
+ *
+ * @internal
  */
 class MessageDispatcher
 {

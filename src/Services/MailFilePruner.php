@@ -14,6 +14,8 @@ use Throwable;
 
 /**
  * Drains abandoned private-file staging records using bounded maintenance work.
+ *
+ * @internal
  */
 class MailFilePruner
 {

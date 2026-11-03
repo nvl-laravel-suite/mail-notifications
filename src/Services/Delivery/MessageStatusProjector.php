@@ -8,6 +8,8 @@ use Nvl\MailNotifications\Models\EmailMessage;
 
 /**
  * Projects aggregate message state from independently recorded recipient outcomes.
+ *
+ * @internal
  */
 class MessageStatusProjector
 {

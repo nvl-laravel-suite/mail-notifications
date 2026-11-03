@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\Services\Delivery;
 
 /**
  * Resolves and validates remote host addresses for outbound attachment and callback safety.
+ *
+ * @internal
  */
 class PublicAddressResolver
 {

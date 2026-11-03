@@ -13,6 +13,8 @@ use Nvl\MailNotifications\Services\MailTestingInterceptor;
  * Applies configured recipient interception and non-delivery testing policy before provider submission.
  *
  * @phpstan-import-type ManagedMessageInput from EmailContent
+ *
+ * @internal
  */
 class MailTesting
 {

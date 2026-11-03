@@ -16,6 +16,8 @@ use Throwable;
 
 /**
  * Builds and submits MIME through the configured SMTP account without host rendering side effects.
+ *
+ * @internal
  */
 class SmtpProvider implements EmailProvider
 {

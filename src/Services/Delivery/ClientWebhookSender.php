@@ -17,6 +17,8 @@ use Throwable;
 
 /**
  * Delivers immutable signed callbacks with target validation, fenced leases and persisted retry outcomes.
+ *
+ * @internal
  */
 class ClientWebhookSender
 {

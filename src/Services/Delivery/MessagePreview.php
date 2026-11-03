@@ -9,6 +9,8 @@ use Nvl\MailNotifications\Models\EmailMessage;
 
 /**
  * Renders stored HTML and checked inline bytes under a restrictive preview content-security policy.
+ *
+ * @internal
  */
 class MessagePreview
 {

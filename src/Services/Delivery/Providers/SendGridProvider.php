@@ -20,6 +20,8 @@ use Throwable;
 
 /**
  * Submits the persisted envelope and attachments using the configured SendGrid account.
+ *
+ * @internal
  */
 class SendGridProvider implements EmailProvider
 {

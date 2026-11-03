@@ -17,6 +17,8 @@ use Throwable;
 
 /**
  * Persists immutable client callback intents and dispatches them after the source commit.
+ *
+ * @internal
  */
 class ClientWebhookPublisher
 {

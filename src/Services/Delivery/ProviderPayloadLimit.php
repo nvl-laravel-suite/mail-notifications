@@ -11,6 +11,8 @@ use RuntimeException;
 
 /**
  * Enforces provider wire-payload limits before attempting submission.
+ *
+ * @internal
  */
 class ProviderPayloadLimit
 {

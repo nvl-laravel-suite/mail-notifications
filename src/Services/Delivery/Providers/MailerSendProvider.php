@@ -22,6 +22,8 @@ use Throwable;
 
 /**
  * Submits the persisted envelope and attachments using the configured MailerSend account.
+ *
+ * @internal
  */
 class MailerSendProvider implements EmailProvider
 {

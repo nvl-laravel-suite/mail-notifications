@@ -12,6 +12,8 @@ use Throwable;
 
 /**
  * Fetches bounded remote attachment bytes with public-address, redirect and transport safeguards.
+ *
+ * @internal
  */
 class RemoteAttachmentFetcher
 {

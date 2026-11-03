@@ -18,6 +18,8 @@ use TijsVerkoyen\CssToInlineStyles\CssToInlineStyles;
  * @phpstan-type MailRecipient array{email: string, name?: string|null}
  * @phpstan-type MailAttachment array{asset_id?: string, file?: \Illuminate\Http\UploadedFile, content_base64?: string, url?: string, name?: string, disposition?: 'attachment'|'inline', content_id?: string|null}
  * @phpstan-type ManagedMessageInput array{subject: string, to: list<MailRecipient>, cc?: list<MailRecipient>, bcc?: list<MailRecipient>, html?: string|null, text?: string|null, css?: string|null, type?: string|EmailMessageType, category?: string|null, language?: string|null, data?: array<array-key, mixed>, metadata?: array<array-key, mixed>, tags?: list<string>, references?: list<array{type: string, id: string}>, external_reference?: string|null, send_at?: string|DateTimeInterface|null, attachments?: list<string|MailAttachment>, inline_assets?: list<MailAttachment>}
+ *
+ * @internal
  */
 class EmailContent
 {

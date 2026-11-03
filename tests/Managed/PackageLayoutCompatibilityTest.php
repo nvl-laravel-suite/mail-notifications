@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use Illuminate\Config\Repository;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Nvl\MailNotifications\Contracts\ProviderApiAdapter;
@@ -13,8 +16,10 @@ use Nvl\MailNotifications\Models\Client;
 use Nvl\MailNotifications\Models\EmailMessage;
 use Nvl\MailNotifications\Models\ProviderAccount;
 use Nvl\MailNotifications\Models\SenderIdentity;
+use Nvl\MailNotifications\Providers\MailNotificationsServiceProvider;
 use Nvl\MailNotifications\Services\Delivery\ProviderManager;
 use Nvl\MailNotifications\Services\ManagedDelivery;
+use Nvl\Support\Globals\GlobalNames;
 use Symfony\Component\Process\Process;
 
 it('resolves delivery through the normal package namespaces and accepts authorized content', function () {
@@ -94,3 +99,31 @@ it('honors an explicitly configured host morph alias for the client', function (
         Relation::morphMap($previous, false);
     }
 });
+
+it('preserves a host binding or alias under a previous managed service identity', function (bool $alias): void {
+    $previous = 'Nvl\\MailNotifications\\Managed\\Services\\Delivery\\ProviderManager';
+    $currentApplication = app();
+    $configuration = config()->all();
+    $application = new Application(sys_get_temp_dir());
+    $application->instance('config', new Repository($configuration));
+    $application->instance('files', new Filesystem);
+    $host = new stdClass;
+    if ($alias) {
+        $application->instance('host.mail-provider', $host);
+        $application->alias('host.mail-provider', $previous);
+    } else {
+        $application->instance($previous, $host);
+    }
+
+    try {
+        (new MailNotificationsServiceProvider($application))->register();
+
+        expect($application->getAlias($previous))->toBe($alias ? 'host.mail-provider' : $previous)
+            ->and($application->make($previous))->toBe($host)
+            ->and(collect($application->make(GlobalNames::class)->diagnostics())->firstWhere('key', 'globals.mail-notifications.container.'.$previous))
+            ->not->toBeNull();
+    } finally {
+        $application->flush();
+        Application::setInstance($currentApplication);
+    }
+})->with(['binding' => false, 'alias' => true]);

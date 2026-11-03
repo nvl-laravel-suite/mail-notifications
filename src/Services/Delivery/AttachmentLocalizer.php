@@ -21,6 +21,8 @@ use Throwable;
  * @phpstan-import-type MailAttachment from EmailContent
  *
  * @phpstan-type StagedAttachment array{asset_id: string|null, name: string, mime_type: string, size: int, checksum: string, source_kind: string, disposition: string, content_id: string|null, file: UploadedFile|null, stream: resource|null, catalog: Asset|null}
+ *
+ * @internal
  */
 class AttachmentLocalizer
 {

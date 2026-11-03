@@ -14,6 +14,8 @@ use Nvl\MailNotifications\Services\Delivery\Providers\SmtpProvider;
 
 /**
  * Resolves the reviewed SMTP, MailerSend, SendGrid and Mailgun submission adapters.
+ *
+ * @internal
  */
 class ProviderManager
 {

@@ -110,11 +110,19 @@ final class MailNotificationsServiceProvider extends ServiceProvider implements 
      */
     public function register(): void
     {
-        foreach (\Nvl\MailNotifications\Support\legacyManagedNamespaces() as $previous => $canonical) {
-            $this->app->alias($canonical, $previous);
-        }
-
         $this->app->register(SupportServiceProvider::class);
+        $names = $this->app->make(GlobalNames::class);
+        foreach (\Nvl\MailNotifications\Support\legacyManagedNamespaces() as $previous => $canonical) {
+            $names->reserve(
+                'mail-notifications',
+                'container',
+                $previous,
+                fn (string $name): bool => $this->app->bound($name),
+                function (string $name) use ($canonical): void {
+                    $this->app->alias($canonical, $name);
+                },
+            );
+        }
         $this->app->bindIf(MailOwnerWorklist::class, StoredMailOwnerWorklist::class);
         PackageDoctorContributor::register($this->app, 'nvl/mail-notifications', fn (): array => $this->app->make(MailNotificationsDoctor::class)->inspect());
 
