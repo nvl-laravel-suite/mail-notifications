@@ -63,6 +63,10 @@ Keep application conventions separate from vendor guidance. Update the skills/co
 
 Use a durable queue/worker and host-owned recovery/retention schedules. Run `php artisan nvl:mail-notifications:doctor --strict` to inspect local declarations; it does not establish real provider delivery, public callback reachability or malware-scanner effectiveness. The [operations guide](docs/operations.md) names the exact bounded commands and failure semantics.
 
+Optional Laravel factory scheduling uses `ScheduledMailProcessor` to submit due Mailables and `ScheduledMailRecovery` to recover expired claims; see the [tracking and scheduling guide](resources/boost/skills/nvl-mail-notifications/references/laravel-tracking.md).
+
+Delivery environment inputs use the `NVL_MAIL_NOTIFICATIONS_` prefix. Existing `MAIL_` delivery inputs remain fallback aliases; an explicit canonical value takes precedence.
+
 Provider catalogue metadata is seeded explicitly from the host seeder with `$this->call(\Nvl\MailNotifications\Database\Seeders\IntegrationSeeder::class);`. Optional provider marks can be published with `php artisan vendor:publish --tag=nvl-mail-notifications-assets`; message/catalogue bytes use native Media.
 
 Tests exercise native validation, authority, isolation, outer-commit dispatch, replay, uncertainty, storage and documentation recipes. Run the owning package suite and static analysis in development. Real provider credentials, public webhook delivery and the deployment's queue/database matrix need their own integration evidence; a local doctor or catalogue is not a production certificate.

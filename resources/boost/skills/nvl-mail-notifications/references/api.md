@@ -815,14 +815,14 @@ public function translationParameters(): array
 ## Nvl\MailNotifications\Exceptions\ManagedDeliveryConflict
 
 ```text
-final class Nvl\MailNotifications\Exceptions\ManagedDeliveryConflict extends DomainException
+final class Nvl\MailNotifications\Exceptions\ManagedDeliveryConflict extends DomainException implements Nvl\Support\Contracts\PackageException
 public function __construct(string $message="The idempotency key was already used for a different request."): mixed
 ```
 
 ## Nvl\MailNotifications\Exceptions\ManagedProviderWebhookRejected
 
 ```text
-final class Nvl\MailNotifications\Exceptions\ManagedProviderWebhookRejected extends DomainException
+final class Nvl\MailNotifications\Exceptions\ManagedProviderWebhookRejected extends DomainException implements Nvl\Support\Contracts\PackageException
 public function __construct(string $reason, string $message): mixed
 public readonly string $reason
 @var ('unsupported_provider' | 'payload_too_large' | 'unsupported_content_type' | 'invalid_signature' | 'invalid_payload')

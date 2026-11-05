@@ -28,3 +28,17 @@ it('keeps package classes and public source methods documented without an extrac
         }
     }
 });
+
+it('keeps production PSR4 paths correct on case sensitive filesystems', function (): void {
+    $root = dirname(__DIR__, 2);
+    $manifest = json_decode(file_get_contents($root.'/composer.json'), true, flags: JSON_THROW_ON_ERROR);
+    foreach ($manifest['autoload']['psr-4'] as $namespace => $paths) {
+        foreach (is_array($paths) ? $paths : [$paths] as $path) {
+            $current = $root;
+            foreach (explode('/', trim($path, '/')) as $segment) {
+                expect(in_array($segment, scandir($current), true))->toBeTrue($namespace.' must use the exact production directory case.');
+                $current .= '/'.$segment;
+            }
+        }
+    }
+});

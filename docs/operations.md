@@ -69,8 +69,6 @@ Receivers verify signatures and timestamp tolerance before side effects, bind th
 
 Production callback targets require allowed public HTTPS origins with DNS/address checks; redirects are not followed. Local HTTP exceptions require explicitly configured origins and an allowed local/testing environment. No client endpoint is registered automatically, and no callback is sent until one is enabled and subscribed. Current target/client policy is rechecked before delivery.
 
-
-
 For a package-only development host, configure the testing section explicitly (in `config/nvl-mail-notifications.php`):
 
 ```php

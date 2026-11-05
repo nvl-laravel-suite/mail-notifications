@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\File;
+use Nvl\MailNotifications\Exceptions\ManagedDeliveryConflict;
+use Nvl\MailNotifications\Exceptions\ManagedProviderWebhookRejected;
+use Nvl\Support\Contracts\PackageException;
+use Nvl\Support\Contracts\RespondableException;
 
 it('keeps core free from host module and provider SDK dependencies', function () {
     $packageRoot = dirname(__DIR__, 2);
@@ -65,4 +69,17 @@ it('uses environment values only from package configuration', function () {
         ->implode("\n");
 
     expect($source)->not->toMatch('/\benv\s*\(/');
+});
+
+it('marks delivery boundary failures as package exceptions without choosing a transport response', function (): void {
+    $failures = [
+        new ManagedDeliveryConflict,
+        new ManagedProviderWebhookRejected('invalid_signature', 'Invalid signature.'),
+    ];
+
+    foreach ($failures as $failure) {
+        expect($failure)->toBeInstanceOf(DomainException::class)
+            ->toBeInstanceOf(PackageException::class)
+            ->not->toBeInstanceOf(RespondableException::class);
+    }
 });

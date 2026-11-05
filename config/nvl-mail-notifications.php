@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Env;
 use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
@@ -16,38 +17,38 @@ return [
         'enabled' => false,
         'configuration_namespace' => 'nvl-mail-notifications.managed',
         'delivery' => [
-            'enabled' => (bool) env('MAIL_DELIVERY_ENABLED', true),
+            'enabled' => (bool) env('NVL_MAIL_NOTIFICATIONS_DELIVERY_ENABLED', Env::get('MAIL_DELIVERY_ENABLED', true)),
         ],
         'content' => [
-            'max_html_bytes' => (int) env('MAIL_CONTENT_MAX_HTML_BYTES', 10 * 1024 * 1024),
+            'max_html_bytes' => (int) env('NVL_MAIL_NOTIFICATIONS_CONTENT_MAX_HTML_BYTES', Env::get('MAIL_CONTENT_MAX_HTML_BYTES', 10 * 1024 * 1024)),
         ],
         'webhooks' => [
-            'connection' => env('MAIL_WEBHOOK_QUEUE_CONNECTION'),
-            'queue' => env('MAIL_WEBHOOK_QUEUE', 'webhooks'),
-            'local_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env('MAIL_WEBHOOK_LOCAL_ORIGINS', ''))))),
-            'local_environments' => array_values(array_filter(array_map('trim', explode(',', (string) env('MAIL_WEBHOOK_LOCAL_ENVIRONMENTS', 'local,testing'))))),
+            'connection' => env('NVL_MAIL_NOTIFICATIONS_WEBHOOK_QUEUE_CONNECTION', Env::get('MAIL_WEBHOOK_QUEUE_CONNECTION')),
+            'queue' => env('NVL_MAIL_NOTIFICATIONS_WEBHOOK_QUEUE', Env::get('MAIL_WEBHOOK_QUEUE', 'webhooks')),
+            'local_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env('NVL_MAIL_NOTIFICATIONS_WEBHOOK_LOCAL_ORIGINS', Env::get('MAIL_WEBHOOK_LOCAL_ORIGINS', '')))))),
+            'local_environments' => array_values(array_filter(array_map('trim', explode(',', (string) env('NVL_MAIL_NOTIFICATIONS_WEBHOOK_LOCAL_ENVIRONMENTS', Env::get('MAIL_WEBHOOK_LOCAL_ENVIRONMENTS', 'local,testing')))))),
         ],
         'authentication' => [
-            'requests_per_minute' => env('MAIL_AUTH_REQUESTS_PER_MINUTE', 600),
+            'requests_per_minute' => env('NVL_MAIL_NOTIFICATIONS_AUTH_REQUESTS_PER_MINUTE', Env::get('MAIL_AUTH_REQUESTS_PER_MINUTE', 600)),
         ],
         'storage' => [
-            'disk' => env('MAIL_STORAGE_DISK', 'local'),
-            'public_disk' => env('MAIL_STORAGE_PUBLIC_DISK', 'public'),
-            'orphan_grace_hours' => (int) env('MAIL_ORPHAN_GRACE_HOURS', 24),
+            'disk' => env('NVL_MAIL_NOTIFICATIONS_STORAGE_DISK', Env::get('MAIL_STORAGE_DISK', 'local')),
+            'public_disk' => env('NVL_MAIL_NOTIFICATIONS_STORAGE_PUBLIC_DISK', Env::get('MAIL_STORAGE_PUBLIC_DISK', 'public')),
+            'orphan_grace_hours' => (int) env('NVL_MAIL_NOTIFICATIONS_ORPHAN_GRACE_HOURS', Env::get('MAIL_ORPHAN_GRACE_HOURS', 24)),
         ],
         'attachments' => [
-            'retention_hours' => (int) env('MAIL_ATTACHMENT_RETENTION_HOURS', 72),
+            'retention_hours' => (int) env('NVL_MAIL_NOTIFICATIONS_ATTACHMENT_RETENTION_HOURS', Env::get('MAIL_ATTACHMENT_RETENTION_HOURS', 72)),
         ],
         'maintenance' => [
-            'batch_size' => (int) env('MAIL_MAINTENANCE_BATCH_SIZE', 1000),
-            'max_seconds' => (int) env('MAIL_MAINTENANCE_MAX_SECONDS', 30),
+            'batch_size' => (int) env('NVL_MAIL_NOTIFICATIONS_MAINTENANCE_BATCH_SIZE', Env::get('MAIL_MAINTENANCE_BATCH_SIZE', 1000)),
+            'max_seconds' => (int) env('NVL_MAIL_NOTIFICATIONS_MAINTENANCE_MAX_SECONDS', Env::get('MAIL_MAINTENANCE_MAX_SECONDS', 30)),
         ],
         'sending_limits' => [
             'providers' => [
-                'mailersend' => (int) env('MAIL_MAILERSEND_PER_MINUTE', 120),
-                'sendgrid' => (int) env('MAIL_SENDGRID_PER_MINUTE', 60),
-                'mailgun' => (int) env('MAIL_MAILGUN_PER_MINUTE', 60),
-                'smtp' => (int) env('MAIL_SMTP_PER_MINUTE', 60),
+                'mailersend' => (int) env('NVL_MAIL_NOTIFICATIONS_MAILERSEND_PER_MINUTE', Env::get('MAIL_MAILERSEND_PER_MINUTE', 120)),
+                'sendgrid' => (int) env('NVL_MAIL_NOTIFICATIONS_SENDGRID_PER_MINUTE', Env::get('MAIL_SENDGRID_PER_MINUTE', 60)),
+                'mailgun' => (int) env('NVL_MAIL_NOTIFICATIONS_MAILGUN_PER_MINUTE', Env::get('MAIL_MAILGUN_PER_MINUTE', 60)),
+                'smtp' => (int) env('NVL_MAIL_NOTIFICATIONS_SMTP_PER_MINUTE', Env::get('MAIL_SMTP_PER_MINUTE', 60)),
             ],
             'accounts' => [],
         ],

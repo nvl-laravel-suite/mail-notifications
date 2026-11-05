@@ -6,11 +6,12 @@ namespace Nvl\MailNotifications\Exceptions;
 
 use DomainException;
 use InvalidArgumentException;
+use Nvl\Support\Contracts\PackageException;
 
 /** Rejects a managed provider webhook without choosing an HTTP response.
  * @api
  */
-final class ManagedProviderWebhookRejected extends DomainException
+final class ManagedProviderWebhookRejected extends DomainException implements PackageException
 {
     /** @var 'unsupported_provider'|'payload_too_large'|'unsupported_content_type'|'invalid_signature'|'invalid_payload' */
     public readonly string $reason;
