@@ -5,6 +5,10 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- Refresh the inherited Ownership deletion API reference for ordinary models and native pivots.
+
 ## [7.0.1] - 2026-11-05
 
 <!-- NVL GENERATED CHANGES START -->

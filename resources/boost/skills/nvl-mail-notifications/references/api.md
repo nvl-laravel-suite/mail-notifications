@@ -1468,7 +1468,9 @@ resolved @property (Illuminate\Support\Carbon | null) $updated_at
 ```text
 class Nvl\MailNotifications\Models\MailNotification extends Illuminate\Database\Eloquent\Model implements Nvl\Support\Ownership\Contracts\Ownable
 public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables::Notifications
-public function delete(): ?bool
+public function delete(): mixed
+@return ($this is Pivot ? (bool | int | null) : (bool | null))
+resolved @return ($this is Illuminate\Database\Eloquent\Relations\Pivot ? (bool | int | null) : (bool | null))
 public function fresh(mixed $with=[]): ?static
 @param (array<array-key, mixed> | string) $with
 public function freshTimestamp(): Illuminate\Support\Carbon
@@ -1532,7 +1534,9 @@ resolved @property Carbon\CarbonImmutable $updated_at
 ```text
 final class Nvl\MailNotifications\Models\MailNotificationEvent extends Illuminate\Database\Eloquent\Model implements Nvl\Support\Ownership\Contracts\Ownable
 public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables::Events
-public function delete(): ?bool
+public function delete(): mixed
+@return ($this is Pivot ? (bool | int | null) : (bool | null))
+resolved @return ($this is Illuminate\Database\Eloquent\Relations\Pivot ? (bool | int | null) : (bool | null))
 public function fresh(mixed $with=[]): ?static
 @param (array<array-key, mixed> | string) $with
 public function freshTimestamp(): Illuminate\Support\Carbon
@@ -1830,7 +1834,9 @@ resolved @property (Illuminate\Support\Carbon | null) $updated_at
 ```text
 class Nvl\MailNotifications\Models\ScheduledMailMessage extends Illuminate\Database\Eloquent\Model implements Nvl\Support\Ownership\Contracts\Ownable
 public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables::ScheduledMessages
-public function delete(): ?bool
+public function delete(): mixed
+@return ($this is Pivot ? (bool | int | null) : (bool | null))
+resolved @return ($this is Illuminate\Database\Eloquent\Relations\Pivot ? (bool | int | null) : (bool | null))
 public function fresh(mixed $with=[]): ?static
 @param (array<array-key, mixed> | string) $with
 public function freshTimestamp(): Illuminate\Support\Carbon
