@@ -9,8 +9,6 @@ use Nvl\Ownership\Providers\OwnershipServiceProvider;
 use Nvl\Ownership\Tests\Fixtures\NativeDatabaseSource;
 use Nvl\Support\Providers\SupportServiceProvider;
 use Orchestra\Testbench\Foundation\Application as TestbenchApplication;
-use Spatie\LaravelData\LaravelDataServiceProvider;
-use Spatie\LaravelData\LaravelDataServiceProvider as DataServiceProvider;
 
 require dirname(__DIR__, 6).'/vendor/autoload.php';
 
@@ -33,7 +31,7 @@ if (! is_array($options) || ! in_array($options['driver'] ?? 'database', ['datab
     throw new RuntimeException('Unsupported native persistence worker transport.');
 }
 WorkerProvider::useSource($connection, $options);
-$application = TestbenchApplication::create(options: ['load_environment_variables' => false, 'extra' => ['dont-discover' => ['*'], 'providers' => [SupportServiceProvider::class, OwnershipServiceProvider::class, LaravelDataServiceProvider::class, DataServiceProvider::class, MailNotificationsServiceProvider::class, WorkerProvider::class]]]);
+$application = TestbenchApplication::create(options: ['load_environment_variables' => false, 'extra' => ['dont-discover' => ['*'], 'providers' => [SupportServiceProvider::class, OwnershipServiceProvider::class, MailNotificationsServiceProvider::class, WorkerProvider::class]]]);
 $kernel = $application->make(Kernel::class);
 $kernel->bootstrap();
 NativeDatabaseSource::inspect($application->make('db')->connection());
