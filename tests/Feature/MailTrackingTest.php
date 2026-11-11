@@ -19,6 +19,7 @@ use Nvl\MailNotifications\Events\MailTrackingFailed;
 use Nvl\MailNotifications\Events\MailTrackingStarted;
 use Nvl\MailNotifications\Exceptions\MailTrackingException;
 use Nvl\MailNotifications\Laravel\Listeners\TrackMessageBeforeSending;
+use Nvl\MailNotifications\Laravel\ScheduledMailFactory;
 use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Services\DatabaseTrackingLifecycle;
 use Nvl\MailNotifications\Services\MailNotificationNotifiableTypeRegistry;
@@ -35,6 +36,8 @@ use Nvl\MailNotifications\Tests\Fixtures\UnavailableTrackingLifecycle;
 use Nvl\MailNotifications\Tests\Fixtures\UntrackedMail;
 use Nvl\MailNotifications\ValueObjects\PreparedMessage;
 use Nvl\MailNotifications\ValueObjects\ProviderAcceptance;
+use Nvl\MailNotifications\ValueObjects\Recipient;
+use Nvl\MailNotifications\ValueObjects\ScheduledRecipients;
 use Nvl\MailNotifications\ValueObjects\TrackingAttempt;
 use Nvl\MailNotifications\ValueObjects\TransitionResult;
 use Nvl\MailNotifications\ValueObjects\VerifiedDeliveryEvent;
@@ -315,6 +318,57 @@ it('tracks an explicitly selected mailer when only the default mailer is exclude
         ->mailer->toBe('smtp-test')
         ->provider->toBe('smtp-test');
 });
+
+it('records the delivery profile mailer that sends a scheduled tracked Mailable', function () {
+    config()->set(
+        'nvl-mail-notifications.providers.mailers.smtp-test',
+        'transactional-smtp',
+    );
+
+    (new TrackedMail)->send(new ScheduledMailFactory(
+        app(MailManager::class),
+        new ScheduledRecipients([new Recipient('recipient@example.test')]),
+        'smtp-test',
+    ));
+
+    expect(MailNotification::query()->sole())
+        ->mailer->toBe('smtp-test')
+        ->provider->toBe('transactional-smtp')
+        ->status->toBe(MailDeliveryStatus::Accepted);
+});
+
+it('records the mailer instance that sends when it differs from the Mailable mailer', function () {
+    config()->set(
+        'nvl-mail-notifications.providers.mailers.smtp-test',
+        'transactional-smtp',
+    );
+
+    (new TrackedMail)
+        ->to('recipient@example.test')
+        ->send(app(MailManager::class)->mailer('smtp-test'));
+
+    expect(MailNotification::query()->sole())
+        ->mailer->toBe('smtp-test')
+        ->provider->toBe('transactional-smtp');
+});
+
+it('tracks a scheduled Mailable by the delivery profile mailer exclusions', function (
+    array $excluded,
+    int $tracked,
+): void {
+    config()->set('nvl-mail-notifications.tracking.excluded_mailers', $excluded);
+
+    (new TrackedMail)->send(new ScheduledMailFactory(
+        app(MailManager::class),
+        new ScheduledRecipients([new Recipient('recipient@example.test')]),
+        'smtp-test',
+    ));
+
+    expect(MailNotification::query()->count())->toBe($tracked);
+})->with([
+    'nominal default excluded' => [['array'], 1],
+    'profile excluded' => [['smtp-test'], 0],
+]);
 
 it('uses the configured provider alias for a Laravel mailer', function () {
     config()->set(

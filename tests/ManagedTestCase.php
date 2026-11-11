@@ -53,9 +53,4 @@ abstract class ManagedTestCase extends CommittedEventTestCase
             });
         }
     }
-
-    protected function defineDatabaseMigrations(): void
-    {
-        $this->loadLaravelMigrations();
-    }
 }

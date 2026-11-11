@@ -997,7 +997,6 @@
                 "senderIdentity"
             ],
             "properties": [
-                "authentication_mode",
                 "client_id",
                 "created_at",
                 "from_email",
@@ -1005,7 +1004,6 @@
                 "incrementing",
                 "owner_id",
                 "provider_account_id",
-                "rate_limit_per_minute",
                 "reply_to_email",
                 "reply_to_name",
                 "sender_identity_id",

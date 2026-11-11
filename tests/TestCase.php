@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Tests;
 
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Nvl\MailNotifications\Providers\MailNotificationsServiceProvider;
 use Nvl\Support\Providers\LocaleServiceProvider;
 use Nvl\Support\Providers\SupportServiceProvider;
@@ -16,6 +18,38 @@ use Orchestra\Testbench\TestCase as Orchestra;
 abstract class TestCase extends Orchestra
 {
     use RefreshDatabase;
+
+    /** Fingerprint of the providers and configuration the shared test schema was last migrated with. */
+    public static ?string $migratedSchema = null;
+
+    /**
+     * Fingerprint what migrations depend on: registered providers, package configuration and connection settings.
+     *
+     * @param  list<class-string>  $providers
+     */
+    public static function schemaFingerprint(Application $app, array $providers): string
+    {
+        $config = $app->make('config');
+
+        return md5(serialize([
+            $providers,
+            array_intersect_key($config->all(), array_flip(['nvl-mail-notifications', 'nvl-media', 'nvl-translatable', 'nvl-core', 'nvl-ownership'])),
+            $config->get('database.connections.'.$config->get('database.default')),
+        ]));
+    }
+
+    /** Rebuild instead of reusing a schema that another test base migrated differently. */
+    protected function beforeRefreshingDatabase(): void
+    {
+        if (self::$migratedSchema !== self::schemaFingerprint($this->app, $this->getPackageProviders($this->app))) {
+            RefreshDatabaseState::$migrated = false;
+        }
+    }
+
+    protected function afterRefreshingDatabase(): void
+    {
+        self::$migratedSchema = self::schemaFingerprint($this->app, $this->getPackageProviders($this->app));
+    }
 
     /**
      * Register the package provider in the isolated application.

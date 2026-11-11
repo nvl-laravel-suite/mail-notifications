@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\SQLiteConnection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
@@ -160,6 +161,10 @@ test('configured managed connections keep acceptance rollback and callback outbo
 });
 
 test('prefixed sender discovery casefolds Unicode on the package sqlite connection', function (): void {
+    if (! (new SenderIdentity)->getConnection() instanceof SQLiteConnection) {
+        $this->markTestSkipped('Full Unicode case folding is installed on SQLite connections only; other engines compare with LOWER().');
+    }
+
     $client = managedProofClient();
     $sender = SenderIdentity::findOrFail($client->mailSettings->sender_identity_id);
     $sender->update(['name' => 'Straße Billing']);

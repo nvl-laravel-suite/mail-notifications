@@ -14,6 +14,7 @@ use Nvl\MailNotifications\Models\MarketingOptOut;
 use Nvl\MailNotifications\Models\RecipientSuppression;
 use Nvl\MailNotifications\Models\WebhookReceipt;
 use Nvl\MailNotifications\Support\ManagedConfiguration;
+use Throwable;
 
 /**
  * Matches verified provider activity to delivery attempts and projects recipient/message state.
@@ -33,7 +34,7 @@ class WebhookProcessor
      */
     public function reconcile(int $limit = 100, ?string $providerAccountId = null): int
     {
-        $query = WebhookReceipt::query()->whereNull('processed_at')->whereIn('status', ['pending', 'received', 'unmatched', 'failed'])
+        $query = WebhookReceipt::query()->whereNull('processed_at')->whereIn('status', ['pending', 'unmatched', 'failed'])
             ->where(fn ($query) => $query->whereNull('next_attempt_at')->orWhere('next_attempt_at', '<=', now()));
         if ($providerAccountId !== null) {
             $query->where('provider_account_id', $providerAccountId);
@@ -43,7 +44,12 @@ class WebhookProcessor
             if (! is_string($id)) {
                 throw new \UnexpectedValueException('Webhook receipt identifiers must be strings.');
             }
-            $this->process($id);
+            try {
+                $this->process($id);
+            } catch (Throwable $exception) {
+                report($exception);
+                $this->retryLater($id, 'failed', 'processing_failed');
+            }
         }
 
         return $ids->count();
@@ -59,21 +65,27 @@ class WebhookProcessor
             return;
         }
         $receipts = WebhookReceipt::query()->where('provider_account_id', $attempt->provider_account_id)
-            ->whereNull('processed_at')->whereIn('status', ['pending', 'received', 'unmatched', 'failed'])
+            ->whereNull('processed_at')->whereIn('status', ['pending', 'unmatched', 'failed'])
             ->orderByDesc('created_at')->orderByDesc('id')->limit(100)->get();
+        $provider = $attempt->providerAccount?->provider;
         foreach ($receipts as $receipt) {
-            $payload = $this->payload($receipt);
-            $type = str_starts_with($payload['type'], 'activity.') ? substr($payload['type'], 9) : '';
-            $data = $payload['data'];
-            $provider = $attempt->providerAccount?->provider;
-            $correlated = in_array($provider, ['sendgrid', 'mailgun'], true) && ($data['correlation_id'] ?? null) === $attempt->id;
-            $tagged = $provider === 'mailersend' && in_array('attempt-'.$attempt->id, $data['tags'], true);
-            $identified = $provider === 'sendgrid'
-                ? in_array($data['message_id'], $attempt->remote_message_ids ?? [], true)
-                : $attempt->provider_message_id !== null && ($data['message_id']) === $attempt->provider_message_id;
-            $receipt->setRelation('providerAccount', $attempt->providerAccount);
-            if (($correlated || $tagged || $identified) && in_array($type, self::EVENTS, true) && $this->matchAttempt($receipt, $data)?->id === $attempt->id) {
-                $this->process($receipt->id);
+            try {
+                $event = $this->event($receipt);
+                if ($event === null) {
+                    continue;
+                }
+                $data = $event['data'];
+                $correlated = in_array($provider, ['sendgrid', 'mailgun'], true) && ($data['correlation_id'] ?? null) === $attempt->id;
+                $tagged = $provider === 'mailersend' && in_array('attempt-'.$attempt->id, $data['tags'], true);
+                $identified = $provider === 'sendgrid'
+                    ? in_array($data['message_id'], $attempt->remote_message_ids ?? [], true)
+                    : $attempt->provider_message_id !== null && ($data['message_id']) === $attempt->provider_message_id;
+                $receipt->setRelation('providerAccount', $attempt->providerAccount);
+                if (($correlated || $tagged || $identified) && $this->matchAttempt($receipt, $data)?->id === $attempt->id) {
+                    $this->process($receipt->id);
+                }
+            } catch (Throwable $exception) {
+                report($exception);
             }
         }
     }
@@ -87,30 +99,19 @@ class WebhookProcessor
         if (! $receipt || $receipt->processed_at) {
             return;
         }
-        $payload = $this->payload($receipt);
-        $type = str_starts_with($payload['type'], 'activity.') ? substr($payload['type'], 9) : '';
-        if (! in_array($type, self::EVENTS, true)) {
-            $receipt->update(['status' => 'ignored', 'processed_at' => now()]);
-
+        $event = $this->event($receipt);
+        if ($event === null) {
             return;
         }
-        $data = $payload['data'];
+        $type = $event['type'];
+        $data = $event['data'];
         $attempt = $this->matchAttempt($receipt, $data);
         if (! $attempt) {
-            DB::connection(ManagedConfiguration::connection())->transaction(function () use ($id): void {
-                $receipt = WebhookReceipt::query()->lockForUpdate()->findOrFail($id);
-                if ($receipt->processed_at !== null) {
-                    return;
-                }
-                $attempts = $receipt->processing_attempts + 1;
-                $expired = $attempts >= 12 || $receipt->created_at?->lessThanOrEqualTo(now()->subHours(6));
-                $receipt->update(['status' => 'unmatched', 'error_code' => 'message_unmatched', 'processing_attempts' => $attempts,
-                    'processed_at' => $expired ? now() : null, 'next_attempt_at' => $expired ? null : now()->addMinutes(5)]);
-            });
+            $this->retryLater($id, 'unmatched', 'message_unmatched');
 
             return;
         }
-        DB::connection(ManagedConfiguration::connection())->transaction(function () use ($id, $attempt, $data, $type, $payload): void {
+        DB::connection(ManagedConfiguration::connection())->transaction(function () use ($id, $attempt, $data, $type, $event): void {
             $message = EmailMessage::query()->lockForUpdate()->findOrFail($attempt->email_message_id);
             $receipt = WebhookReceipt::query()->lockForUpdate()->findOrFail($id);
             if ($receipt->processed_at) {
@@ -135,7 +136,7 @@ class WebhookProcessor
 
                 return;
             }
-            $at = CarbonImmutable::parse($payload['created_at'])->utc();
+            $at = CarbonImmutable::parse($event['created_at'])->utc();
             $metadata = array_intersect_key($data['meta'], array_flip(['bounce_code', 'bounce_type', 'suppression_reason', 'unsubscribe_reason']));
             if ($isSendGrid && $data['message_id'] !== '') {
                 $metadata['provider_message_id'] = $data['message_id'];
@@ -164,18 +165,67 @@ class WebhookProcessor
         });
     }
 
-    /** @return array{type: string, created_at: string, data: ProviderEventData} */
-    private function payload(WebhookReceipt $receipt): array
+    /**
+     * Keep an unapplied receipt for a bounded number of later runs, then close it with the given status.
+     */
+    private function retryLater(string $id, string $status, string $errorCode): void
+    {
+        DB::connection(ManagedConfiguration::connection())->transaction(function () use ($id, $status, $errorCode): void {
+            $receipt = WebhookReceipt::query()->lockForUpdate()->findOrFail($id);
+            if ($receipt->processed_at !== null) {
+                return;
+            }
+            $attempts = $receipt->processing_attempts + 1;
+            $expired = $attempts >= 12 || $receipt->created_at?->lessThanOrEqualTo(now()->subHours(6));
+            $receipt->update(['status' => $status, 'error_code' => $errorCode, 'processing_attempts' => $attempts,
+                'processed_at' => $expired ? now() : null, 'next_attempt_at' => $expired ? null : now()->addMinutes(5)]);
+        });
+    }
+
+    /**
+     * Read the receipt's supported activity event, closing a receipt that is another event type or unreadable.
+     *
+     * @return array{type: string, created_at: string, data: ProviderEventData}|null
+     */
+    private function event(WebhookReceipt $receipt): ?array
+    {
+        try {
+            $event = $this->payload($receipt);
+        } catch (\UnexpectedValueException) {
+            $receipt->update(['status' => 'failed', 'error_code' => 'invalid_payload', 'processed_at' => now(), 'next_attempt_at' => null]);
+
+            return null;
+        }
+        if ($event === null) {
+            $receipt->update(['status' => 'ignored', 'processed_at' => now()]);
+        }
+
+        return $event;
+    }
+
+    /**
+     * Decide the event type first; only a supported activity event must carry the activity fields.
+     *
+     * @return array{type: string, created_at: string, data: ProviderEventData}|null
+     */
+    private function payload(WebhookReceipt $receipt): ?array
     {
         $payload = $receipt->payload;
         $type = $payload['type'] ?? null;
+        if (! is_string($type)) {
+            throw new \UnexpectedValueException('The stored provider event payload is invalid.');
+        }
+        $type = str_starts_with($type, 'activity.') ? substr($type, 9) : '';
+        if (! in_array($type, self::EVENTS, true)) {
+            return null;
+        }
         $createdAt = $payload['created_at'] ?? null;
         $data = $payload['data'] ?? [];
-        if (! is_string($type) || ! is_string($createdAt) || ! is_array($data)) {
+        if (! is_string($createdAt) || ! is_array($data)) {
             throw new \UnexpectedValueException('The stored provider event payload is invalid.');
         }
         $id = $data['id'] ?? '';
-        $messageId = $data['message_id'];
+        $messageId = $data['message_id'] ?? null;
         $recipient = $data['recipient'] ?? '';
         $correlationId = $data['correlation_id'] ?? null;
         if (! is_string($id) || ! is_string($messageId) || ! is_string($recipient) || ($correlationId !== null && ! is_string($correlationId))) {

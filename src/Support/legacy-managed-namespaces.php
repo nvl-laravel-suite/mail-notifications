@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Support;
 
+use Composer\Autoload\ClassLoader;
+
 /**
  * Original extraction identities retained for installed callers and serialized queue payloads.
  *
@@ -137,11 +139,42 @@ function legacyManagedNamespaces(): array
 }
 
 /**
- * Register recorded aliases before host type checks. PHP instanceof and parameter
- * checks do not autoload a missing alias, so a lazy loader cannot preserve these contracts.
+ * Alias a recorded identity on first use without loading the package at boot.
+ *
+ * PHP instanceof and parameter checks never autoload, so the alias is also
+ * registered the moment its canonical implementation is loaded.
  */
-foreach (legacyManagedNamespaces() as $previous => $canonical) {
-    if (! class_exists($previous, false) && ! interface_exists($previous, false) && ! trait_exists($previous, false)) {
-        class_alias($canonical, $previous);
+$canonicalByPrevious = legacyManagedNamespaces();
+$previousByCanonical = array_flip($canonicalByPrevious);
+
+spl_autoload_register(static function (string $class) use ($canonicalByPrevious, $previousByCanonical): void {
+    $declared = static fn (string $name, bool $autoload): bool => class_exists($name, $autoload)
+        || interface_exists($name, $autoload)
+        || trait_exists($name, $autoload);
+
+    if (isset($canonicalByPrevious[$class])) {
+        $canonical = $canonicalByPrevious[$class];
+
+        if ($declared($canonical, true) && ! $declared($class, false)) {
+            class_alias($canonical, $class);
+        }
+
+        return;
     }
-}
+
+    if (! isset($previousByCanonical[$class])) {
+        return;
+    }
+
+    foreach (ClassLoader::getRegisteredLoaders() as $loader) {
+        if ($loader->loadClass($class) === true) {
+            break;
+        }
+    }
+
+    $previous = $previousByCanonical[$class];
+
+    if ($declared($class, false) && ! $declared($previous, false)) {
+        class_alias($class, $previous);
+    }
+}, true, true);

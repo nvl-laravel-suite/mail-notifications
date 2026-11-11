@@ -4,18 +4,20 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Tests;
 
-use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Nvl\MailNotifications\Providers\MailNotificationsServiceProvider;
 use Nvl\Support\Providers\LocaleServiceProvider;
 use Nvl\Support\Providers\SupportServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 /**
- * Boots Mail Notifications with migration isolation and native outer commits.
+ * Boots Mail Notifications with native outer commits and no wrapping test transaction.
  */
 abstract class CommittedEventTestCase extends Orchestra
 {
-    use DatabaseMigrations;
+    use CommitsTestDatabase, RefreshDatabase {
+        CommitsTestDatabase::refreshDatabase insteadof RefreshDatabase;
+    }
 
     /**
      * Register the package provider in the isolated application.

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nvl\MailNotifications\Tests;
 
+use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Nvl\MailNotifications\Tests\Fixtures\ExtendedMailNotification;
@@ -28,6 +29,12 @@ abstract class ConfiguredModelsTestCase extends CommittedEventTestCase
         } finally {
             Relation::morphMap($this->originalMorphMap, false);
         }
+    }
+
+    /** The package tables live on an in-memory connection that does not survive the test. */
+    protected function sharesCommittedSchema(Connection $connection): bool
+    {
+        return false;
     }
 
     protected function defineEnvironment($app): void

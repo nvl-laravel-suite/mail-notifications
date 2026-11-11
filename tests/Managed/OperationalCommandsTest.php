@@ -124,7 +124,7 @@ it('requires paused delivery and an explicit valid cutoff before restored intent
     $attempt = EmailAttempt::factory()->for($message)->create();
     $options = ['--before' => now()->toIso8601String(), '--limit' => 1];
 
-    $this->artisan('nvl:mail-notifications:delivery:quarantine-restored', $options)->expectsOutputToContain('Pause outbound delivery')->assertFailed();
+    $this->artisan('nvl:mail-notifications:delivery:quarantine-restored', $options)->expectsOutputToContain('Pause outbound delivery with NVL_MAIL_NOTIFICATIONS_DELIVERY_ENABLED=false')->assertFailed();
     config()->set('nvl-mail-notifications.managed.delivery.enabled', false);
     $this->artisan('nvl:mail-notifications:delivery:quarantine-restored', ['--before' => 'yesterday'])->expectsOutputToContain('absolute ISO8601')->assertFailed();
     $this->artisan('nvl:mail-notifications:delivery:quarantine-restored', [...$options, '--dry-run' => true])->expectsOutputToContain('Would hold 1 messages; 1 eligible remain unchanged.')->assertSuccessful();
@@ -166,3 +166,17 @@ it('seeds its provider catalog idempotently without modifying an unrelated host 
     expect(DB::table('integrations')->sole()->name)->toBe('Host integration');
     Http::assertNothingSent();
 });
+
+it('refuses a provider account option or argument that is not a UUID before querying', function (string $command, array $parameters): void {
+    Queue::fake();
+    WebhookReceipt::factory()->create(['payload' => ['type' => 'activity.unsupported', 'created_at' => now()->toIso8601String(), 'data' => []]]);
+
+    $this->artisan('nvl:mail-notifications:delivery:'.$command, $parameters)->expectsOutputToContain('Provider account must be a UUID.')->assertFailed();
+
+    expect(WebhookReceipt::query()->whereNull('processed_at')->count())->toBe(1);
+    Queue::assertNothingPushed();
+})->with([
+    'reconcile with a malformed account' => ['reconcile-webhooks', ['--provider-account' => 'not-a-uuid']],
+    'reconcile with an empty account' => ['reconcile-webhooks', ['--provider-account' => '']],
+    'synchronize a malformed account' => ['integrations:sync', ['account' => 'not-a-uuid']],
+]);

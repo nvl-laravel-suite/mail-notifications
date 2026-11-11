@@ -18,10 +18,11 @@ it('appends healthy managed readiness checks without invoking storage or scannin
     $scanner = Mockery::mock(MediaContentScanner::class);
     $scanner->shouldNotReceive('scan');
     app()->instance(MediaContentScanner::class, $scanner);
+    config()->set('queue.default', 'database');
 
     $checks = collect(app(MailNotificationsDoctor::class)->inspect())->filter(fn ($check): bool => str_starts_with($check->key, 'managed.'));
 
-    expect($checks)->toHaveCount(5);
+    expect($checks)->toHaveCount(6);
     expect($checks->where('passed', false))->toBeEmpty();
     expect($checks->firstWhere('key', 'managed.scanning')->message)->toContain('No scan was performed', 'malware safety is not established');
 });

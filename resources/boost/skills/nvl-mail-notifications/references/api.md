@@ -1057,7 +1057,7 @@ resolved @property (Illuminate\Support\Carbon | null) $updated_at
 ## Nvl\MailNotifications\Models\ClientMailSettings
 
 ```text
-#[Illuminate\Database\Eloquent\Attributes\Fillable(['owner_id', 'status', 'provider_account_id', 'sender_identity_id', 'from_email', 'from_name', 'reply_to_email', 'reply_to_name', 'rate_limit_per_minute', 'authentication_mode'])]
+#[Illuminate\Database\Eloquent\Attributes\Fillable(['owner_id', 'status', 'provider_account_id', 'sender_identity_id', 'from_email', 'from_name', 'reply_to_email', 'reply_to_name'])]
 class Nvl\MailNotifications\Models\ClientMailSettings extends Illuminate\Database\Eloquent\Model
 public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables::ClientMailSettings
 public function client(): Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -1072,8 +1072,6 @@ public function senderIdentity(): Illuminate\Database\Eloquent\Relations\Belongs
 @return BelongsTo<SenderIdentity, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifications\Models\SenderIdentity, $this>
 public mixed $incrementing=false
-@property ClientAuthenticationMode $authentication_mode
-resolved @property Nvl\MailNotifications\Enums\ClientAuthenticationMode $authentication_mode
 @property string $client_id
 @property (Carbon | null) $created_at
 resolved @property (Illuminate\Support\Carbon | null) $created_at
@@ -1081,7 +1079,6 @@ resolved @property (Illuminate\Support\Carbon | null) $created_at
 @property (string | null) $from_name
 @property string $owner_id
 @property (string | null) $provider_account_id
-@property int $rate_limit_per_minute
 @property (string | null) $reply_to_email
 @property (string | null) $reply_to_name
 @property (string | null) $sender_identity_id

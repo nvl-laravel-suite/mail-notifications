@@ -535,3 +535,35 @@ it('returns failure for invalid configuration and database errors', function () 
     ])->expectsOutputToContain('Mail notification pruning failed')
         ->assertExitCode(Command::FAILURE);
 });
+
+it('advises in the doctor that default retention leaves non-terminal notification statuses in place', function () {
+    config()->set(
+        'nvl-mail-notifications.retention',
+        (require __DIR__.'/../../config/nvl-mail-notifications.php')['retention'],
+    );
+
+    $check = collect(app(MailNotificationsDoctor::class)->inspect())
+        ->firstWhere('key', 'retention.coverage');
+
+    expect($check)
+        ->not->toBeNull()
+        ->severity->toBe('warning')
+        ->passed->toBeTrue()
+        ->message->toContain('[pending, accepted, delayed]', 'kept indefinitely');
+
+    config()->set('nvl-mail-notifications.retention.notifications.statuses', [
+        'pending', 'delayed', 'delivered', 'opened', 'clicked', 'failed',
+    ]);
+    config()->set('nvl-mail-notifications.retention.anonymization.enabled', true);
+    config()->set('nvl-mail-notifications.retention.anonymization.notifications.statuses', [
+        'accepted',
+    ]);
+
+    $check = collect(app(MailNotificationsDoctor::class)->inspect())
+        ->firstWhere('key', 'retention.coverage');
+
+    expect($check)
+        ->severity->toBe('info')
+        ->passed->toBeTrue()
+        ->message->toContain('cover every non-terminal');
+});

@@ -221,12 +221,13 @@ final class TrackingRuntime
         }
 
         $staged->prepared = null;
+        $staged->mailer = $mailer ?? $staged->mailer;
 
         try {
             $staged->prepared = $this->normalizer->normalize(
                 message: $message,
                 correlationId: $correlationId,
-                mailer: $mailer ?? $staged->mailer,
+                mailer: $staged->mailer,
                 context: $staged->context,
                 queueReference: $staged->queueReference,
             );

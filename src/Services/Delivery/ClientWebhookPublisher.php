@@ -7,7 +7,6 @@ namespace Nvl\MailNotifications\Services\Delivery;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
 use Nvl\MailNotifications\Jobs\DeliverClientWebhook;
 use Nvl\MailNotifications\Models\ClientWebhookDelivery;
 use Nvl\MailNotifications\Models\ClientWebhookEndpoint;
@@ -62,7 +61,7 @@ class ClientWebhookPublisher
     {
         $connection = ManagedConfiguration::get('webhooks.connection') ?: config('queue.default');
         if (! is_string($connection) || ! in_array(config('queue.connections.'.$connection.'.driver'), ['database', 'redis', 'sqs', 'beanstalkd'], true)) {
-            throw ValidationException::withMessages(['webhooks' => 'Client webhooks require a durable queue connection.']);
+            throw new \RuntimeException('Client webhooks require a durable queue connection using the database, redis, sqs or beanstalkd driver.');
         }
 
         return $connection;
@@ -70,6 +69,7 @@ class ClientWebhookPublisher
 
     /**
      * Queue one persisted callback intent without reconstructing its immutable event body.
+     * A failure is reported and leaves the intent pending for recovery.
      */
     public function dispatch(string $id): bool
     {
@@ -83,8 +83,9 @@ class ClientWebhookPublisher
             DeliverClientWebhook::dispatch($id)->onConnection($connection)->onQueue(ManagedConfiguration::string('webhooks.queue', 'webhooks'));
 
             return true;
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
             ClientWebhookDelivery::query()->whereKey($id)->where('status', 'pending')->update(['dispatched_at' => null]);
+            report($exception);
 
             return false;
         }
@@ -92,6 +93,7 @@ class ClientWebhookPublisher
 
     /**
      * Requeue a bounded set of due callback intents and recover expired dispatch leases.
+     * Due intents without a durable queue fail the run once instead of once per intent.
      */
     public function recover(int $limit = 100): int
     {
@@ -99,6 +101,9 @@ class ClientWebhookPublisher
             ->update(['status' => 'pending', 'lease_token' => null, 'lease_until' => null, 'dispatched_at' => null, 'error_code' => 'worker_interrupted']);
         $ids = ClientWebhookDelivery::query()->where('status', 'pending')->where(fn ($q) => $q->whereNull('next_attempt_at')->orWhere('next_attempt_at', '<=', now()))
             ->where(fn ($q) => $q->whereNull('dispatched_at')->orWhere('dispatched_at', '<=', now()->subMinutes(5)))->oldest()->limit(min(1000, max(1, $limit)))->pluck('id');
+        if ($ids->isNotEmpty()) {
+            $this->durableConnection();
+        }
         $count = 0;
         foreach ($ids as $id) {
             if (! is_string($id)) {

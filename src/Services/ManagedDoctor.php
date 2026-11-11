@@ -8,6 +8,7 @@ use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Models\Asset;
 use Nvl\MailNotifications\Models\Client;
 use Nvl\MailNotifications\Models\MessageAsset;
+use Nvl\MailNotifications\Services\Delivery\ClientWebhookPublisher;
 use Nvl\MailNotifications\Services\Delivery\MailMediaAuthorization;
 use Nvl\MailNotifications\Support\ManagedConfiguration;
 use Nvl\MailNotifications\ValueObjects\MailNotificationsDoctorCheck;
@@ -40,7 +41,18 @@ final class ManagedDoctor
             return [];
         }
 
-        return [$this->schema(), $this->connections(), $this->disks(), $this->authorization(), $this->scanning()];
+        return [$this->schema(), $this->connections(), $this->disks(), $this->authorization(), $this->scanning(), $this->clientWebhookQueue()];
+    }
+
+    private function clientWebhookQueue(): MailNotificationsDoctorCheck
+    {
+        try {
+            app(ClientWebhookPublisher::class)->durableConnection();
+
+            return new MailNotificationsDoctorCheck('managed.client_webhook_queue', 'warning', true, 'Client webhook callbacks resolve to a durable queue connection. Worker availability was not tested.');
+        } catch (Throwable) {
+            return new MailNotificationsDoctorCheck('managed.client_webhook_queue', 'warning', false, 'Client webhook callbacks require a durable queue connection using the database, redis, sqs or beanstalkd driver. Until one is configured, callback deliveries stay pending and are never sent.');
+        }
     }
 
     private function schema(): MailNotificationsDoctorCheck

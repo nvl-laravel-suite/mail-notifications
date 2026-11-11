@@ -19,6 +19,17 @@ For a delivery-only host enable `managed.enabled`, disable ordinary `tracking.en
 
 Use [architecture](docs/architecture.md), [delivery](docs/delivery.md), [database](docs/database.md) and [operations](docs/operations.md) as the current setup/behavior source. The final [namespace section](#conventional-delivery-namespaces) records current aliases and stable Media uploader identities. Preserve the existing HTTP/native contracts and already accepted bodies/attachments when moving an application onto the package; the package installs no HTTP routes or template catalogue.
 
+## Corrections after 7.0.2
+
+No schema or data change is required. Review these where they touch host code:
+
+- MariaDB must be 10.10 or newer; older releases are refused before schema creation and by the doctor.
+- Remove `managed.authentication.requests_per_minute` from a published configuration, and stop assigning `rate_limit_per_minute` or `authentication_mode` on `ClientMailSettings`. Nothing enforced them; the columns remain unused. Models in strict mode reject the removed attributes on mass assignment.
+- `failed_at` on a tracked notification now means a delivery failure (`bounced`, `rejected`, `failed`). Read `status` and `status_changed_at` for complaints and unsubscribes.
+- A tracked notification keeps the most severe status reported for any recipient, so `delivered`, `opened` or `clicked` can still become `bounced`, and `unsubscribed` or `complained` can still become a more severe outcome.
+- A scheduled-message factory that must fail permanently should throw from `validate()`. An exception from `make()` is retried until `max_attempts`.
+- Persist provider receipts with the default `pending` status; reconciliation reads `pending`, `unmatched` and `failed` only.
+
 ## Historical upgrade notes
 
 The following sections describe pre-Light releases and their old APIs, compatibility windows and commands. They remain useful for understanding existing installations, but are not Light setup instructions. The old Tenancy bridge, DTO/Action contracts, package HTTP and type generation are retired in Light.
@@ -98,7 +109,7 @@ Version 1.0 introduces the standalone provider-neutral package.
 14. Keep the current and previous sensitive-storage keys or protection profiles
     available for as long as protected history must remain readable.
 15. Confirm the storage database can enforce exact status allowlists: MySQL
-    8.0.16+, or MariaDB 10.3+ through Laravel's `mariadb` driver with session
+    8.0.16+, or MariaDB 10.10+ through Laravel's `mariadb` driver with session
     `check_constraint_checks` enabled. Keep the database/session timezone UTC.
 
 ### Adopting provider submission lead time
@@ -161,7 +172,7 @@ This unreleased alpha has one initial schema migration, `2026_11_02_000000_nvl_m
 
 Use fresh package tables. Configure the package connection and table mappings before migration. Set `migrations.enabled=false` only when a reviewed host-owned copy creates the complete schema. `managed.enabled` controls runtime behavior without changing schema shape. Rollback drops mail-owned tables and data; recreate only disposable alpha databases or follow an explicitly reviewed backup/restore procedure. Native Media schema and physical files belong to `nvl/media`.
 
-PostgreSQL, MySQL 8.0.16+ and MariaDB 10.3+ retain named status checks; SQLite uses paired INSERT/UPDATE triggers. Unsupported database enforcement is refused before schema mutation.
+PostgreSQL, MySQL 8.0.16+ and MariaDB 10.10+ retain named status checks; SQLite uses paired INSERT/UPDATE triggers. Unsupported database enforcement is refused before schema mutation.
 
 ### Adopting sensitive storage and anonymization
 
@@ -511,15 +522,17 @@ Mailable to repair local state.
 
 ## Shared Doctor integration
 
-The loaded package provider now contributes its existing inspection checks to Core's `nvl:doctor --strict --format=json`. The package command remains available. The shared gate fails errors and, in strict mode, warnings; no data upgrade is required for diagnostics.
+The loaded package provider now contributes its existing inspection checks to Core's `nvl:doctor --strict --format=json`. In family 7, register `Nvl\Support\Providers\DoctorServiceProvider` in the host first; it is not auto-discovered. The package command remains available. The shared gate fails errors and, in strict mode, warnings; no data upgrade is required for diagnostics.
 
 ## Optional Settings dependency
 
-Settings moves from a runtime requirement to a suggestion. Set `scheduling.delivery_profile` for a deployment-wide configured mailer, or retain `delivery_profile_setting` with the Settings provider loaded for tenant selection. `integrations.settings` is nullable automatic activation; `false` disables and `true` requires Settings. Resolve `TenantDeliveryProfileResolver` through Laravel's container, or inject the new `DeliveryProfileResolver` contract; its constructor now receives that contract.
+Settings moves from a runtime requirement to a suggestion. Set `scheduling.delivery_profile` for a deployment-wide configured mailer, or retain `delivery_profile_setting` with the Settings provider loaded for tenant selection. `integrations.settings` is nullable automatic activation; `false` disables and `true` requires Settings. Inject the `Contracts\DeliveryProfileResolver` contract; the provider binds `SettingsDeliveryProfileResolver` when Settings is active and `ConfiguredDeliveryProfileResolver` otherwise.
 
 ## Next major: isolated schema identities
 
 This is a breaking schema identity change. Back up storage and migration history, pause writes/workers, install this code with automatic package migrations disabled, and select one owner for migrations (vendor or published).
+
+The `nvl:schema:*` commands ship through the 6.x line only. Family 7 does not register them, so complete this step before upgrading to 7.
 
 ```sh
 php artisan nvl:doctor --strict --format=json

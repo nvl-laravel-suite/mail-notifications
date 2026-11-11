@@ -37,9 +37,15 @@ class ProviderSendingAllowance
         return 0;
     }
 
+    /**
+     * Read the stored pause; Redis returns a stored integer as a numeric string.
+     */
     private function cachedUntil(string $key): int
     {
         $until = Cache::get($key, 0);
+        if (is_string($until) && ctype_digit($until)) {
+            $until = (int) $until;
+        }
         if (! is_int($until)) {
             throw new \UnexpectedValueException('The provider cooldown cache must contain an integer timestamp.');
         }

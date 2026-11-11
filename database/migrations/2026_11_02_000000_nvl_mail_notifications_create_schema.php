@@ -35,9 +35,24 @@ return new class extends Migration
                 throw new LogicException('Mail table ['.$table.'] already exists. The alpha schema requires fresh package tables.');
             }
         }
-        $this->createTracking($schema);
-        $this->createScheduledMail($schema);
-        $this->createManagedDelivery($schema);
+        try {
+            $this->createTracking($schema);
+            $this->createScheduledMail($schema);
+            $this->createManagedDelivery($schema);
+        } catch (Throwable $exception) {
+            // No package table existed before this run, so whatever exists now
+            // is its own partial work. A surrounding transaction already undoes
+            // it; MySQL and MariaDB commit each DDL statement and never call down().
+            if ($schema->getConnection()->transactionLevel() === 0) {
+                try {
+                    $this->down();
+                } catch (Throwable) {
+                    // The creation failure stays the reported cause.
+                }
+            }
+
+            throw $exception;
+        }
     }
 
     /** Drop package-owned schema only; native Media lifecycle remains owned by nvl/media. */

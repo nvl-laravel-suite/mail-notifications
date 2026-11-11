@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Exceptions;
 use Nvl\MailNotifications\Exceptions\ManagedProviderWebhookRejected;
 use Nvl\MailNotifications\Models\ProviderAccount;
 use Nvl\MailNotifications\Services\Delivery\ProviderWebhookAdapter;
@@ -82,10 +82,92 @@ it('returns transport-independent rejection reasons for bounded raw inputs', fun
     ['mailersend', '{}', 'json', ['signature' => ['invalid']], 'invalid_payload'],
 ]);
 
-it('retains native validation errors for authenticated malformed provider fields', function (): void {
-    $body = '{"type":"activity.delivered","created_at":"not-a-date","data":{"id":"event-1"}}';
+it('rejects authenticated malformed provider fields with the documented rejection instead of a validation error', function (string $provider): void {
+    $account = rawProviderWebhookAccount($provider);
+    $headers = [];
+    if ($provider === 'mailersend') {
+        $body = '{"type":"activity.delivered","created_at":"not-a-date","data":{"id":"event-1"}}';
+        $headers = ['signature' => hash_hmac('sha256', $body, 'private-secret')];
+    } elseif ($provider === 'sendgrid') {
+        $key = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+        if ($key === false) {
+            throw new RuntimeException('The test signing key could not be created.');
+        }
+        $account->webhook_public_key = openssl_pkey_get_details($key)['key'];
+        // A verified batch without a single valid event has nothing to accept.
+        $body = json_encode([
+            ['email' => 'not-an-address', 'timestamp' => now()->timestamp, 'event' => 'delivered', 'sg_event_id' => 'sg-malformed'],
+            'not-an-event',
+        ], JSON_THROW_ON_ERROR);
+        $timestamp = (string) now()->timestamp;
+        openssl_sign($timestamp.$body, $signature, $key, OPENSSL_ALGO_SHA256);
+        $headers = ['x-twilio-email-event-webhook-timestamp' => $timestamp, 'x-twilio-email-event-webhook-signature' => base64_encode($signature)];
+    } else {
+        $timestamp = (string) now()->timestamp;
+        $token = str_repeat('a', 50);
+        $body = json_encode(['signature' => ['timestamp' => $timestamp, 'token' => $token, 'signature' => hash_hmac('sha256', $timestamp.$token, 'private-secret')], 'event-data' => ['event' => 'delivered', 'id' => 'mg-event']], JSON_THROW_ON_ERROR);
+    }
 
-    expect(fn () => app(ProviderWebhookAdapter::class)->normalize(rawProviderWebhookAccount(), $body, 'json', ['signature' => hash_hmac('sha256', $body, 'private-secret')]))->toThrow(ValidationException::class);
+    try {
+        app(ProviderWebhookAdapter::class)->normalize($account, $body, 'json', $headers);
+        $this->fail('The webhook should be rejected.');
+    } catch (ManagedProviderWebhookRejected $exception) {
+        expect($exception->reason)->toBe('invalid_payload');
+    }
+})->with(['mailersend', 'sendgrid', 'mailgun']);
+
+/**
+ * @param  list<mixed>  $events
+ * @return array{ProviderAccount, string, array<string, string>}
+ */
+function signedSendGridBatch(array $events): array
+{
+    $key = openssl_pkey_new(['private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1']);
+    if ($key === false) {
+        throw new RuntimeException('The test signing key could not be created.');
+    }
+    $account = rawProviderWebhookAccount('sendgrid');
+    $account->webhook_public_key = openssl_pkey_get_details($key)['key'];
+    $body = json_encode($events, JSON_THROW_ON_ERROR);
+    $timestamp = (string) now()->timestamp;
+    openssl_sign($timestamp.$body, $signature, $key, OPENSSL_ALGO_SHA256);
+
+    return [$account, $body, ['x-twilio-email-event-webhook-timestamp' => $timestamp, 'x-twilio-email-event-webhook-signature' => base64_encode($signature)]];
+}
+
+it('accepts the valid events of a verified SendGrid batch and reports its malformed elements', function (): void {
+    Exceptions::fake();
+    [$account, $body, $headers] = signedSendGridBatch([
+        ['email' => 'first@example.com', 'timestamp' => now()->timestamp, 'event' => 'delivered', 'sg_event_id' => 'sg-first'],
+        ['email' => 'not-an-address', 'timestamp' => now()->timestamp, 'event' => 'delivered', 'sg_event_id' => 'sg-malformed'],
+        'not-an-event',
+        ['email' => 'second@example.com', 'timestamp' => now()->timestamp, 'event' => 'bounce', 'sg_event_id' => 'sg-second'],
+    ]);
+
+    $events = app(ProviderWebhookAdapter::class)->normalize($account, $body, 'json', $headers);
+
+    expect(array_map(static fn (array $event): string => $event['payload']['data']['id'], $events))->toBe(['sg:sg-first', 'sg:sg-second'])
+        ->and($events[1]['payload']['type'])->toBe('activity.hard_bounced');
+    Exceptions::assertReported(fn (ManagedProviderWebhookRejected $exception): bool => $exception->reason === 'invalid_payload'
+        && str_contains($exception->getMessage(), '2 of 4')
+        && ! str_contains($exception->getMessage(), 'not-an-address'));
+});
+
+it('rejects every event of a SendGrid batch whose signature does not verify', function (): void {
+    Exceptions::fake();
+    [$account, $body, $headers] = signedSendGridBatch([
+        ['email' => 'first@example.com', 'timestamp' => now()->timestamp, 'event' => 'delivered', 'sg_event_id' => 'sg-first'],
+        ['email' => 'not-an-address', 'timestamp' => now()->timestamp, 'event' => 'delivered', 'sg_event_id' => 'sg-malformed'],
+    ]);
+    $forged = str_replace('first@example.com', 'other@example.com', $body);
+
+    try {
+        app(ProviderWebhookAdapter::class)->normalize($account, $forged, 'json', $headers);
+        $this->fail('The webhook should be rejected.');
+    } catch (ManagedProviderWebhookRejected $exception) {
+        expect($exception->reason)->toBe('invalid_signature');
+    }
+    Exceptions::assertNothingReported();
 });
 
 it('rejects unknown domain rejection reasons instead of creating unmappable outcomes', function (): void {

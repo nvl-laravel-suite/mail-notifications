@@ -27,6 +27,12 @@ it('rejects malformed native feature switches', function (string $key): void {
     'webhooks' => 'nvl-mail-notifications.webhooks.enabled',
 ]);
 
+it('publishes no managed authentication limit because the package authenticates no request', function (): void {
+    $defaults = require dirname(__DIR__, 2).'/config/nvl-mail-notifications.php';
+
+    expect($defaults['managed'])->not->toHaveKey('authentication');
+});
+
 it('prefers canonical delivery environment names while retaining legacy fallbacks', function (string $suffix, string $path, string $legacyValue, mixed $legacyExpected, string $canonicalValue, mixed $canonicalExpected, string $configuration = 'config'): void {
     $legacy = 'MAIL_'.$suffix;
     $canonical = 'NVL_MAIL_NOTIFICATIONS_'.$suffix;
@@ -53,7 +59,6 @@ it('prefers canonical delivery environment names while retaining legacy fallback
     ['WEBHOOK_QUEUE', 'webhooks.queue', 'old-webhooks', 'old-webhooks', 'new-webhooks', 'new-webhooks'],
     ['WEBHOOK_LOCAL_ORIGINS', 'webhooks.local_origins', 'http://old.test', ['http://old.test'], 'http://new.test, http://other.test', ['http://new.test', 'http://other.test']],
     ['WEBHOOK_LOCAL_ENVIRONMENTS', 'webhooks.local_environments', 'local', ['local'], 'local, testing', ['local', 'testing']],
-    ['AUTH_REQUESTS_PER_MINUTE', 'authentication.requests_per_minute', '100', '100', '200', '200'],
     ['STORAGE_DISK', 'storage.disk', 'old-private', 'old-private', 'new-private', 'new-private'],
     ['STORAGE_PUBLIC_DISK', 'storage.public_disk', 'old-public', 'old-public', 'new-public', 'new-public'],
     ['ORPHAN_GRACE_HOURS', 'storage.orphan_grace_hours', '12', 12, '36', 36],

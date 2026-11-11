@@ -25,7 +25,7 @@ class QuarantineRestoredMail extends Command
     public function handle(): int
     {
         if (ManagedConfiguration::sendingEnabled()) {
-            $this->error('Pause outbound delivery with MAIL_DELIVERY_ENABLED=false before quarantining restored mail.');
+            $this->error('Pause outbound delivery with NVL_MAIL_NOTIFICATIONS_DELIVERY_ENABLED=false before quarantining restored mail; a legacy MAIL_DELIVERY_ENABLED value is ignored while the canonical name is set.');
 
             return self::FAILURE;
         }

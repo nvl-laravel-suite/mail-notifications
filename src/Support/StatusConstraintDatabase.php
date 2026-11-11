@@ -79,7 +79,9 @@ final class StatusConstraintDatabase
         }
 
         $serverVersion = trim($connection->getServerVersion());
-        $minimumVersion = '10.3.0';
+        // Older releases give a second NOT NULL timestamp an implicit zero
+        // default, which strict mode rejects while the schema is created.
+        $minimumVersion = '10.10.0';
         $normalizedVersion = self::normalizedVersion($serverVersion);
 
         if ($normalizedVersion === null
@@ -89,7 +91,7 @@ final class StatusConstraintDatabase
                 '<',
             )) {
             return sprintf(
-                'MariaDB [%s] cannot enforce the package status invariants; MariaDB %s or newer is required.',
+                'MariaDB [%s] cannot create the package schema and enforce its status invariants; MariaDB %s or newer is required.',
                 $serverVersion !== '' ? $serverVersion : 'unknown',
                 $minimumVersion,
             );

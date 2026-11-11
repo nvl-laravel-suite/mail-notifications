@@ -90,6 +90,25 @@ it('preserves previous instanceof and parameter types before any host class look
     expect($process->getExitCode())->toBe(0, $process->getErrorOutput());
 });
 
+it('loads no package class from the autoload file and resolves a previous name on first use', function () {
+    $prefix = var_export('Nvl\\MailNotifications\\', true);
+    $previousClient = var_export('Nvl\\MailNotifications\\Managed\\Models\\Client', true);
+    $previousContract = var_export('Nvl\\MailNotifications\\Managed\\Contracts\\EmailProvider', true);
+    $code = 'require '.var_export(dirname(__DIR__, 5).'/vendor/autoload.php', true).';'
+        .'$loaded = array_filter('
+        .'[...get_declared_classes(), ...get_declared_interfaces(), ...get_declared_traits()],'
+        .'static fn (string $name): bool => str_starts_with($name, '.$prefix.'));'
+        .'if ($loaded !== []) { fwrite(STDERR, implode(",", $loaded)); exit(1); }'
+        .'if (! interface_exists('.$previousContract.')) { exit(2); }'
+        .'if (class_exists(Nvl\\MailNotifications\\Models\\Client::class, false)) { exit(3); }'
+        .'if (! class_exists('.$previousClient.')) { exit(4); }'
+        .'$client = (new ReflectionClass('.$previousClient.'))->newInstanceWithoutConstructor();'
+        .'if ($client::class !== Nvl\\MailNotifications\\Models\\Client::class) { exit(5); }';
+    $process = new Process([PHP_BINARY, '-r', $code]);
+    $process->run();
+    expect($process->getExitCode())->toBe(0, $process->getErrorOutput());
+});
+
 it('honors an explicitly configured host morph alias for the client', function () {
     $previous = Relation::morphMap();
     try {

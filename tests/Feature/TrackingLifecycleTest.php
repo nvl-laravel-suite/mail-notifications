@@ -350,6 +350,71 @@ it('does not replace terminal provider failures', function () {
         ->toBe(MailDeliveryStatus::Bounced);
 });
 
+it('records a failure time only for delivery failures', function (
+    MailDeliveryStatus $status,
+    bool $isFailure,
+): void {
+    $lifecycle = app(TrackingLifecycle::class);
+    [$attempt] = beginAcceptedAttempt($lifecycle);
+    $lifecycle->apply(new VerifiedDeliveryEvent(
+        provider: 'provider-test',
+        eventId: 'event-terminal',
+        status: $status,
+        occurredAt: CarbonImmutable::parse('2026-07-29T10:00:00Z'),
+        providerMessageId: 'message-123',
+    ));
+
+    $notification = MailNotification::query()->findOrFail($attempt->id);
+
+    expect($notification->status)->toBe($status)
+        ->and($notification->failed_at !== null)->toBe($isFailure);
+})->with([
+    'bounced' => [MailDeliveryStatus::Bounced, true],
+    'rejected' => [MailDeliveryStatus::Rejected, true],
+    'complained' => [MailDeliveryStatus::Complained, false],
+    'unsubscribed' => [MailDeliveryStatus::Unsubscribed, false],
+]);
+
+it('keeps the most severe recipient outcome whichever order provider events arrive in', function (
+    array $events,
+    MailDeliveryStatus $expected,
+    bool $delivered,
+    bool $failed,
+): void {
+    $lifecycle = app(TrackingLifecycle::class);
+    [$attempt] = beginAcceptedAttempt($lifecycle);
+
+    foreach ($events as [$status, $minute]) {
+        $lifecycle->apply(new VerifiedDeliveryEvent(
+            provider: 'provider-test',
+            eventId: 'event-'.$status->value,
+            status: $status,
+            occurredAt: CarbonImmutable::parse('2026-07-29T10:00:00Z')->addMinutes($minute),
+            providerMessageId: 'message-123',
+        ));
+    }
+
+    $notification = MailNotification::query()->findOrFail($attempt->id);
+
+    expect($notification->status)->toBe($expected)
+        ->and($notification->delivered_at !== null)->toBe($delivered)
+        ->and($notification->failed_at !== null)->toBe($failed);
+})->with(function (): Generator {
+    $sets = [
+        'later delivery beside an earlier open' => [[[MailDeliveryStatus::Opened, 5], [MailDeliveryStatus::Delivered, 6]], MailDeliveryStatus::Opened, true, false],
+        'deferral beside an earlier delivery' => [[[MailDeliveryStatus::Delivered, 0], [MailDeliveryStatus::Delayed, 5]], MailDeliveryStatus::Delivered, true, false],
+        'bounce beside a delivery' => [[[MailDeliveryStatus::Delivered, 0], [MailDeliveryStatus::Bounced, 1]], MailDeliveryStatus::Bounced, true, true],
+        'bounce beside a click' => [[[MailDeliveryStatus::Clicked, 3], [MailDeliveryStatus::Bounced, 1]], MailDeliveryStatus::Bounced, false, true],
+        'bounce beside a complaint' => [[[MailDeliveryStatus::Complained, 2], [MailDeliveryStatus::Bounced, 1]], MailDeliveryStatus::Bounced, false, true],
+        'complaint beside an unsubscribe' => [[[MailDeliveryStatus::Unsubscribed, 2], [MailDeliveryStatus::Complained, 4]], MailDeliveryStatus::Complained, false, false],
+    ];
+
+    foreach ($sets as $name => [$events, $expected, $delivered, $failed]) {
+        yield $name => [$events, $expected, $delivered, $failed];
+        yield $name.' (reversed arrival)' => [array_reverse($events), $expected, $delivered, $failed];
+    }
+});
+
 it('preserves advanced engagement when provider events arrive out of order', function () {
     $lifecycle = app(TrackingLifecycle::class);
     [$attempt] = beginAcceptedAttempt($lifecycle);

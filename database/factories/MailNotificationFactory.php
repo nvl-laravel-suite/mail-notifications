@@ -219,7 +219,6 @@ final class MailNotificationFactory extends Factory
             status: MailDeliveryStatus::Complained,
             hasAcceptance: true,
             hasDelivery: true,
-            hasFailure: true,
         );
     }
 
@@ -270,7 +269,6 @@ final class MailNotificationFactory extends Factory
             status: MailDeliveryStatus::Unsubscribed,
             hasAcceptance: true,
             hasDelivery: true,
-            hasFailure: true,
         );
     }
 

@@ -279,11 +279,10 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             );
         }
 
-        $isStale = $notification->provider_occurred_at instanceof CarbonImmutable
-            && $event->occurredAt->lessThan($notification->provider_occurred_at);
         $this->backfillMilestoneTimestamp($notification, $event, $previousStatus);
 
-        if ($isStale || ! $previousStatus->canTransitionTo($event->status)) {
+        // Arrival order and event age never decide the outcome: only severity does.
+        if (! $previousStatus->canTransitionTo($event->status)) {
             return new TransitionResult(
                 notificationId: $notification->id,
                 previousStatus: $previousStatus,
@@ -311,7 +310,11 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             $updates['delivered_at'] = $event->occurredAt;
         }
 
-        if ($event->status->isTerminal()) {
+        if (in_array($event->status, [
+            MailDeliveryStatus::Bounced,
+            MailDeliveryStatus::Rejected,
+            MailDeliveryStatus::Failed,
+        ], true)) {
             $updates['failed_at'] = $event->occurredAt;
         }
 
@@ -332,7 +335,7 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
     }
 
     /**
-     * Preserve known milestone times when a later event cannot move status backward.
+     * Preserve known milestone times of an event that no longer changes the status.
      */
     private function backfillMilestoneTimestamp(
         MailNotification $notification,
@@ -348,16 +351,8 @@ final readonly class DatabaseTrackingLifecycle implements TrackingLifecycle
             return;
         }
 
-        $deliveryImplied = in_array($currentStatus, [
-            MailDeliveryStatus::Delivered,
-            MailDeliveryStatus::Opened,
-            MailDeliveryStatus::Clicked,
-            MailDeliveryStatus::Complained,
-            MailDeliveryStatus::Unsubscribed,
-        ], true);
-
         if ($event->status === MailDeliveryStatus::Delivered
-            && $deliveryImplied
+            && ! $currentStatus->canTransitionTo(MailDeliveryStatus::Delivered)
             && $notification->delivered_at === null) {
             $notification->delivered_at = $event->occurredAt;
             $this->saveNotification($notification);

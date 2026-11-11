@@ -29,9 +29,12 @@ final readonly class ScheduledMailFactory implements Factory
      */
     public function mailer(mixed $name = null): Mailer
     {
+        $selected = $this->deliveryProfile ?? $name;
+
         return new ScheduledRecipientMailer(
-            $this->factory->mailer($this->deliveryProfile ?? $name),
+            $this->factory->mailer($selected),
             $this->recipients,
+            is_string($selected) ? $selected : null,
         );
     }
 }

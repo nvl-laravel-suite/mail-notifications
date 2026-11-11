@@ -1267,6 +1267,8 @@ it('fails deterministic factory preparation terminally without raw failure text'
             maxAttempts: 2,
         ),
     );
+    $message->payload = ['unexpected' => 'raw provider secret'];
+    $message->save();
 
     expect(app(ScheduledMailProcessor::class)->process())->toBe(1);
     $message->refresh();
@@ -1274,8 +1276,44 @@ it('fails deterministic factory preparation terminally without raw failure text'
     expect($message)
         ->status->toBe(ScheduledMailStatus::Failed)
         ->attempts->toBe(1)
-        ->last_error->toBe(RuntimeException::class)
+        ->last_error->toBe(InvalidArgumentException::class)
         ->claim_token->toBeNull()
+        ->and($message->last_error)->not->toContain('raw provider secret');
+    Event::assertDispatched(ScheduledMailFailed::class);
+});
+
+it('retries a failure thrown while a host factory builds the Mailable', function () {
+    Event::fake([
+        ScheduledMailRetrying::class,
+        ScheduledMailFailed::class,
+    ]);
+    $message = app(ScheduledMailScheduler::class)->schedule(
+        scheduledMailRequest(
+            alias: 'test.scheduled-failure',
+            maxAttempts: 2,
+        ),
+    );
+
+    expect(app(ScheduledMailProcessor::class)->process())->toBe(1);
+    $message->refresh();
+
+    expect($message)
+        ->status->toBe(ScheduledMailStatus::Pending)
+        ->attempts->toBe(1)
+        ->last_error->toBe(RuntimeException::class)
+        ->claim_token->toBeNull();
+    Event::assertDispatched(ScheduledMailRetrying::class);
+    Event::assertNotDispatched(ScheduledMailFailed::class);
+
+    CarbonImmutable::setTestNow(CarbonImmutable::now('UTC')->addSeconds(61));
+
+    expect(app(ScheduledMailProcessor::class)->process())->toBe(1);
+    $message->refresh();
+
+    expect($message)
+        ->status->toBe(ScheduledMailStatus::Failed)
+        ->attempts->toBe(2)
+        ->last_error->toBe(RuntimeException::class)
         ->and($message->last_error)->not->toContain('raw provider secret');
     Event::assertDispatched(ScheduledMailFailed::class);
 });

@@ -19,7 +19,7 @@ final class StagedTracking
      */
     public function __construct(
         public readonly string $correlationId,
-        public readonly string $mailer,
+        public string $mailer,
         public readonly TrackingContext $context,
         public readonly ?string $queueReference = null,
         public ?TrackingAttempt $attempt = null,

@@ -76,7 +76,8 @@ final readonly class TrackingTransport implements TransportInterface
         $this->runtime->accepted(
             $this->correlationId,
             new TransportResult(
-                mailer: $this->mailer,
+                mailer: $this->runtime->staged($this->correlationId)->mailer
+                    ?? $this->mailer,
                 message: new LaravelSentMessage($sentMessage),
             ),
         );

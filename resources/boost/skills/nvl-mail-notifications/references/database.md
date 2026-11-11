@@ -1,6 +1,6 @@
 # Mail storage and schema ownership
 
-The package has one alpha create/drop migration. It creates all 29 mail tables, including Media links and native ownership columns. Configure `connection`, `tables` and the migration owner before the first installation. Use either vendor-loaded migrations (`migrations.enabled=true`) or one published copy with the vendor loader disabled. Do not run both. `managed.enabled` changes behavior, not schema installation.
+The package has one alpha create/drop migration. It creates all 29 mail tables, including Media links. Tracking and scheduling tables get only the legacy `tenant_id`, `ownership_key` and `tenant_envelope` columns; the native `owner_scope_key`, `owner_reference` and `ownership_envelope` columns are added by Ownership adoption (`nvl:ownership:prepare`), which must run before ownership is enabled. Configure `connection`, `tables` and the migration owner before the first installation. Use either vendor-loaded migrations (`migrations.enabled=true`) or one published copy with the vendor loader disabled. Do not run both. `managed.enabled` changes behavior, not schema installation.
 
 The names below are logical keys in `Definitions\Tables\MailNotificationsTables`; physical names are configurable. The standalone service maps these to its existing tables, and this namespace refactor changes no IDs, columns or table names.
 

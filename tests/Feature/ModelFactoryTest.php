@@ -188,7 +188,7 @@ it('provides coherent notification lifecycle factory states', function (
         true,
         true,
         true,
-        true,
+        false,
     ],
     'rejected' => [
         'rejected',
@@ -212,7 +212,7 @@ it('provides coherent notification lifecycle factory states', function (
         true,
         true,
         true,
-        true,
+        false,
     ],
 ]);
 

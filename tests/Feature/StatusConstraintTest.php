@@ -749,9 +749,14 @@ it('requires a supported MariaDB version', function (
     'unsupported legacy MariaDB' => [
         '10.2.44',
         null,
-        'MariaDB 10.3.0 or newer',
+        'MariaDB 10.10.0 or newer',
     ],
-    'minimum MariaDB release' => ['10.3.0', 1, null],
+    'implicit timestamp defaults reject the schema' => [
+        '10.9.8',
+        null,
+        'MariaDB 10.10.0 or newer',
+    ],
+    'minimum MariaDB release' => ['10.10.0', 1, null],
     'table-scoped constraint release' => ['12.1.0', 'ON', null],
     'disabled check enforcement' => [
         '12.1.0',

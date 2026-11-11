@@ -129,7 +129,7 @@ trait TracksMailDelivery
         $queueReference = $this->mailTrackingQueueReference;
 
         try {
-            if (! $this->shouldStageMailTracking()) {
+            if (! $this->shouldStageMailTracking($this->mailer)) {
                 return;
             }
 
@@ -201,15 +201,19 @@ trait TracksMailDelivery
 
         try {
             $resolvedMailer = $this->resolveMailer($mailer);
-            $transportMailer = $resolvedMailer instanceof ScheduledRecipientMailer
-                ? $resolvedMailer->mailer
-                : $resolvedMailer;
+            $transportMailer = $resolvedMailer;
+            $sendingMailer = $this->mailer;
 
-            if ($this->shouldStageMailTracking()) {
+            if ($resolvedMailer instanceof ScheduledRecipientMailer) {
+                $transportMailer = $resolvedMailer->mailer;
+                $sendingMailer = $resolvedMailer->name;
+            }
+
+            if ($this->shouldStageMailTracking($sendingMailer)) {
                 if (! $transportMailer instanceof Mailer) {
                     TrackingRuntimeBridge::unsupportedMailer();
                 } else {
-                    $this->stageMailTracking();
+                    $this->stageMailTracking($sendingMailer);
                 }
             }
 
@@ -277,18 +281,18 @@ trait TracksMailDelivery
     /**
      * Stage tracking before Laravel resolves and invokes the concrete transport.
      */
-    private function shouldStageMailTracking(): bool
+    private function shouldStageMailTracking(?string $sendingMailer): bool
     {
         return $this instanceof TrackableMessage
             && $this->mailTrackingEnabled
             && TrackingRuntimeBridge::available()
-            && TrackingRuntimeBridge::shouldTrack($this->mailer);
+            && TrackingRuntimeBridge::shouldTrack($sendingMailer);
     }
 
     /**
      * Stage tracking after validating the concrete mailer capability.
      */
-    private function stageMailTracking(): void
+    private function stageMailTracking(?string $sendingMailer): void
     {
         $context = $this->resolvedTrackingContext();
 
@@ -298,7 +302,7 @@ trait TracksMailDelivery
 
         $this->mailTrackingCorrelationId = TrackingRuntimeBridge::stage(
             $context,
-            $this->mailer,
+            $sendingMailer,
             $this->mailTrackingQueueReference,
         );
     }

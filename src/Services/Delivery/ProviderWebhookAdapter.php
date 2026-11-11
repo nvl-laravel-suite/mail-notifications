@@ -6,6 +6,7 @@ namespace Nvl\MailNotifications\Services\Delivery;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use JsonException;
 use Nvl\MailNotifications\Exceptions\ManagedProviderWebhookRejected;
 use Nvl\MailNotifications\Models\ProviderAccount;
@@ -73,7 +74,7 @@ class ProviderWebhookAdapter
 
             return [];
         }
-        $validated = Validator::make($payload, [
+        $validated = $this->validated($payload, [
             'type' => ['required', 'string', 'max:80'], 'created_at' => ['required', 'date'],
             'data' => ['required_unless:type,webhook.test', 'array'],
             'data.id' => ['required_unless:type,webhook.test', 'string', 'max:191'],
@@ -81,7 +82,7 @@ class ProviderWebhookAdapter
             'data.recipient' => ['required_if:type,activity.submitted', 'required_with:data.message_id', 'email:rfc', 'max:254'],
             'data.tags' => ['sometimes', 'nullable', 'array', 'max:20'], 'data.tags.*' => ['string', 'max:191'],
             'data.meta' => ['sometimes', 'array', 'max:30'],
-        ])->validate();
+        ]);
 
         return $validated['type'] === 'webhook.test' ? [] : [['payload' => $this->object($validated), 'key' => hash('sha256', $body)]];
     }
@@ -110,43 +111,62 @@ class ProviderWebhookAdapter
         if (! ($key !== false && openssl_verify($timestamp.$body, $signature, $key, OPENSSL_ALGO_SHA256) === 1)) {
             throw new ManagedProviderWebhookRejected('invalid_signature', 'Invalid webhook signature.');
         }
-        if (! (array_is_list($payload))) {
+        if (! (array_is_list($payload)) || $payload === [] || count($payload) > 500) {
             throw new ManagedProviderWebhookRejected('invalid_payload', 'Invalid webhook payload.');
         }
-        $events = Validator::make(['events' => $payload], [
-            'events' => ['required', 'array', 'max:500'],
-            'events.*' => ['array'], 'events.*.email' => ['required', 'email:rfc', 'max:254'],
-            'events.*.timestamp' => ['required', 'numeric', 'min:0', 'max:4102444800'],
-            'events.*.event' => ['required', 'string', 'max:80'],
-            'events.*.sg_event_id' => ['required', 'string', 'max:180'],
-            'events.*.sg_message_id' => ['nullable', 'string', 'max:255'],
-            'events.*.attempt_id' => ['nullable', 'uuid'],
-            'events.*.custom_args' => ['sometimes', 'array', 'max:20'],
-            'events.*.custom_args.attempt_id' => ['nullable', 'uuid'],
-            'events.*.type' => ['nullable', 'string', 'max:80'],
-        ])->validate()['events'];
+        // SendGrid retries a refused batch as a whole, so one malformed element
+        // must not cost the verified events delivered beside it.
         $normalized = [];
-        if (! (is_array($events))) {
-            throw new ManagedProviderWebhookRejected('invalid_payload', 'Invalid webhook events.');
+        foreach ($payload as $rawEvent) {
+            try {
+                $normalized[] = $this->sendGridEvent($rawEvent);
+            } catch (ManagedProviderWebhookRejected) {
+                continue;
+            }
         }
-        foreach ($events as $rawEvent) {
-            $event = $this->object($rawEvent);
-            $type = match ($this->requiredString($event, 'event')) {
-                'processed' => 'submitted', 'delivered' => 'delivered', 'deferred' => 'deferred',
-                'open' => 'opened', 'click' => 'clicked', 'spamreport' => 'spam_complaint',
-                'unsubscribe', 'group_unsubscribe' => 'unsubscribed',
-                'bounce' => ($event['type'] ?? '') === 'blocked' ? 'soft_bounced' : 'hard_bounced',
-                'dropped' => 'suppressed', default => 'unknown',
-            };
-            $data = [
-                'id' => 'sg:'.$this->requiredString($event, 'sg_event_id'), 'message_id' => $this->optionalString($event, 'sg_message_id') ?? '',
-                'recipient' => $this->requiredString($event, 'email'), 'correlation_id' => $this->optionalString($event, 'attempt_id') ?? $this->optionalString($event, 'custom_args.attempt_id'),
-                'meta' => [],
-            ];
-            $normalized[] = ['payload' => ['type' => 'activity.'.$type, 'created_at' => CarbonImmutable::createFromTimestampUTC($this->timestamp($event, 'timestamp'))->toIso8601String(), 'data' => $data], 'key' => hash('sha256', 'sendgrid:'.$this->requiredString($event, 'sg_event_id'))];
+        $malformed = count($payload) - count($normalized);
+        if ($normalized === []) {
+            throw new ManagedProviderWebhookRejected('invalid_payload', 'Invalid webhook payload.');
+        }
+        if ($malformed > 0) {
+            report(new ManagedProviderWebhookRejected('invalid_payload', sprintf('Skipped %d of %d malformed events in a verified SendGrid webhook batch.', $malformed, count($payload))));
         }
 
         return $normalized;
+    }
+
+    /**
+     * Validate and normalize one element of a verified SendGrid batch.
+     *
+     * @return array{payload: array<string, mixed>, key: string}
+     */
+    private function sendGridEvent(mixed $rawEvent): array
+    {
+        $event = $this->object($this->validated($this->object($rawEvent), [
+            'email' => ['required', 'email:rfc', 'max:254'],
+            'timestamp' => ['required', 'numeric', 'min:0', 'max:4102444800'],
+            'event' => ['required', 'string', 'max:80'],
+            'sg_event_id' => ['required', 'string', 'max:180'],
+            'sg_message_id' => ['nullable', 'string', 'max:255'],
+            'attempt_id' => ['nullable', 'uuid'],
+            'custom_args' => ['sometimes', 'array', 'max:20'],
+            'custom_args.attempt_id' => ['nullable', 'uuid'],
+            'type' => ['nullable', 'string', 'max:80'],
+        ]));
+        $type = match ($this->requiredString($event, 'event')) {
+            'processed' => 'submitted', 'delivered' => 'delivered', 'deferred' => 'deferred',
+            'open' => 'opened', 'click' => 'clicked', 'spamreport' => 'spam_complaint',
+            'unsubscribe', 'group_unsubscribe' => 'unsubscribed',
+            'bounce' => ($event['type'] ?? '') === 'blocked' ? 'soft_bounced' : 'hard_bounced',
+            'dropped' => 'suppressed', default => 'unknown',
+        };
+        $data = [
+            'id' => 'sg:'.$this->requiredString($event, 'sg_event_id'), 'message_id' => $this->optionalString($event, 'sg_message_id') ?? '',
+            'recipient' => $this->requiredString($event, 'email'), 'correlation_id' => $this->optionalString($event, 'attempt_id') ?? $this->optionalString($event, 'custom_args.attempt_id'),
+            'meta' => [],
+        ];
+
+        return ['payload' => ['type' => 'activity.'.$type, 'created_at' => CarbonImmutable::createFromTimestampUTC($this->timestamp($event, 'timestamp'))->toIso8601String(), 'data' => $data], 'key' => hash('sha256', 'sendgrid:'.$this->requiredString($event, 'sg_event_id'))];
     }
 
     /**
@@ -167,7 +187,7 @@ class ProviderWebhookAdapter
         if (! ($this->freshTimestamp($timestamp) && is_string($token) && preg_match('/\A[a-zA-Z0-9]{50}\z/', $token) && is_string($provided) && is_string($secret) && $secret !== '' && hash_equals(hash_hmac('sha256', $timestamp.$token, $secret), $provided))) {
             throw new ManagedProviderWebhookRejected('invalid_signature', 'Invalid webhook signature.');
         }
-        $event = Validator::make($payload, [
+        $event = $this->validated($payload, [
             'event-data' => ['required', 'array'], 'event-data.event' => ['required', 'string', 'max:80'],
             'event-data.id' => ['required', 'string', 'max:180'],
             'event-data.timestamp' => ['required', 'numeric', 'min:0', 'max:4102444800'],
@@ -176,7 +196,7 @@ class ProviderWebhookAdapter
             'event-data.message.headers.message-id' => ['required', 'string', 'max:253'],
             'event-data.user-variables' => ['sometimes', 'array', 'max:20'],
             'event-data.user-variables.attempt_id' => ['nullable', 'uuid'],
-        ])->validate()['event-data'];
+        ])['event-data'];
         $event = $this->object($event);
         $type = match ($this->requiredString($event, 'event')) {
             'accepted' => 'submitted', 'delivered' => 'delivered', 'opened' => 'opened', 'clicked' => 'clicked',
@@ -188,6 +208,22 @@ class ProviderWebhookAdapter
         $data = ['id' => 'mg:'.$this->requiredString($event, 'id'), 'message_id' => '<'.trim($this->requiredString($event, 'message.headers.message-id'), '<>').'>', 'recipient' => $this->requiredString($event, 'recipient'), 'correlation_id' => $this->optionalString($event, 'user-variables.attempt_id'), 'meta' => []];
 
         return [['payload' => ['type' => 'activity.'.$type, 'created_at' => CarbonImmutable::createFromTimestampUTC($this->timestamp($event, 'timestamp'))->toIso8601String(), 'data' => $data], 'key' => hash('sha256', 'mailgun:'.$timestamp.':'.$token)]];
+    }
+
+    /**
+     * Apply the provider schema and reject a failure as the documented webhook rejection.
+     *
+     * @param  array<array-key, mixed>  $payload
+     * @param  array<string, list<string>>  $rules
+     * @return array<array-key, mixed>
+     */
+    private function validated(array $payload, array $rules): array
+    {
+        try {
+            return Validator::make($payload, $rules)->validate();
+        } catch (ValidationException) {
+            throw new ManagedProviderWebhookRejected('invalid_payload', 'Invalid webhook payload.');
+        }
     }
 
     /** @return array<string, mixed> */

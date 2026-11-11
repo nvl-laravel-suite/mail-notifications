@@ -57,10 +57,18 @@ final readonly class ScheduledMailClaimer
             throw new ScheduledMailException('Scheduled mail claims must start outside an existing database transaction.');
         }
 
+        // Concurrent workers take the next free rows instead of queueing on one.
+        $skipsLockedRows = in_array(
+            $model->getConnection()->getDriverName(),
+            ['pgsql', 'mysql', 'mariadb'],
+            true,
+        );
+
         return $model->getConnection()->transaction(function () use (
             $batchSize,
             $excludedMessageIds,
             $leaseSeconds,
+            $skipsLockedRows,
         ): array {
             $now = CarbonImmutable::now('UTC');
             $databaseNow = DatabaseTimestamp::format($now);
@@ -77,7 +85,7 @@ final readonly class ScheduledMailClaimer
 
             $candidates = $query
                 ->limit($batchSize)
-                ->lockForUpdate()
+                ->lock($skipsLockedRows ? 'for update skip locked' : true)
                 ->get();
             $claimed = [];
 

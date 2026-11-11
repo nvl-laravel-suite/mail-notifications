@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 use Nvl\MailNotifications\Services\Delivery\WebhookProcessor;
 
 /** Trusted operator entry point for the opt-in managed delivery engine.
@@ -28,8 +29,8 @@ class ReconcileMailWebhooks extends Command
             return self::FAILURE;
         }
         $account = $this->option('provider-account');
-        if ($account !== null && ! is_string($account)) {
-            $this->error('Provider account must be a string.');
+        if ($account !== null && ! (is_string($account) && Str::isUuid($account))) {
+            $this->error('Provider account must be a UUID.');
 
             return self::FAILURE;
         }

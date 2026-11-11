@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Nvl\MailNotifications\Models\ProviderAccount;
 use Nvl\MailNotifications\Services\Integrations\SyncProviderConfiguration;
@@ -24,7 +25,12 @@ class SyncMailIntegrations extends Command
     public function handle(SyncProviderConfiguration $sync): int
     {
         $id = $this->argument('account');
-        $account = is_string($id) ? ProviderAccount::query()->find($id) : null;
+        if (! is_string($id) || ! Str::isUuid($id)) {
+            $this->error('Provider account must be a UUID.');
+
+            return self::FAILURE;
+        }
+        $account = ProviderAccount::query()->find($id);
         if (! $account) {
             $this->error('Provider account not found.');
 

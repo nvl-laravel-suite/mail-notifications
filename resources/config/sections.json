@@ -62,7 +62,6 @@
                 "extensions.webhook_managers",
                 "integrations.settings",
                 "managed.attachments.retention_hours",
-                "managed.authentication.requests_per_minute",
                 "managed.content.max_html_bytes",
                 "managed.maintenance.batch_size",
                 "managed.maintenance.max_seconds",

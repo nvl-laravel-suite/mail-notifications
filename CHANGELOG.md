@@ -5,6 +5,26 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- A provider rate-limit cooldown no longer breaks sending on the Redis cache store, which returns the stored timestamp as a numeric string; a cooldown that cannot be stored is reported instead of leaving the attempt `sending`.
+- A stored provider event of an unlisted type without `message_id` is ignored instead of throwing, an unreadable receipt is closed as `failed`, and one receipt that cannot be applied no longer blocks webhook reconciliation for the receipts behind it; it is reported, retried on the unmatched-receipt schedule and then closed as `failed`.
+- Client callbacks that cannot be queued on a durable queue connection are reported instead of being dropped silently; callback recovery fails once with the cause, and the doctor adds a `managed.client_webhook_queue` warning.
+- `ProviderWebhookAdapter::normalize()` rejects authenticated payloads that fail the provider schema with `ManagedProviderWebhookRejected` (`invalid_payload`) as documented, instead of letting Laravel's `ValidationException` escape.
+- The doctor adds a `retention.coverage` advisory naming the non-terminal notification statuses (by default `pending`, `accepted` and `delayed`) that neither retention nor anonymization reaches. What is pruned or anonymized is unchanged.
+- `failed_at` on a tracked notification is set only for `bounced`, `rejected` and `failed`; `complained` and `unsubscribed` no longer record a failure time.
+- A tracked Mailable sent through a scheduling delivery profile, or handed to a mailer instance other than its own, records the mailer that actually sends it and resolves its provider and tracking exclusions from that mailer.
+- The previous `Managed` class names are aliased on first use instead of loading about 117 package classes in every PHP process; `instanceof`, type hints, `new` and serialized payloads keep working.
+- Removed settings that nothing enforced: `managed.authentication.requests_per_minute`, and the `rate_limit_per_minute` and `authentication_mode` attributes of `ClientMailSettings` (the columns stay, unused). `ClientAuthenticationMode` is deprecated.
+- Concurrent `process-scheduled` workers on PostgreSQL, MySQL and MariaDB claim the next free due messages with `SKIP LOCKED` instead of queueing on the same row.
+- A schema creation that fails part-way on MySQL or MariaDB drops the tables it created, so the migration can be re-run instead of refusing because package tables already exist.
+- One malformed element no longer rejects a verified SendGrid webhook batch: valid events are accepted and the malformed count is reported. A batch that fails verification or has no valid event is still rejected.
+- MariaDB older than 10.10 is refused before schema creation; its implicit timestamp defaults reject the package tables under strict mode.
+- An exception thrown while a host factory builds a scheduled Mailable is retried within `max_attempts` like a transport failure instead of failing the message at once. Invalid stored payloads, recipients and unknown factories still fail terminally.
+- A tracked notification with several recipients keeps the most severe status any provider event reported, whichever order events arrive in; an older event no longer loses to a newer, less severe one, and a bounce is recorded after a delivery.
+- Receipt reconciliation no longer queries the `received` state, which nothing writes.
+- `delivery:reconcile-webhooks --provider-account` and `delivery:integrations:sync` refuse a value that is not a UUID instead of failing in the database, and the restore quarantine names the canonical `NVL_MAIL_NOTIFICATIONS_DELIVERY_ENABLED` switch.
+
 ## [7.0.2] - 2026-11-09
 
 ### Changed

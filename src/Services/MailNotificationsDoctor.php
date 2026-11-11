@@ -255,6 +255,7 @@ final readonly class MailNotificationsDoctor
             ...$this->managementAuthorizationChecks(),
             $this->sensitiveStorageConfigurationCheck(),
             $this->retentionConfigurationCheck(),
+            $this->retentionCoverageCheck(),
             $this->anonymizationConfigurationCheck(),
             $this->testing->inspect(),
             $this->migrationOwnershipCheck(),
@@ -659,6 +660,54 @@ final readonly class MailNotificationsDoctor
                 message: $exception->getMessage(),
             );
         }
+    }
+
+    /**
+     * Advise which non-terminal statuses neither retention nor enabled anonymization will ever reach.
+     */
+    private function retentionCoverageCheck(): MailNotificationsDoctorCheck
+    {
+        try {
+            $covered = [
+                ...$this->retention->notificationStatuses(),
+                ...($this->anonymization->enabled() ? $this->anonymization->notificationStatuses() : []),
+            ];
+        } catch (Throwable) {
+            return new MailNotificationsDoctorCheck(
+                key: 'retention.coverage',
+                severity: 'warning',
+                passed: false,
+                message: 'Retention status coverage could not be evaluated because the retention or anonymization configuration is invalid.',
+            );
+        }
+
+        $uncovered = array_map(
+            static fn (MailDeliveryStatus $status): string => $status->value,
+            array_filter(
+                MailDeliveryStatus::cases(),
+                static fn (MailDeliveryStatus $status): bool => ! $status->isTerminal()
+                    && ! in_array($status, $covered, true),
+            ),
+        );
+
+        if ($uncovered === []) {
+            return new MailNotificationsDoctorCheck(
+                key: 'retention.coverage',
+                severity: 'info',
+                passed: true,
+                message: 'Retention or anonymization statuses cover every non-terminal notification status.',
+            );
+        }
+
+        return new MailNotificationsDoctorCheck(
+            key: 'retention.coverage',
+            severity: 'warning',
+            passed: true,
+            message: sprintf(
+                'Retention and anonymization do not cover non-terminal status(es) [%s]. Notifications that stay in them, such as mail from a tracked mailer without provider webhooks that ends at accepted, are kept indefinitely with their recipients, subject and metadata. Add the statuses to the retention or anonymization statuses if that history must expire.',
+                implode(', ', $uncovered),
+            ),
+        );
     }
 
     /**

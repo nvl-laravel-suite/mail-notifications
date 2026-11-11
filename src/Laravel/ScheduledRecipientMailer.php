@@ -28,6 +28,7 @@ final readonly class ScheduledRecipientMailer implements Mailer
     public function __construct(
         public Mailer $mailer,
         private ScheduledRecipients $recipients,
+        public ?string $name = null,
     ) {}
 
     /**

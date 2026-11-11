@@ -83,6 +83,13 @@ class MessageSender
             ]);
             $result = new ProviderResult('unknown', null, 'submission_interrupted', 'Provider submission could not be confirmed.');
         }
+        if ($result->status !== 'submitted' && ($result->response['status'] ?? null) === 429) {
+            try {
+                $this->allowance->pause($attempt->providerAccount ?? throw new \RuntimeException('The provider account is unavailable.'), $result->retryAfter ?? 60);
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        }
         DB::connection(ManagedConfiguration::connection())->transaction(function () use ($attempt, $result): void {
             $message = EmailMessage::query()->lockForUpdate()->findOrFail($attempt->email_message_id);
             $attempt = EmailAttempt::query()->lockForUpdate()->findOrFail($attempt->id);
@@ -102,9 +109,6 @@ class MessageSender
                 $message->recipients()->where('delivery_status', 'pending')->update(['delivery_status' => 'submitted']);
                 $this->statuses->refresh($message);
             } else {
-                if (($result->response['status'] ?? null) === 429) {
-                    $this->allowance->pause($attempt->providerAccount ?? throw new \RuntimeException('The provider account is unavailable.'), $result->retryAfter ?? 60);
-                }
                 $count = $message->attempts()->whereNotNull('started_at')->count();
                 $retry = $result->status === 'failed' && $result->retryable && $count < 3;
                 $message->update(['status' => $retry ? 'accepted' : $result->status, 'next_attempt_at' => $retry ? now()->addSeconds(max([60, 300][$count - 1], $result->retryAfter ?? 0)) : null, 'dispatched_at' => null, 'lease_until' => null, 'error_code' => $result->errorCode, 'error_message' => $result->errorMessage]);

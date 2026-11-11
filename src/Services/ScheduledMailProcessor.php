@@ -107,11 +107,6 @@ final readonly class ScheduledMailProcessor
                 version: $message->payload_version,
             );
             $factory->validate($data->payloadVersion, $data->payload);
-            $mailable = $factory->make($data);
-            $this->enforcePersistedRecipients(
-                mailable: $mailable,
-                recipients: $data->recipients,
-            );
         } catch (Throwable $exception) {
             $this->finalizer->markFailure(
                 messageId: $message->id,
@@ -123,7 +118,15 @@ final readonly class ScheduledMailProcessor
             return;
         }
 
+        // Building the Mailable runs host code that may fail transiently, so
+        // it is retried within max_attempts like the transport itself.
         try {
+            $mailable = $factory->make($data);
+            $this->enforcePersistedRecipients(
+                mailable: $mailable,
+                recipients: $data->recipients,
+            );
+
             if ($message->getConnection()->transactionLevel() !== 0) {
                 throw new ScheduledMailException('Scheduled mail transport must run outside an existing database transaction.');
             }

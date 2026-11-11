@@ -24,71 +24,42 @@ enum MailDeliveryStatus: string
     case Unsubscribed = 'unsubscribed';
 
     /**
+     * Statuses from least to most severe outcome.
+     *
+     * One row summarizes every recipient of a message, so it keeps the most
+     * severe status any provider event reported, in whichever order they arrive.
+     */
+    private const array SEVERITY = [
+        self::Pending,
+        self::Accepted,
+        self::Delayed,
+        self::Delivered,
+        self::Opened,
+        self::Clicked,
+        self::Unsubscribed,
+        self::Complained,
+        self::Bounced,
+        self::Rejected,
+        self::Failed,
+    ];
+
+    /**
      * Determine whether the status may advance to the supplied state.
+     *
+     * A local transport failure is only possible before provider acceptance.
      */
     public function canTransitionTo(self $next): bool
     {
-        if ($this === $next) {
-            return false;
+        if ($next === self::Failed) {
+            return $this === self::Pending;
         }
 
-        return match ($this) {
-            self::Pending => in_array($next, [
-                self::Accepted,
-                self::Delayed,
-                self::Delivered,
-                self::Opened,
-                self::Clicked,
-                self::Bounced,
-                self::Complained,
-                self::Rejected,
-                self::Failed,
-                self::Unsubscribed,
-            ], true),
-            self::Accepted => in_array($next, [
-                self::Delayed,
-                self::Delivered,
-                self::Opened,
-                self::Clicked,
-                self::Bounced,
-                self::Complained,
-                self::Rejected,
-                self::Unsubscribed,
-            ], true),
-            self::Delayed => in_array($next, [
-                self::Delivered,
-                self::Opened,
-                self::Clicked,
-                self::Bounced,
-                self::Complained,
-                self::Rejected,
-                self::Unsubscribed,
-            ], true),
-            self::Delivered => in_array($next, [
-                self::Opened,
-                self::Clicked,
-                self::Complained,
-                self::Unsubscribed,
-            ], true),
-            self::Opened => in_array($next, [
-                self::Clicked,
-                self::Complained,
-                self::Unsubscribed,
-            ], true),
-            self::Clicked => in_array($next, [
-                self::Complained,
-                self::Unsubscribed,
-            ], true),
-            self::Bounced,
-            self::Complained,
-            self::Rejected,
-            self::Failed,
-            self::Unsubscribed => false,
-        };
+        return array_search($next, self::SEVERITY, true)
+            > array_search($this, self::SEVERITY, true);
     }
 
     /**
-     * Determine whether no later delivery state may replace this status.
+     * Determine whether the status is a final outcome rather than delivery progress.
      */
     public function isTerminal(): bool
     {

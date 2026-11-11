@@ -28,9 +28,6 @@ return [
             'local_origins' => array_values(array_filter(array_map('trim', explode(',', (string) env('NVL_MAIL_NOTIFICATIONS_WEBHOOK_LOCAL_ORIGINS', Env::get('MAIL_WEBHOOK_LOCAL_ORIGINS', '')))))),
             'local_environments' => array_values(array_filter(array_map('trim', explode(',', (string) env('NVL_MAIL_NOTIFICATIONS_WEBHOOK_LOCAL_ENVIRONMENTS', Env::get('MAIL_WEBHOOK_LOCAL_ENVIRONMENTS', 'local,testing')))))),
         ],
-        'authentication' => [
-            'requests_per_minute' => env('NVL_MAIL_NOTIFICATIONS_AUTH_REQUESTS_PER_MINUTE', Env::get('MAIL_AUTH_REQUESTS_PER_MINUTE', 600)),
-        ],
         'storage' => [
             'disk' => env('NVL_MAIL_NOTIFICATIONS_STORAGE_DISK', Env::get('MAIL_STORAGE_DISK', 'local')),
             'public_disk' => env('NVL_MAIL_NOTIFICATIONS_STORAGE_PUBLIC_DISK', Env::get('MAIL_STORAGE_PUBLIC_DISK', 'public')),
