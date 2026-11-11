@@ -5,6 +5,8 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+## [7.0.3] - 2026-11-11
+
 ### Fixed
 
 - A provider rate-limit cooldown no longer breaks sending on the Redis cache store, which returns the stored timestamp as a numeric string; a cooldown that cannot be stored is reported instead of leaving the attempt `sending`.
@@ -24,6 +26,12 @@ All notable changes to `nvl/mail-notifications` are documented here.
 - A tracked notification with several recipients keeps the most severe status any provider event reported, whichever order events arrive in; an older event no longer loses to a newer, less severe one, and a bounce is recorded after a delivery.
 - Receipt reconciliation no longer queries the `received` state, which nothing writes.
 - `delivery:reconcile-webhooks --provider-account` and `delivery:integrations:sync` refuse a value that is not a UUID instead of failing in the database, and the restore quarantine names the canonical `NVL_MAIL_NOTIFICATIONS_DELIVERY_ENABLED` switch.
+
+<!-- NVL GENERATED CHANGES START -->
+### Changed
+
+- correct scheduling, provider sync, webhooks and settings
+<!-- NVL GENERATED CHANGES END -->
 
 ## [7.0.2] - 2026-11-09
 
