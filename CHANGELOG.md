@@ -5,9 +5,17 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+## [7.0.4] - 2026-11-13
+
 ### Fixed
 
 - Route webhook delivery state updates, testing interception, and Doctor migration checks through configured connections with PostgreSQL-safe savepoints and wrapped domain search predicates.
+
+<!-- NVL GENERATED CHANGES START -->
+### Changed
+
+- harden package runtime safety, PostgreSQL portability and test performance
+<!-- NVL GENERATED CHANGES END -->
 
 ## [7.0.3] - 2026-11-11
 
