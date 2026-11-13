@@ -6,7 +6,9 @@ namespace Nvl\MailNotifications\Services;
 
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Database\Schema\Builder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
 use Nvl\MailNotifications\Contracts\ProviderConfigurationValidator;
 use Nvl\MailNotifications\Contracts\ScheduledMailReadAuthorization;
@@ -466,35 +468,55 @@ final readonly class MailNotificationsDoctor
                 );
             }
 
-            return $this->migrator->usingConnection(
-                PackageOptions::connection('mail-notifications'),
-                function () use ($expectedMigrations): MailNotificationsDoctorCheck {
-                    if (! $this->migrator->repositoryExists()) {
-                        return new MailNotificationsDoctorCheck(
-                            key: 'schema.migrations',
-                            severity: 'error',
-                            passed: false,
-                            message: 'Package migrations are enabled, but the migration repository does not exist.',
-                        );
+            // Laravel records the migration on the default connection or the explicit --database target.
+            $connections = array_unique([DB::getDefaultConnection(), PackageOptions::connection('mail-notifications')]);
+            $repository = clone $this->migrator->getRepository();
+            $missingMigrations = null;
+            $unavailable = [];
+
+            foreach ($connections as $connection) {
+                try {
+                    $source = ! Str::endsWith($connection, ['::read', '::write', '::direct'])
+                        && DB::connection($connection)->hasDirectConnection()
+                            ? $connection.'::direct'
+                            : $connection;
+                    $repository->setSource($source);
+                    if (! $repository->repositoryExists()) {
+                        continue;
                     }
 
-                    $ranMigrations = $this->migrator->getRepository()->getRan();
-                    $missingMigrations = array_values(array_diff(
-                        $expectedMigrations,
-                        $ranMigrations,
-                    ));
+                    $missing = array_diff($expectedMigrations, $repository->getRan());
+                } catch (Throwable $exception) {
+                    $unavailable[] = $exception->getMessage();
 
+                    continue;
+                }
+
+                if ($missing === []) {
                     return new MailNotificationsDoctorCheck(
                         key: 'schema.migrations',
                         severity: 'error',
-                        passed: $missingMigrations === [],
-                        message: $missingMigrations === []
-                            ? 'The complete alpha schema migration has an exact repository ownership record.'
-                            : sprintf(
-                                'The alpha schema migration is not recorded: %s. Run the pending migration on fresh package tables, or disable package migrations when the host owns the complete schema.',
-                                implode(', ', $missingMigrations),
-                            ),
+                        passed: true,
+                        message: 'The complete alpha schema migration has an exact repository ownership record.',
                     );
+                }
+
+                if ($missingMigrations === null || count($missing) < count($missingMigrations)) {
+                    $missingMigrations = $missing;
+                }
+            }
+
+            return new MailNotificationsDoctorCheck(
+                key: 'schema.migrations',
+                severity: 'error',
+                passed: false,
+                message: match (true) {
+                    $unavailable !== [] => 'Package migration history is unavailable: '.implode(' ', $unavailable),
+                    $missingMigrations === null => 'Package migrations are enabled, but the migration repository does not exist on the default or configured mail connection.',
+                    default => sprintf(
+                        'The alpha schema migration is not recorded: %s. Run the pending migration on fresh package tables, or disable package migrations when the host owns the complete schema.',
+                        implode(', ', $missingMigrations),
+                    ),
                 },
             );
         } catch (Throwable $exception) {
