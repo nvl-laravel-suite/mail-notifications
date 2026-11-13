@@ -5,9 +5,17 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+## [7.0.5] - 2026-11-13
+
 ### Fixed
 
 - Mail Notifications Doctor accepts exact Laravel migration history on the default database when Mail Notifications stores its tables on a separate connection.
+
+<!-- NVL GENERATED CHANGES START -->
+### Changed
+
+- correct permission caches, transaction outcomes and migration diagnostics
+<!-- NVL GENERATED CHANGES END -->
 
 ## [7.0.4] - 2026-11-13
 
