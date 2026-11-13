@@ -58,11 +58,7 @@ final readonly class ScheduledMailClaimer
         }
 
         // Concurrent workers take the next free rows instead of queueing on one.
-        $skipsLockedRows = in_array(
-            $model->getConnection()->getDriverName(),
-            ['pgsql', 'mysql', 'mariadb'],
-            true,
-        );
+        $skipsLockedRows = $model->getConnection()->getDriverName() === 'pgsql';
 
         return $model->getConnection()->transaction(function () use (
             $batchSize,

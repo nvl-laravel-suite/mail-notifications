@@ -41,7 +41,8 @@ abstract class TestCase extends Orchestra
     /** Rebuild instead of reusing a schema that another test base migrated differently. */
     protected function beforeRefreshingDatabase(): void
     {
-        if (self::$migratedSchema !== self::schemaFingerprint($this->app, $this->getPackageProviders($this->app))) {
+        if (self::$migratedSchema !== self::schemaFingerprint($this->app, $this->getPackageProviders($this->app))
+            || in_array('fresh-schema', $this->groups(), true)) {
             RefreshDatabaseState::$migrated = false;
         }
     }
@@ -70,10 +71,9 @@ abstract class TestCase extends Orchestra
      */
     protected function defineEnvironment($app): void
     {
+        $app['config']->set('hashing.bcrypt.rounds', 4);
         $app['config']->set('app.timezone', 'UTC');
         $app['config']->set('database.connections.pgsql.timezone', 'UTC');
-        $app['config']->set('database.connections.mysql.timezone', '+00:00');
-        $app['config']->set('database.connections.mariadb.timezone', '+00:00');
         $app['config']->set('mail.default', 'array');
         $app['config']->set('mail.mailers.array', [
             'transport' => 'array',

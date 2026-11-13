@@ -16,11 +16,12 @@ use Nvl\MailNotifications\ValueObjects\TrackingContext;
 use Nvl\Ownership\Services\OwnershipRunner;
 use Nvl\Ownership\Tests\Fixtures\Actor;
 use Nvl\Ownership\Tests\Fixtures\Company;
+use Nvl\Ownership\Tests\Fixtures\OptsIntoAdoptedSchemaReuse;
 use Nvl\Support\Ownership\Contracts\OwnershipContext;
 use Nvl\Support\Ownership\Enums\OwnershipContextMode;
 use Nvl\Support\Ownership\Exceptions\OwnershipException;
 
-uses(OwnerScopeTestCase::class);
+uses(OwnerScopeTestCase::class, OptsIntoAdoptedSchemaReuse::class);
 
 function nativeMailPrepared(string $subject): PreparedMessage
 {

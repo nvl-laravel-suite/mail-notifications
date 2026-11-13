@@ -13,7 +13,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\SQLiteConnection;
 use Illuminate\Support\Carbon;
+use InvalidArgumentException;
 use Nvl\MailNotifications\Database\Factories\SendingDomainFactory;
 use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Support\UsesManagedStorage;
@@ -113,8 +115,22 @@ class SendingDomain extends Model
     protected function matchingSearch(Builder $query, string $search): void
     {
         if ($search !== '') {
-            $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($search)).'%';
-            $query->whereRaw("LOWER(domain) LIKE ? ESCAPE '!'", [$pattern]);
+            $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search).'%';
+            $column = $query->getQuery()->getGrammar()->wrap($this->qualifyColumn('domain'));
+            $fold = $query->getConnection() instanceof SQLiteConnection ? 'mail_casefold' : 'LOWER';
+            $sql = "{$fold}({$column}) LIKE {$fold}(?) ESCAPE '!'";
+            $this->assertSafeSearchSql($sql);
+            $query->whereRaw($sql, [$pattern]);
+        }
+    }
+
+    /**
+     * @phpstan-assert literal-string $sql
+     */
+    private function assertSafeSearchSql(string $sql): void
+    {
+        if (preg_match("/^(?:mail_casefold|LOWER)\\([A-Za-z0-9_.\"`\\[\\]]+\\) LIKE (?:mail_casefold|LOWER)\\(\\?\\) ESCAPE '!'$/D", $sql) !== 1) {
+            throw new InvalidArgumentException('Sending domain search produced unsafe SQL.');
         }
     }
 

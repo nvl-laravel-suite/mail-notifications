@@ -23,6 +23,7 @@ use Nvl\MailNotifications\Support\StatusConstraintDatabase;
 use Nvl\MailNotifications\Support\StatusConstraintInspector;
 use Nvl\MailNotifications\ValueObjects\MailNotificationsDoctorCheck;
 use Nvl\Settings\Providers\SettingsServiceProvider;
+use Nvl\Support\Config\PackageOptions;
 use Nvl\Support\Integrations\OptionalIntegration;
 use Throwable;
 
@@ -465,31 +466,36 @@ final readonly class MailNotificationsDoctor
                 );
             }
 
-            if (! $this->migrator->repositoryExists()) {
-                return new MailNotificationsDoctorCheck(
-                    key: 'schema.migrations',
-                    severity: 'error',
-                    passed: false,
-                    message: 'Package migrations are enabled, but the migration repository does not exist.',
-                );
-            }
+            return $this->migrator->usingConnection(
+                PackageOptions::connection('mail-notifications'),
+                function () use ($expectedMigrations): MailNotificationsDoctorCheck {
+                    if (! $this->migrator->repositoryExists()) {
+                        return new MailNotificationsDoctorCheck(
+                            key: 'schema.migrations',
+                            severity: 'error',
+                            passed: false,
+                            message: 'Package migrations are enabled, but the migration repository does not exist.',
+                        );
+                    }
 
-            $ranMigrations = $this->migrator->getRepository()->getRan();
-            $missingMigrations = array_values(array_diff(
-                $expectedMigrations,
-                $ranMigrations,
-            ));
+                    $ranMigrations = $this->migrator->getRepository()->getRan();
+                    $missingMigrations = array_values(array_diff(
+                        $expectedMigrations,
+                        $ranMigrations,
+                    ));
 
-            return new MailNotificationsDoctorCheck(
-                key: 'schema.migrations',
-                severity: 'error',
-                passed: $missingMigrations === [],
-                message: $missingMigrations === []
-                    ? 'The complete alpha schema migration has an exact repository ownership record.'
-                    : sprintf(
-                        'The alpha schema migration is not recorded: %s. Run the pending migration on fresh package tables, or disable package migrations when the host owns the complete schema.',
-                        implode(', ', $missingMigrations),
-                    ),
+                    return new MailNotificationsDoctorCheck(
+                        key: 'schema.migrations',
+                        severity: 'error',
+                        passed: $missingMigrations === [],
+                        message: $missingMigrations === []
+                            ? 'The complete alpha schema migration has an exact repository ownership record.'
+                            : sprintf(
+                                'The alpha schema migration is not recorded: %s. Run the pending migration on fresh package tables, or disable package migrations when the host owns the complete schema.',
+                                implode(', ', $missingMigrations),
+                            ),
+                    );
+                },
             );
         } catch (Throwable $exception) {
             return new MailNotificationsDoctorCheck(
@@ -1050,9 +1056,6 @@ final readonly class MailNotificationsDoctor
             'pgsql' => $this->postgresUsesUtc($connection->scalar(
                 "select current_setting('TIMEZONE')",
             )),
-            'mysql', 'mariadb' => $this->mysqlUsesUtc($connection->scalar(
-                'select timestampdiff(second, utc_timestamp(), now())',
-            )),
             default => false,
         };
 
@@ -1082,15 +1085,6 @@ final readonly class MailNotificationsDoctor
             'UCT',
             'ZULU',
         ], true);
-    }
-
-    /**
-     * Determine whether a MySQL-family session has zero UTC offset.
-     */
-    private function mysqlUsesUtc(mixed $result): bool
-    {
-        return is_int($result) && $result === 0
-            || is_string($result) && is_numeric($result) && (int) $result === 0;
     }
 
     /**
@@ -1174,24 +1168,6 @@ final readonly class MailNotificationsDoctor
             if (is_array($status)
                 && ! $this->isPendingDefault($status['default'] ?? null)) {
                 $failures[] = "{$table}.status default";
-            }
-        }
-
-        if (in_array(
-            $schema->getConnection()->getDriverName(),
-            ['mysql', 'mariadb'],
-            true,
-        )) {
-            foreach (['provider', 'provider_message_id', 'provider_event_id'] as $columnName) {
-                $column = $columns->get($columnName);
-
-                if (is_array($column)
-                    && ! str_ends_with(
-                        strtolower((string) ($column['collation'] ?? '')),
-                        '_bin',
-                    )) {
-                    $failures[] = "{$table}.{$columnName} case sensitivity";
-                }
             }
         }
 

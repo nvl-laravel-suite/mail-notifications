@@ -23,7 +23,6 @@ Use [architecture](docs/architecture.md), [delivery](docs/delivery.md), [databas
 
 No schema or data change is required. Review these where they touch host code:
 
-- MariaDB must be 10.10 or newer; older releases are refused before schema creation and by the doctor.
 - Remove `managed.authentication.requests_per_minute` from a published configuration, and stop assigning `rate_limit_per_minute` or `authentication_mode` on `ClientMailSettings`. Nothing enforced them; the columns remain unused. Models in strict mode reject the removed attributes on mass assignment.
 - `failed_at` on a tracked notification now means a delivery failure (`bounced`, `rejected`, `failed`). Read `status` and `status_changed_at` for complaints and unsubscribes.
 - A tracked notification keeps the most severe status reported for any recipient, so `delivered`, `opened` or `clicked` can still become `bounced`, and `unsubscribed` or `complained` can still become a more severe outcome.
@@ -108,9 +107,8 @@ Version 1.0 introduces the standalone provider-neutral package.
     published configuration, then run the strict doctor.
 14. Keep the current and previous sensitive-storage keys or protection profiles
     available for as long as protected history must remain readable.
-15. Confirm the storage database can enforce exact status allowlists: MySQL
-    8.0.16+, or MariaDB 10.10+ through Laravel's `mariadb` driver with session
-    `check_constraint_checks` enabled. Keep the database/session timezone UTC.
+15. Use PostgreSQL or SQLite for enforceable status allowlists. Keep the PostgreSQL
+    session timezone UTC.
 
 ### Adopting provider submission lead time
 
@@ -172,7 +170,7 @@ This unreleased alpha has one initial schema migration, `2026_11_02_000000_nvl_m
 
 Use fresh package tables. Configure the package connection and table mappings before migration. Set `migrations.enabled=false` only when a reviewed host-owned copy creates the complete schema. `managed.enabled` controls runtime behavior without changing schema shape. Rollback drops mail-owned tables and data; recreate only disposable alpha databases or follow an explicitly reviewed backup/restore procedure. Native Media schema and physical files belong to `nvl/media`.
 
-PostgreSQL, MySQL 8.0.16+ and MariaDB 10.10+ retain named status checks; SQLite uses paired INSERT/UPDATE triggers. Unsupported database enforcement is refused before schema mutation.
+PostgreSQL uses named status checks. SQLite uses paired INSERT/UPDATE triggers. Unsupported database enforcement is refused before schema mutation.
 
 ### Adopting sensitive storage and anonymization
 
@@ -544,7 +542,7 @@ The command validates released columns and relational keys plus creating migrati
 
 Declare each published path and canonical identity explicitly in `nvl-core.migrations.published`; retimestamped history also needs an exact `legacy` mapping. Use `--migration-owner=vendor` after manually archiving declared copies outside loaded paths, or `--migration-owner=published` after manually replacing executable copies with current migration code and disabling vendor loading. The plan verifies ownership and preserves batches; checksums do not automatically claim files. Modified host copies remain host-owned. No migration files or stored morph types are rewritten.
 
-DDL transactions are driver dependent and per connection. Inspect dry-run warnings for MySQL/MariaDB or split storage; after a failure, inspect completed steps before resuming. Schema-qualified rename targets require an explicit host schema move first. Re-enable your selected migration owner, run `nvl:schema:preflight` with the same selected paths and connection, then migrate remaining package changes and rerun Doctor before resuming writes. See the suite upgrade guide for shared owner/locale inputs, Core option defaults and one-major deprecation rules.
+DDL transactions apply per connection. Inspect dry-run warnings for split storage. After a failure, inspect completed steps before resuming. Schema-qualified rename targets require an explicit host schema move first. Re-enable your selected migration owner, run `nvl:schema:preflight` with the same selected paths and connection, then migrate remaining package changes and rerun Doctor before resuming writes. See the suite upgrade guide for shared owner/locale inputs, Core option defaults and one-major deprecation rules.
 
 ## Tagged consumer PHP boundary
 

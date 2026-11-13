@@ -24,13 +24,14 @@ use Nvl\Ownership\Services\OwnerIdentityResolver;
 use Nvl\Ownership\Services\OwnershipRunner;
 use Nvl\Ownership\Tests\Fixtures\Actor;
 use Nvl\Ownership\Tests\Fixtures\Company;
+use Nvl\Ownership\Tests\Fixtures\OptsIntoAdoptedSchemaReuse;
 use Nvl\Support\Ownership\Contracts\OwnershipContext;
 use Nvl\Support\Ownership\Enums\OwnershipContextMode;
 use Nvl\Support\Ownership\Exceptions\OwnershipSchemaNotReady;
 use Nvl\Support\Ownership\Exceptions\OwnershipViolation;
 use Nvl\Support\Ownership\Services\OwnershipConstraintInspector;
 
-uses(OwnerScopeTestCase::class);
+uses(OwnerScopeTestCase::class, OptsIntoAdoptedSchemaReuse::class);
 
 function nativeScheduleRequest(): ScheduleMailData
 {
@@ -121,4 +122,4 @@ it('rejects scheduled effects when the live producer envelope constraint is miss
     $connection->statement('DROP TRIGGER '.$name.($connection->getDriverName() === 'pgsql' ? ' ON '.$target : ''));
     expect(fn () => app(ScheduledMailProcessor::class)->process())->toThrow(OwnershipSchemaNotReady::class);
     expect(DB::table($message->getTable())->where('id', $message->id)->value('attempts'))->toBe(0);
-});
+})->group('fresh-adoption');

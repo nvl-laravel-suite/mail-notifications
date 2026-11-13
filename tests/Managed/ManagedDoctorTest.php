@@ -125,7 +125,7 @@ it('describes custom policy wiring without exercising or claiming actor permissi
 });
 
 it('uses fixed safe diagnostics when configuration resolution throws', function (): void {
-    $secret = 'mysql://admin:never-print-this@database.invalid/private';
+    $secret = 'pgsql://admin:never-print-this@database.invalid/private';
     config()->set('nvl-media.models.media', $secret);
     app()->bind(MediaAuthorization::class, static fn () => throw new RuntimeException($secret));
 

@@ -6,15 +6,20 @@ use Nvl\MailNotifications\Tests\CommittedEventTestCase;
 use Nvl\MailNotifications\Tests\ConfiguredManagedMediaTestCase;
 use Nvl\MailNotifications\Tests\ConfiguredModelsTestCase;
 use Nvl\MailNotifications\Tests\ManagedTestCase;
-use Nvl\MailNotifications\Tests\MySqlConcurrencyTestCase;
 use Nvl\MailNotifications\Tests\PluggedTestCase;
 use Nvl\MailNotifications\Tests\PostgreSqlConcurrencyTestCase;
 use Nvl\MailNotifications\Tests\SensitiveStorageTestCase;
 use Nvl\MailNotifications\Tests\TestCase;
+use Nvl\MailNotifications\Tests\UnitTestCase;
+use PHPUnit\Framework\TestCase as PhpUnitTestCase;
 
-pest()->extend(TestCase::class)->in(
-    __DIR__.'/Unit',
-);
+foreach (glob(__DIR__.'/Unit/*Test.php') ?: [] as $file) {
+    pest()->extend(match (basename($file)) {
+        'NotifiableRegistryTest.php', 'ProviderRegistryTest.php' => PhpUnitTestCase::class,
+        'MailerSendAdapterTest.php' => TestCase::class,
+        default => UnitTestCase::class,
+    })->in($file);
+}
 foreach (glob(__DIR__.'/Feature/*.php') ?: [] as $file) {
     pest()->extend(match (basename($file)) {
         'ScheduledMailTest.php' => CommittedEventTestCase::class,
@@ -28,9 +33,6 @@ pest()->extend(SensitiveStorageTestCase::class)->in(
 );
 pest()->extend(PostgreSqlConcurrencyTestCase::class)->in(
     __DIR__.'/Concurrency',
-);
-pest()->extend(MySqlConcurrencyTestCase::class)->in(
-    __DIR__.'/MySqlConcurrency',
 );
 
 pest()->extend(ConfiguredModelsTestCase::class)->in(__DIR__.'/ConfiguredModels');

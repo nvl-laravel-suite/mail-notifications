@@ -21,7 +21,7 @@ if (! is_string($source)) {
     throw new RuntimeException('The worker requires a native persistence source argument.');
 }
 $connection = json_decode($source, true, flags: JSON_THROW_ON_ERROR);
-if (! is_array($connection) || ! in_array($connection['driver'] ?? null, ['pgsql', 'mysql', 'mariadb'], true)
+if (! is_array($connection) || ($connection['driver'] ?? null) !== 'pgsql'
     || ! is_string($connection['database'] ?? null) || preg_match('/^nvl_own_test_[a-z0-9_]+$/D', $connection['database']) !== 1) {
     throw new RuntimeException('The worker requires an explicitly dedicated native persistence source.');
 }
@@ -35,7 +35,7 @@ $application = TestbenchApplication::create(options: ['load_environment_variable
 $kernel = $application->make(Kernel::class);
 $kernel->bootstrap();
 NativeDatabaseSource::inspect($application->make('db')->connection());
-$status = $kernel->call('queue:work', ['connection' => $options['driver'] ?? 'database', '--stop-when-empty' => false, '--max-time' => 5, '--sleep' => 1, '--tries' => 2, '--timeout' => 10, '--force' => true, '--no-interaction' => true]);
+$status = $kernel->call('queue:work', ['connection' => $options['driver'] ?? 'database', '--stop-when-empty' => true, '--sleep' => 0, '--tries' => 2, '--timeout' => 10, '--force' => true, '--no-interaction' => true]);
 if ($status !== 0) {
     fwrite(STDERR, $kernel->output());
     exit($status);

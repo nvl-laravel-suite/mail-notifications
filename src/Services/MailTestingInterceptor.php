@@ -43,12 +43,20 @@ final readonly class MailTestingInterceptor
             return;
         }
 
-        $environments = $this->environments($testing['environments'] ?? []);
+        $configuredEnvironments = $testing['environments'] ?? [];
         $respectEnvironment = $this->settingBoolean(
             $testing,
             'respect_environment',
             true,
         );
+
+        if ($respectEnvironment && ! is_array($configuredEnvironments)) {
+            throw new MailTrackingException(
+                'Mail testing interception environments must be an array.',
+            );
+        }
+
+        $environments = $this->environments($configuredEnvironments);
 
         if ($respectEnvironment
             && ($environments === []
@@ -153,17 +161,17 @@ final readonly class MailTestingInterceptor
      */
     public function settings(): array
     {
+        $packageTesting = $this->config->get('nvl-mail-notifications.testing', []);
+        $defaults = is_array($packageTesting)
+            ? $this->stringKeyedSettings($packageTesting)
+            : [];
         $hostTesting = $this->config->get('mail.testing');
 
         if (is_array($hostTesting) && $hostTesting !== []) {
-            return $this->stringKeyedSettings($hostTesting);
+            return [...$defaults, ...$this->stringKeyedSettings($hostTesting)];
         }
 
-        $packageTesting = $this->config->get('nvl-mail-notifications.testing', []);
-
-        return is_array($packageTesting)
-            ? $this->stringKeyedSettings($packageTesting)
-            : [];
+        return $defaults;
     }
 
     /**

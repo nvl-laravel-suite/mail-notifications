@@ -939,6 +939,31 @@ it('fails safe when testing interception has no environment allowlist', function
         ->toBe('real@example.test');
 });
 
+it('inherits package environment defaults when mail.testing partially overrides testing interception', function () {
+    config()->set('mail.testing', [
+        'enabled' => true,
+        'to_address' => 'preview@example.test',
+    ]);
+    app(MailTestingInterceptor::class)->apply();
+
+    Mail::to('real@example.test')->send(new TrackedMail);
+
+    expect(MailNotification::query()->sole()->primary_recipient_email)
+        ->toBe('preview@example.test');
+});
+
+it('rejects a non-array mail.testing environments allowlist', function () {
+    config()->set('mail.testing', [
+        'enabled' => true,
+        'to_address' => 'preview@example.test',
+        'respect_environment' => true,
+        'environments' => 'testing',
+    ]);
+
+    expect(fn () => app(MailTestingInterceptor::class)->apply())
+        ->toThrow(MailTrackingException::class);
+});
+
 it('rejects an enabled testing mode without a safe recipient', function () {
     config()->set('mail.testing', [
         'enabled' => true,

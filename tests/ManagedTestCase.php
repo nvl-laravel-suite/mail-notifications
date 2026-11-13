@@ -38,9 +38,10 @@ abstract class ManagedTestCase extends CommittedEventTestCase
         ]);
     }
 
-    protected function defineDatabaseMigrationsAfterDatabaseRefreshed(): void
+    protected function migrateDatabases(): void
     {
-        Schema::enableForeignKeyConstraints();
+        parent::migrateDatabases();
+
         if (! Schema::hasTable('jobs')) {
             Schema::create('jobs', function (Blueprint $table): void {
                 $table->bigIncrements('id');
@@ -52,5 +53,10 @@ abstract class ManagedTestCase extends CommittedEventTestCase
                 $table->unsignedInteger('created_at');
             });
         }
+    }
+
+    protected function defineDatabaseMigrationsAfterDatabaseRefreshed(): void
+    {
+        Schema::enableForeignKeyConstraints();
     }
 }

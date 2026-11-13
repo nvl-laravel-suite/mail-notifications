@@ -24,10 +24,11 @@ use Nvl\Ownership\Contracts\OwnerSystemAccess;
 use Nvl\Ownership\Services\OwnershipRunner;
 use Nvl\Ownership\Tests\Fixtures\Actor;
 use Nvl\Ownership\Tests\Fixtures\Company;
+use Nvl\Ownership\Tests\Fixtures\OptsIntoAdoptedSchemaReuse;
 use Nvl\Support\Ownership\Contracts\OwnershipContext;
 use Nvl\Support\Ownership\Exceptions\OwnershipViolation;
 
-uses(OwnerScopeTestCase::class);
+uses(OwnerScopeTestCase::class, OptsIntoAdoptedSchemaReuse::class);
 
 function ownershipMailWebhook(string $messageId): WebhookRequest
 {

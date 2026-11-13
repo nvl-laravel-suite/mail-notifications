@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\MySqlConnection;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\Builder as SchemaBuilder;
@@ -18,7 +17,6 @@ use Nvl\MailNotifications\Models\MailNotification;
 use Nvl\MailNotifications\Models\MailNotificationEvent;
 use Nvl\MailNotifications\Models\ScheduledMailMessage;
 use Nvl\MailNotifications\Services\MailNotificationsDoctor;
-use Nvl\MailNotifications\Support\StatusConstraintDatabase;
 use Nvl\MailNotifications\Support\StatusConstraintInspector;
 
 const MAIL_STATUS_TEST_CONNECTION = 'mail-status-upgrade-test';
@@ -76,7 +74,6 @@ function scheduledMailStatusValues(): array
  * @param  list<string>  $allowedValues
  */
 function nativeStatusClauseMatches(
-    string $driver,
     string $clause,
     string $column,
     array $allowedValues,
@@ -88,7 +85,6 @@ function nativeStatusClauseMatches(
 
     return $method->invoke(
         null,
-        $driver,
         $clause,
         $column,
         $allowedValues,
@@ -117,8 +113,6 @@ function dropMailStatusInvariant(
 
     $dropClause = match ($driver) {
         'pgsql' => 'drop constraint',
-        'mysql' => 'drop check',
-        'mariadb' => 'drop constraint',
         default => throw new LogicException(
             "Unsupported status-constraint test driver [{$driver}].",
         ),
@@ -545,226 +539,6 @@ it('rejects a SQLite update invariant attached to the wrong operation', function
         ->toBe(1);
 });
 
-it('recognizes only an exact case-sensitive MySQL-family status check', function () {
-    $values = implode(', ', array_map(
-        static fn (string $value): string => "_utf8mb4'{$value}'",
-        mailDeliveryStatusValues(),
-    ));
-    $caseSensitive = "(cast(`status` as char charset binary) in ({$values}))";
-    $catalogEscaped = str_replace("'", "\\'", $caseSensitive);
-    $collationSensitive = "(`status` in ({$values}))";
-    $ineffective = "(cast(`status` as char charset binary) in ({$values}) or 1 = 1)";
-
-    expect(nativeStatusClauseMatches(
-        'mysql',
-        $caseSensitive,
-        'status',
-        mailDeliveryStatusValues(),
-    ))->toBeTrue()
-        ->and(nativeStatusClauseMatches(
-            'mysql',
-            $catalogEscaped,
-            'status',
-            mailDeliveryStatusValues(),
-        ))->toBeTrue()
-        ->and(nativeStatusClauseMatches(
-            'mysql',
-            $collationSensitive,
-            'status',
-            mailDeliveryStatusValues(),
-        ))->toBeFalse()
-        ->and(nativeStatusClauseMatches(
-            'mysql',
-            $ineffective,
-            'status',
-            mailDeliveryStatusValues(),
-        ))->toBeFalse();
-});
-
-it('uses version-compatible MariaDB check metadata', function (
-    string $serverVersion,
-    bool $expectsTableScope,
-) {
-    $values = implode(', ', array_map(
-        static fn (string $value): string => "'{$value}'",
-        mailDeliveryStatusValues(),
-    ));
-    $schema = $this->mock(SchemaBuilder::class);
-    $schema->shouldReceive('parseSchemaAndTable')
-        ->once()
-        ->with(MailNotificationsTables::Notifications)
-        ->andReturn([null, MailNotificationsTables::Notifications]);
-    $connection = $this->mock(Connection::class);
-    $connection->shouldReceive('getDriverName')
-        ->andReturn('mariadb');
-    $connection->shouldReceive('getSchemaBuilder')
-        ->once()
-        ->andReturn($schema);
-    $connection->shouldReceive('getTablePrefix')
-        ->once()
-        ->andReturn('');
-    $connection->shouldReceive('getDatabaseName')
-        ->once()
-        ->andReturn('mail_database');
-    $connection->shouldReceive('getServerVersion')
-        ->twice()
-        ->andReturn($serverVersion);
-    $connection->shouldReceive('scalar')
-        ->once()
-        ->with('select @@session.check_constraint_checks')
-        ->andReturn(1);
-    $connection->shouldReceive('selectOne')
-        ->once()
-        ->withArgs(static function (
-            string $query,
-            array $bindings,
-        ) use ($expectsTableScope): bool {
-            $expectation = expect($query)
-                ->not->toContain('tc.enforced');
-
-            if ($expectsTableScope) {
-                $expectation->toContain(
-                    'and cc.table_name = tc.table_name',
-                );
-            } else {
-                $expectation->not->toContain(
-                    'and cc.table_name = tc.table_name',
-                );
-            }
-
-            return $bindings === [
-                'mail_database',
-                MailNotificationsTables::Notifications,
-                'mail_notifications_status_check',
-            ];
-        })
-        ->andReturn((object) [
-            'check_clause' => "binary `status` in ({$values})",
-        ]);
-
-    expect(StatusConstraintInspector::matches(
-        connection: $connection,
-        table: MailNotificationsTables::Notifications,
-        column: 'status',
-        constraint: 'mail_notifications_status_check',
-        allowedValues: mailDeliveryStatusValues(),
-    ))->toBeTrue();
-})->with([
-    'schema-unique legacy constraint names' => ['10.11.11', false],
-    'table-scoped constraint names' => [
-        '12.1.0-MariaDB-1:12.1.0+maria~ubu2404',
-        true,
-    ],
-]);
-
-it('requires a MySQL version that enforces check constraints', function (
-    string $serverVersion,
-    int $enforcedColumnCount,
-    ?string $expectedFailure,
-) {
-    $connection = $this->mock(MySqlConnection::class);
-    $connection->shouldReceive('getDriverName')
-        ->once()
-        ->andReturn('mysql');
-    $connection->shouldReceive('isMaria')
-        ->once()
-        ->andReturnFalse();
-    $connection->shouldReceive('scalar')
-        ->once()
-        ->andReturn($enforcedColumnCount);
-
-    if ($enforcedColumnCount === 0) {
-        $connection->shouldReceive('getServerVersion')
-            ->once()
-            ->andReturn($serverVersion);
-    }
-
-    $reason = StatusConstraintDatabase::unsupportedReason($connection);
-
-    if ($expectedFailure === null) {
-        expect($reason)->toBeNull();
-
-        return;
-    }
-
-    expect($reason)->toContain($expectedFailure);
-})->with([
-    'MySQL 5.7' => ['5.7.44', 0, 'MySQL 8.0.16 or newer'],
-    'MySQL before check enforcement' => [
-        '8.0.15',
-        0,
-        'MySQL 8.0.16 or newer',
-    ],
-    'first enforcing MySQL release' => ['8.0.16-log', 1, null],
-    'Aurora capability metadata' => [
-        '8.0.mysql_aurora.3.10.0',
-        1,
-        null,
-    ],
-]);
-
-it('rejects MariaDB configured through Laravel’s MySQL driver', function () {
-    $connection = $this->mock(MySqlConnection::class);
-    $connection->shouldReceive('getDriverName')
-        ->once()
-        ->andReturn('mysql');
-    $connection->shouldReceive('isMaria')
-        ->once()
-        ->andReturnTrue();
-
-    expect(StatusConstraintDatabase::unsupportedReason($connection))
-        ->toContain("Laravel's [mariadb] connection driver");
-});
-
-it('requires a supported MariaDB version', function (
-    string $serverVersion,
-    mixed $constraintChecks,
-    ?string $expectedFailure,
-) {
-    $connection = $this->mock(Connection::class);
-    $connection->shouldReceive('getDriverName')
-        ->once()
-        ->andReturn('mariadb');
-    $connection->shouldReceive('getServerVersion')
-        ->once()
-        ->andReturn($serverVersion);
-
-    if ($constraintChecks !== null) {
-        $connection->shouldReceive('scalar')
-            ->once()
-            ->with('select @@session.check_constraint_checks')
-            ->andReturn($constraintChecks);
-    }
-
-    $reason = StatusConstraintDatabase::unsupportedReason($connection);
-
-    if ($expectedFailure === null) {
-        expect($reason)->toBeNull();
-
-        return;
-    }
-
-    expect($reason)->toContain($expectedFailure);
-})->with([
-    'unsupported legacy MariaDB' => [
-        '10.2.44',
-        null,
-        'MariaDB 10.10.0 or newer',
-    ],
-    'implicit timestamp defaults reject the schema' => [
-        '10.9.8',
-        null,
-        'MariaDB 10.10.0 or newer',
-    ],
-    'minimum MariaDB release' => ['10.10.0', 1, null],
-    'table-scoped constraint release' => ['12.1.0', 'ON', null],
-    'disabled check enforcement' => [
-        '12.1.0',
-        0,
-        'check_constraint_checks',
-    ],
-]);
-
 it('recognizes only the exact PostgreSQL ANY status check', function () {
     $values = implode(', ', array_map(
         static fn (string $value): string => "'{$value}'::character varying",
@@ -779,19 +553,16 @@ it('recognizes only the exact PostgreSQL ANY status check', function () {
     $ineffective = "((status)::text = ANY ((ARRAY[{$values}])::text[]) OR 1 = 1)";
 
     expect(nativeStatusClauseMatches(
-        'pgsql',
         $exact,
         'status',
         mailDeliveryStatusValues(),
     ))->toBeTrue()
         ->and(nativeStatusClauseMatches(
-            'pgsql',
             $pretty,
             'status',
             mailDeliveryStatusValues(),
         ))->toBeTrue()
         ->and(nativeStatusClauseMatches(
-            'pgsql',
             $ineffective,
             'status',
             mailDeliveryStatusValues(),

@@ -56,7 +56,7 @@ test('fresh managed storage preserves unrelated host owners clients and users', 
     expect(DB::table('owners')->sole()->host_name)->toBe('Host owner');
     expect(DB::table('clients')->sole()->host_name)->toBe('Host client');
     expect(Schema::hasColumn('users', 'is_admin'))->toBeFalse();
-});
+})->group('fresh-schema');
 
 test('mapped legacy inventory tables keep configured joins search and verification', function (): void {
     $logicalTables = ['owners', 'owner_mail_settings', 'clients', 'client_mail_settings', 'provider_accounts', 'sending_domains', 'sender_identities'];

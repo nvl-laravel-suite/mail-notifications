@@ -5,6 +5,10 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- Route webhook delivery state updates, testing interception, and Doctor migration checks through configured connections with PostgreSQL-safe savepoints and wrapped domain search predicates.
+
 ## [7.0.3] - 2026-11-11
 
 ### Fixed
@@ -18,10 +22,8 @@ All notable changes to `nvl/mail-notifications` are documented here.
 - A tracked Mailable sent through a scheduling delivery profile, or handed to a mailer instance other than its own, records the mailer that actually sends it and resolves its provider and tracking exclusions from that mailer.
 - The previous `Managed` class names are aliased on first use instead of loading about 117 package classes in every PHP process; `instanceof`, type hints, `new` and serialized payloads keep working.
 - Removed settings that nothing enforced: `managed.authentication.requests_per_minute`, and the `rate_limit_per_minute` and `authentication_mode` attributes of `ClientMailSettings` (the columns stay, unused). `ClientAuthenticationMode` is deprecated.
-- Concurrent `process-scheduled` workers on PostgreSQL, MySQL and MariaDB claim the next free due messages with `SKIP LOCKED` instead of queueing on the same row.
-- A schema creation that fails part-way on MySQL or MariaDB drops the tables it created, so the migration can be re-run instead of refusing because package tables already exist.
+- Concurrent `process-scheduled` workers on PostgreSQL claim the next free due messages with `SKIP LOCKED` instead of queueing on the same row.
 - One malformed element no longer rejects a verified SendGrid webhook batch: valid events are accepted and the malformed count is reported. A batch that fails verification or has no valid event is still rejected.
-- MariaDB older than 10.10 is refused before schema creation; its implicit timestamp defaults reject the package tables under strict mode.
 - An exception thrown while a host factory builds a scheduled Mailable is retried within `max_attempts` like a transport failure instead of failing the message at once. Invalid stored payloads, recipients and unknown factories still fail terminally.
 - A tracked notification with several recipients keeps the most severe status any provider event reported, whichever order events arrive in; an older event no longer loses to a newer, less severe one, and a bounce is recorded after a delivery.
 - Receipt reconciliation no longer queries the `received` state, which nothing writes.
@@ -226,7 +228,7 @@ All notable changes to `nvl/mail-notifications` are documented here.
   anonymized metadata.
 - Added driver-native database status invariants for notifications, provider
   events, and scheduled messages, with exact named `CHECK` constraints on
-  PostgreSQL/MySQL-family databases, paired SQLite triggers, adversarial
+  PostgreSQL, paired SQLite triggers, adversarial
   definition checks, and readiness diagnostics.
 - Added retention-aligned notification and scheduled-message indexes, including
   legacy timestamp fallbacks, with migration and doctor compatibility checks.
@@ -237,9 +239,7 @@ All notable changes to `nvl/mail-notifications` are documented here.
   privacy-marker, status-invariant, foreign-key, and exact named-index contracts
   and reject ambiguous ownership when the package creator is absent from
   migration history.
-- Added fail-closed database capability gates for MySQL 8.0.16+ and MariaDB
-  10.3+ through Laravel's `mariadb` driver, including active session constraint
-  enforcement, physical table prefixes, and PostgreSQL schema-qualified
+- Added readiness checks for physical table prefixes and PostgreSQL schema-qualified
   ownership.
 - Consolidated queue-reference identity, status invariants, privacy markers,
   and their indexes into the unpublished first-release creator migrations,

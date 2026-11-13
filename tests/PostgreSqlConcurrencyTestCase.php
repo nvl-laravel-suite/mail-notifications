@@ -73,8 +73,6 @@ abstract class PostgreSqlConcurrencyTestCase extends Orchestra
     {
         $app['config']->set('app.timezone', 'UTC');
         $app['config']->set('database.connections.pgsql.timezone', 'UTC');
-        $app['config']->set('database.connections.mysql.timezone', '+00:00');
-        $app['config']->set('database.connections.mariadb.timezone', '+00:00');
         $app['config']->set('mail.default', 'array');
         $app['config']->set('mail.mailers.array', [
             'transport' => 'array',

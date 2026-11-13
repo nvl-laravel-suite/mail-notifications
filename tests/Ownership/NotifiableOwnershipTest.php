@@ -14,9 +14,10 @@ use Nvl\MailNotifications\ValueObjects\TrackingContext;
 use Nvl\Ownership\Services\OwnershipRunner;
 use Nvl\Ownership\Tests\Fixtures\Actor;
 use Nvl\Ownership\Tests\Fixtures\Company;
+use Nvl\Ownership\Tests\Fixtures\OptsIntoAdoptedSchemaReuse;
 use Nvl\Support\Ownership\Exceptions\OwnershipException;
 
-uses(NotifiableOwnerScopeTestCase::class);
+uses(NotifiableOwnerScopeTestCase::class, OptsIntoAdoptedSchemaReuse::class);
 
 function notifiableOwnershipMessage(?NotifiableReference $notifiable = null): PreparedMessage
 {

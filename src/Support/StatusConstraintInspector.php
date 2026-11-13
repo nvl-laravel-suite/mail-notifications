@@ -82,7 +82,6 @@ final class StatusConstraintInspector
 
         return $clause !== null
             && self::checkClauseMatches(
-                $connection->getDriverName(),
                 $clause,
                 $column,
                 $allowedValues,
@@ -188,113 +187,49 @@ final class StatusConstraintInspector
     }
 
     /**
-     * Return one named CHECK clause for a PostgreSQL or MySQL-family table.
+     * Return one named CHECK clause for a PostgreSQL table.
      */
     private static function checkClause(
         Connection $connection,
         string $table,
         string $constraint,
     ): ?string {
+        if ($connection->getDriverName() !== 'pgsql') {
+            return null;
+        }
+
         [$schema, $tableName] = self::tableParts($connection, $table);
-        $driver = $connection->getDriverName();
-
-        if (StatusConstraintDatabase::unsupportedReason($connection)
-            !== null) {
-            return null;
-        }
-
-        if ($driver === 'pgsql') {
-            $schema ??= $connection->scalar('select current_schema()');
-        } elseif (in_array($driver, ['mysql', 'mariadb'], true)) {
-            $schema ??= $connection->getDatabaseName();
-        } else {
-            return null;
-        }
-
+        $schema ??= $connection->scalar('select current_schema()');
         if (! is_string($schema) || $schema === '') {
             return null;
         }
 
-        if ($driver === 'pgsql') {
-            $enforcementPredicate = self::postgresConstraintEnforcementMetadataExists(
-                $connection,
-            )
-                ? 'and constraint_record.conenforced = true'
-                : 'and true';
-            $row = $connection->selectOne(
-                <<<SQL
-                    select pg_catalog.pg_get_expr(
-                        constraint_record.conbin,
-                        constraint_record.conrelid,
-                        true
-                    ) as check_clause
-                    from pg_catalog.pg_constraint as constraint_record
-                    inner join pg_catalog.pg_class as relation
-                        on relation.oid = constraint_record.conrelid
-                    inner join pg_catalog.pg_namespace as namespace
-                        on namespace.oid = relation.relnamespace
-                    where constraint_record.contype = 'c'
-                      and constraint_record.convalidated = true
-                      {$enforcementPredicate}
-                      and namespace.nspname = ?
-                      and relation.relname = ?
-                      and constraint_record.conname = ?
-                    SQL,
-                [$schema, $tableName, $constraint],
-            );
-        } elseif ($driver === 'mysql') {
-            $row = $connection->selectOne(
-                <<<'SQL'
-                    select cc.check_clause as check_clause
-                    from information_schema.table_constraints as tc
-                    inner join information_schema.check_constraints as cc
-                        on cc.constraint_catalog = tc.constraint_catalog
-                        and cc.constraint_schema = tc.constraint_schema
-                        and cc.constraint_name = tc.constraint_name
-                    where tc.constraint_type = 'CHECK'
-                      and tc.table_schema = ?
-                      and tc.table_name = ?
-                      and tc.constraint_name = ?
-                      and upper(tc.enforced) = 'YES'
-                SQL,
-                [$schema, $tableName, $constraint],
-            );
-        } elseif (self::mariaDbCheckConstraintsIncludeTableName(
+        $enforcementPredicate = self::postgresConstraintEnforcementMetadataExists(
             $connection,
-        )) {
-            $row = $connection->selectOne(
-                <<<'SQL'
-                    select cc.check_clause as check_clause
-                    from information_schema.table_constraints as tc
-                    inner join information_schema.check_constraints as cc
-                        on cc.constraint_catalog = tc.constraint_catalog
-                        and cc.constraint_schema = tc.constraint_schema
-                        and cc.constraint_name = tc.constraint_name
-                        and cc.table_name = tc.table_name
-                    where tc.constraint_type = 'CHECK'
-                      and tc.table_schema = ?
-                      and tc.table_name = ?
-                      and tc.constraint_name = ?
+        )
+            ? 'and constraint_record.conenforced = true'
+            : 'and true';
+        $row = $connection->selectOne(
+            <<<SQL
+                select pg_catalog.pg_get_expr(
+                    constraint_record.conbin,
+                    constraint_record.conrelid,
+                    true
+                ) as check_clause
+                from pg_catalog.pg_constraint as constraint_record
+                inner join pg_catalog.pg_class as relation
+                    on relation.oid = constraint_record.conrelid
+                inner join pg_catalog.pg_namespace as namespace
+                    on namespace.oid = relation.relnamespace
+                where constraint_record.contype = 'c'
+                  and constraint_record.convalidated = true
+                  {$enforcementPredicate}
+                  and namespace.nspname = ?
+                  and relation.relname = ?
+                  and constraint_record.conname = ?
                 SQL,
-                [$schema, $tableName, $constraint],
-            );
-        } else {
-            $row = $connection->selectOne(
-                <<<'SQL'
-                    select cc.check_clause as check_clause
-                    from information_schema.table_constraints as tc
-                    inner join information_schema.check_constraints as cc
-                        on cc.constraint_catalog = tc.constraint_catalog
-                        and cc.constraint_schema = tc.constraint_schema
-                        and cc.constraint_name = tc.constraint_name
-                    where tc.constraint_type = 'CHECK'
-                      and tc.table_schema = ?
-                      and tc.table_name = ?
-                      and tc.constraint_name = ?
-                    SQL,
-                [$schema, $tableName, $constraint],
-            );
-        }
+            [$schema, $tableName, $constraint],
+        );
 
         if (! is_object($row)) {
             return null;
@@ -321,23 +256,6 @@ final class StatusConstraintInspector
         }
 
         return (int) $matches[1] >= 18;
-    }
-
-    /**
-     * Determine whether MariaDB scopes CHECK metadata by table name.
-     */
-    private static function mariaDbCheckConstraintsIncludeTableName(
-        Connection $connection,
-    ): bool {
-        if (preg_match(
-            '/(?<!\d)(\d+\.\d+\.\d+)(?!\d)/',
-            $connection->getServerVersion(),
-            $matches,
-        ) !== 1) {
-            return false;
-        }
-
-        return version_compare($matches[1], '12.1.0', '>=');
     }
 
     /**
@@ -391,39 +309,22 @@ final class StatusConstraintInspector
      * @param  list<string>  $allowedValues
      */
     private static function checkClauseMatches(
-        string $driver,
         string $clause,
         string $column,
         array $allowedValues,
     ): bool {
-        $predicate = self::stripWrappingParentheses(
-            self::normalizeCatalogClause($driver, $clause),
-        );
+        $predicate = self::stripWrappingParentheses($clause);
         $identifier = '["`]?'.preg_quote($column, '/').'["`]?';
         $scalarCast = '(?:\s*::\s*(?:text|character\s+varying))?';
         $columnExpression = '(?:\(\s*'.$identifier.'\s*\)|'
             .$identifier.')'.$scalarCast;
         $literal = self::stringLiteralPattern();
         $literalList = $literal.'(?:\s*,\s*'.$literal.')*';
-        $checkedColumnExpression = in_array(
-            $driver,
-            ['mysql', 'mariadb'],
-            true,
-        )
-            ? '(?:binary\s+'.$identifier
-                .'|cast\s*\(\s*'.$identifier
-                .'\s+as\s+(?:binary(?:\s*\(\s*\d+\s*\))?'
-                .'|char(?:acter)?\s+charset\s+binary)\s*\))'
-            : $columnExpression;
-        $inPattern = '/^'.$checkedColumnExpression.'\s+in\s*\(\s*'
+        $inPattern = '/^'.$columnExpression.'\s+in\s*\(\s*'
             .$literalList.'\s*\)$/i';
 
         if (preg_match($inPattern, $predicate) === 1) {
             return self::literalValuesMatch($predicate, $allowedValues);
-        }
-
-        if ($driver !== 'pgsql') {
-            return false;
         }
 
         $arrayCast = '(?:::\s*(?:text|character\s+varying)\s*\[\s*\])?';
@@ -438,23 +339,11 @@ final class StatusConstraintInspector
     }
 
     /**
-     * Normalize driver catalog escaping without changing the SQL predicate.
-     */
-    private static function normalizeCatalogClause(
-        string $driver,
-        string $clause,
-    ): string {
-        return in_array($driver, ['mysql', 'mariadb'], true)
-            ? str_replace("\\'", "'", $clause)
-            : $clause;
-    }
-
-    /**
      * Return the strict SQL string-literal pattern used by supported drivers.
      */
     private static function stringLiteralPattern(): string
     {
-        return "(?:_[a-z0-9]+)?'(?:''|[^'])*'"
+        return "'(?:''|[^'])*'"
             .'(?:\s*::\s*(?:text|character\s+varying))*';
     }
 

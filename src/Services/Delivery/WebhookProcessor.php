@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nvl\MailNotifications\Services\Delivery;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Nvl\MailNotifications\Models\EmailAttempt;
 use Nvl\MailNotifications\Models\EmailEvent;
@@ -111,7 +112,8 @@ class WebhookProcessor
 
             return;
         }
-        DB::connection(ManagedConfiguration::connection())->transaction(function () use ($id, $attempt, $data, $type, $event): void {
+        $connection = DB::connection(ManagedConfiguration::connection());
+        $connection->transaction(function () use ($id, $attempt, $data, $type, $event, $connection): void {
             $message = EmailMessage::query()->lockForUpdate()->findOrFail($attempt->email_message_id);
             $receipt = WebhookReceipt::query()->lockForUpdate()->findOrFail($id);
             if ($receipt->processed_at) {
@@ -141,7 +143,13 @@ class WebhookProcessor
             if ($isSendGrid && $data['message_id'] !== '') {
                 $metadata['provider_message_id'] = $data['message_id'];
             }
-            $event = EmailEvent::create(['provider_account_id' => $receipt->provider_account_id, 'email_message_id' => $message->id, 'email_recipient_id' => $recipient->id, 'webhook_receipt_id' => $receipt->id, 'provider_event_id' => $data['id'], 'type' => $type, 'occurred_at' => $at, 'metadata' => $metadata]);
+            try {
+                $event = $connection->transaction(fn (): EmailEvent => EmailEvent::create(['provider_account_id' => $receipt->provider_account_id, 'email_message_id' => $message->id, 'email_recipient_id' => $recipient->id, 'webhook_receipt_id' => $receipt->id, 'provider_event_id' => $data['id'], 'type' => $type, 'occurred_at' => $at, 'metadata' => $metadata]));
+            } catch (UniqueConstraintViolationException) {
+                $receipt->update(['status' => 'duplicate', 'processed_at' => now()]);
+
+                return;
+            }
             $attemptUpdates = ['status' => 'submitted', 'retryable' => false, 'completed_at' => $attempt->completed_at ?? now()];
             if ($isSendGrid) {
                 if ($data['message_id'] !== '') {

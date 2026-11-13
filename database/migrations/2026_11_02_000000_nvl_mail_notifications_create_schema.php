@@ -40,9 +40,7 @@ return new class extends Migration
             $this->createScheduledMail($schema);
             $this->createManagedDelivery($schema);
         } catch (Throwable $exception) {
-            // No package table existed before this run, so whatever exists now
-            // is its own partial work. A surrounding transaction already undoes
-            // it; MySQL and MariaDB commit each DDL statement and never call down().
+            // Without a surrounding transaction, remove only this run's partial work.
             if ($schema->getConnection()->transactionLevel() === 0) {
                 try {
                     $this->down();
@@ -130,23 +128,15 @@ return new class extends Migration
     {
         $notificationTable = MailNotificationsTables::get(MailNotificationsTables::Notifications);
         $eventTable = MailNotificationsTables::get(MailNotificationsTables::Events);
-        $identityCollation = in_array($schema->getConnection()->getDriverName(), ['mysql', 'mariadb'], true) ? 'utf8mb4_bin' : null;
-        $schema->create($notificationTable, function (Blueprint $table) use ($identityCollation): void {
+        $schema->create($notificationTable, function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->uuid('tenant_id')->nullable()->index('nvl_mn_notifications_tenant_idx');
             $table->string('ownership_key', 96)->default('platform')->index('nvl_mn_notifications_owner_idx');
             $table->uuid('correlation_id')->unique();
             $table->uuid('queue_reference')->nullable();
             $table->string('mailer', 128);
-            $provider = $table->string('provider', 128)->nullable();
-            $providerMessageId = $table->string('provider_message_id', 255)
-                ->nullable();
-
-            if ($identityCollation !== null) {
-                $provider->collation($identityCollation);
-                $providerMessageId->collation($identityCollation);
-            }
-
+            $table->string('provider', 128)->nullable();
+            $table->string('provider_message_id', 255)->nullable();
             $table->string('status', 32)->default('pending');
             $table->string('message_category', 128);
             $table->text('subject')->nullable();
@@ -196,26 +186,15 @@ return new class extends Migration
                 'mail_notifications_redacted_time_index',
             );
         });
-        $schema->create($eventTable, function (Blueprint $table) use (
-            $identityCollation,
-            $notificationTable,
-        ): void {
+        $schema->create($eventTable, function (Blueprint $table) use ($notificationTable): void {
             $table->uuid('id')->primary();
             $table->uuid('tenant_id')->nullable()->index('nvl_mn_events_tenant_idx');
             $table->foreignUuid('mail_notification_id')
                 ->constrained($notificationTable, indexName: 'nvl_mn_event_notification_fk')
                 ->cascadeOnDelete();
-            $provider = $table->string('provider', 128);
-            $providerEventId = $table->string('provider_event_id', 255);
-            $providerMessageId = $table->string('provider_message_id', 255)
-                ->nullable();
-
-            if ($identityCollation !== null) {
-                $provider->collation($identityCollation);
-                $providerEventId->collation($identityCollation);
-                $providerMessageId->collation($identityCollation);
-            }
-
+            $table->string('provider', 128);
+            $table->string('provider_event_id', 255);
+            $table->string('provider_message_id', 255)->nullable();
             $table->string('normalized_type', 32);
             $table->timestampTz('occurred_at', 6);
             $table->json('metadata')->nullable();
@@ -680,10 +659,7 @@ return new class extends Migration
             $table->foreignUuid('client_id')->constrained(ManagedConfiguration::table('clients'), indexName: 'nvl_mn_c0ced4ceb54859de6dc9')->cascadeOnDelete();
             $table->uuid('email_message_id');
             $table->string('type', 64);
-            $identifier = $table->string('reference_id', 191);
-            if (in_array(Schema::connection(ManagedConfiguration::connection())->getConnection()->getDriverName(), ['mysql', 'mariadb'], true)) {
-                $identifier->collation('utf8mb4_bin');
-            }
+            $table->string('reference_id', 191);
             $table->foreign(['email_message_id', 'client_id'], 'nvl_mn_e13a9e5de23fa3d56c59')
                 ->references(['id', 'client_id'])->on(ManagedConfiguration::table('email_messages'))->cascadeOnDelete();
             $table->unique(['email_message_id', 'type', 'reference_id'], 'nvl_mn_5b97b11d3133a40107df');
@@ -759,15 +735,11 @@ return new class extends Migration
         }
 
         $grammar = $connection->getQueryGrammar();
-        $wrappedColumn = $grammar->wrap($column);
-        $checkedColumn = in_array($driver, ['mysql', 'mariadb'], true)
-            ? 'binary '.$wrappedColumn
-            : $wrappedColumn;
         $connection->statement(sprintf(
             'alter table %s add constraint %s check (%s in (%s))',
             $grammar->wrapTable($table),
             $grammar->wrap($constraint),
-            $checkedColumn,
+            $grammar->wrap($column),
             $this->quotedValues($allowedValues),
         ));
     }
