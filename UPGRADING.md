@@ -562,8 +562,8 @@ Inject these contracts when application workflows need substitution. Native
 concrete constructors and operation signatures remain available through major 5;
 internal workflow chains are unchanged. Register host implementations before
 package discovery or replace the contract before resolving a new host service.
-See [Testing your app](README.md#testing-your-app) for native fixtures and the
-shipped consumer-audit PHPStan configuration.
+See [operations and verification](README.md#operations-and-verification) for
+the current verification guidance.
 
 
 ## Conventional delivery namespaces

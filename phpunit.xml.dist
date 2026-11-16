@@ -11,7 +11,6 @@
     <testsuites>
         <testsuite name="NVL Mail Notifications">
             <directory>tests</directory>
-            <exclude>tests/Historical</exclude>
         </testsuite>
     </testsuites>
     <php>
