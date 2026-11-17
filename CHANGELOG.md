@@ -5,6 +5,15 @@ All notable changes to `nvl/mail-notifications` are documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- History and scheduled-mail detail reads report a malformed identifier as not found on PostgreSQL instead of raising a database error.
+- History search and suggestions match case-insensitively on every supported database through the core `TextMatcher`, and treat `%` and `_` literally.
+- History and scheduled-mail `from`/`to` filters compare the given instant in UTC with microseconds, matching stored timestamps.
+- Managed delivery tables store and read every timestamp in UTC, like the tracking and scheduling tables, and compare against a UTC clock. Under a non-UTC `app.timezone`, `send_at` is no longer dispatched early or an hour late across a DST fallback, `quarantine-restored` compares `--before` with the right creation times, and out-of-order provider events keep their correct order and earliest engagement times. Idempotent replays now treat equivalent `send_at` offsets (for example `Z` and `+00:00`) as the same request.
+- Scheduled payload versions above 32767 are rejected before persistence instead of overflowing the PostgreSQL `smallint` column; the factory registry refuses them too.
+- History and scheduled-mail pagination rejects a page whose offset would overflow instead of returning the first page.
+
 ## [7.2.0] - 2026-11-17
 
 ### Changed

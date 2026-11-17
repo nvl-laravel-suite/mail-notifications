@@ -8,6 +8,7 @@ use Illuminate\Container\Container;
 use Illuminate\Contracts\Container\Container as ContainerContract;
 use Nvl\MailNotifications\Contracts\ScheduledMessageFactory;
 use Nvl\MailNotifications\Exceptions\ScheduledMailException;
+use Nvl\MailNotifications\ValueObjects\ScheduleMailData;
 use ReflectionClass;
 
 /**
@@ -100,7 +101,7 @@ final class ScheduledMessageFactoryRegistry
         $factory = is_string($factoryClass)
             ? $this->instantiate($factoryClass)
             : $factoryClass;
-        if ($factory->alias() !== $normalizedAlias || $version < 1 || ! $factory->supportsVersion($version)) {
+        if ($factory->alias() !== $normalizedAlias || $version < 1 || $version > ScheduleMailData::MAX_PAYLOAD_VERSION || ! $factory->supportsVersion($version)) {
             throw new ScheduledMailException(sprintf(
                 'Scheduled message factory [%s] does not support payload version [%d].',
                 $normalizedAlias,

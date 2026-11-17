@@ -20,6 +20,8 @@ The names below are logical keys in `Definitions\Tables\MailNotificationsTables`
 
 The last three tables support established package APIs. They are not the service's prepared-message attempt/event tables. This cleanup retains those APIs rather than silently deleting a supported capability. The table count also includes explicit file/queue recovery evidence; collapsing those into live message fields would change their failure and retention guarantees.
 
+Every package table stores timestamps as UTC wall-clock values, independently of `app.timezone`, and models read them back as UTC instants. Tracking and scheduling tables keep microseconds; the delivery tables keep seconds. Raw queries against these tables must compare UTC values.
+
 ## Relationships and ownership
 
 Provider accounts, domains and senders belong to an owner. Each client has a stable owner relationship and independent settings/keys. Every business reference belongs to the same client as its message. Message recipients and attempts retain distinct outcomes; an aggregate message status is projected from their evidence.

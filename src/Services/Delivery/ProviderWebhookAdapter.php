@@ -303,6 +303,6 @@ class ProviderWebhookAdapter
 
     private function freshTimestamp(string $timestamp): bool
     {
-        return preg_match('/\A[0-9]{1,12}\z/', $timestamp) === 1 && abs(now()->getTimestamp() - (int) $timestamp) <= 259200;
+        return preg_match('/\A[0-9]{1,12}\z/', $timestamp) === 1 && abs(now('UTC')->getTimestamp() - (int) $timestamp) <= 259200;
     }
 }

@@ -35,7 +35,7 @@ class ClientWebhookPublisher
         }
         $eventId = (string) Str::uuid();
         $payload = json_encode([
-            'version' => 1, 'id' => $eventId, 'type' => $type, 'occurred_at' => ($occurredAt ?? now())->toIso8601String(), 'client_id' => $message->client_id,
+            'version' => 1, 'id' => $eventId, 'type' => $type, 'occurred_at' => ($occurredAt ?? now('UTC'))->toIso8601String(), 'client_id' => $message->client_id,
             'data' => [
                 'message_id' => $message->id, 'status' => $message->status,
                 'references' => $message->references()->get()->map(fn ($reference): array => ['type' => $reference->type, 'id' => $reference->reference_id])->all(),
@@ -46,7 +46,7 @@ class ClientWebhookPublisher
         foreach ($endpoints as $endpoint) {
             $delivery = ClientWebhookDelivery::query()->firstOrCreate(
                 ['client_webhook_endpoint_id' => $endpoint->id, 'event_key' => $eventKey],
-                ['event_id' => $eventId, 'event_type' => $type, 'payload' => $payload, 'status' => 'pending', 'next_attempt_at' => now()],
+                ['event_id' => $eventId, 'event_type' => $type, 'payload' => $payload, 'status' => 'pending', 'next_attempt_at' => now('UTC')],
             );
             if ($delivery->wasRecentlyCreated) {
                 DB::connection(ManagedConfiguration::connection())->afterCommit(fn () => $this->dispatch($delivery->id));
@@ -75,8 +75,8 @@ class ClientWebhookPublisher
     {
         try {
             $connection = $this->durableConnection();
-            $claimed = ClientWebhookDelivery::query()->whereKey($id)->where('status', 'pending')->where(fn ($q) => $q->whereNull('next_attempt_at')->orWhere('next_attempt_at', '<=', now()))
-                ->where(fn ($q) => $q->whereNull('dispatched_at')->orWhere('dispatched_at', '<=', now()->subMinutes(5)))->update(['dispatched_at' => now()]);
+            $claimed = ClientWebhookDelivery::query()->whereKey($id)->where('status', 'pending')->where(fn ($q) => $q->whereNull('next_attempt_at')->orWhere('next_attempt_at', '<=', now('UTC')))
+                ->where(fn ($q) => $q->whereNull('dispatched_at')->orWhere('dispatched_at', '<=', now('UTC')->subMinutes(5)))->update(['dispatched_at' => now('UTC')]);
             if ($claimed === 0) {
                 return false;
             }
@@ -97,10 +97,10 @@ class ClientWebhookPublisher
      */
     public function recover(int $limit = 100): int
     {
-        ClientWebhookDelivery::query()->where('status', 'processing')->where('lease_until', '<=', now())
+        ClientWebhookDelivery::query()->where('status', 'processing')->where('lease_until', '<=', now('UTC'))
             ->update(['status' => 'pending', 'lease_token' => null, 'lease_until' => null, 'dispatched_at' => null, 'error_code' => 'worker_interrupted']);
-        $ids = ClientWebhookDelivery::query()->where('status', 'pending')->where(fn ($q) => $q->whereNull('next_attempt_at')->orWhere('next_attempt_at', '<=', now()))
-            ->where(fn ($q) => $q->whereNull('dispatched_at')->orWhere('dispatched_at', '<=', now()->subMinutes(5)))->oldest()->limit(min(1000, max(1, $limit)))->pluck('id');
+        $ids = ClientWebhookDelivery::query()->where('status', 'pending')->where(fn ($q) => $q->whereNull('next_attempt_at')->orWhere('next_attempt_at', '<=', now('UTC')))
+            ->where(fn ($q) => $q->whereNull('dispatched_at')->orWhere('dispatched_at', '<=', now('UTC')->subMinutes(5)))->oldest()->limit(min(1000, max(1, $limit)))->pluck('id');
         if ($ids->isNotEmpty()) {
             $this->durableConnection();
         }

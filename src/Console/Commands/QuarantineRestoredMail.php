@@ -70,7 +70,7 @@ class QuarantineRestoredMail extends Command
                         'lease_until' => null, 'next_attempt_at' => null, 'dispatched_at' => null]);
                     $message->attempts()->whereIn('status', ['pending', 'sending', 'failed', 'blocked'])->update([
                         'status' => 'unknown', 'retryable' => false, 'error_code' => 'restore_reconciliation_required',
-                        'error_message' => 'Restored send intent requires provider reconciliation before any resubmission.', 'completed_at' => now(),
+                        'error_message' => 'Restored send intent requires provider reconciliation before any resubmission.', 'completed_at' => now('UTC'),
                     ]);
                 }
 

@@ -23,7 +23,7 @@ class MessageStatusProjector
         $terminal = $statuses->isNotEmpty() && $statuses->every(fn (string $status): bool => in_array($status, ['delivered', 'hard_bounced', 'suppressed'], true));
         $message->update([
             'status' => $terminal ? ($delivered === $statuses->count() ? 'delivered' : ($delivered > 0 ? 'partially_delivered' : 'failed')) : 'submitted',
-            'completed_at' => $terminal ? ($message->completed_at ?? now()) : null,
+            'completed_at' => $terminal ? ($message->completed_at ?? now('UTC')) : null,
         ]);
     }
 }

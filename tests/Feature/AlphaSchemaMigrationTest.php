@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables;
 use Nvl\MailNotifications\Services\MailNotificationsDoctor;
+use Nvl\Support\Testing\TestServiceHosts;
 
 /** Fresh alpha schema, deliberately independent from package migration history. */
 function alphaMailSchema(): Migration
@@ -34,9 +35,14 @@ beforeEach(function (): void {
             throw new RuntimeException('Mail migration history tests require separate databases.');
         }
 
+        $host = getenv('NVL_OWNERSHIP_TEST_HOST') ?: '/tmp';
+        if (! TestServiceHosts::admitsDatabaseHost($host)) {
+            throw new RuntimeException('Mail migration history tests require an admitted test database host.');
+        }
+
         $connection = [
             'driver' => 'pgsql',
-            'host' => getenv('NVL_OWNERSHIP_TEST_HOST') ?: '/tmp',
+            'host' => $host,
             'port' => getenv('NVL_OWNERSHIP_TEST_PORT') ?: '5432',
             'username' => getenv('NVL_OWNERSHIP_TEST_USERNAME') ?: get_current_user(),
             'password' => getenv('NVL_OWNERSHIP_TEST_PASSWORD') ?: '',

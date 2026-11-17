@@ -47,7 +47,7 @@ class ClientWebhookSender
 
                 return null;
             }
-            $delivery->update(['status' => 'processing', 'attempts' => $delivery->attempts + 1, 'last_attempt_at' => now(), 'lease_token' => (string) Str::uuid(), 'lease_until' => now()->addMinute()]);
+            $delivery->update(['status' => 'processing', 'attempts' => $delivery->attempts + 1, 'last_attempt_at' => now('UTC'), 'lease_token' => (string) Str::uuid(), 'lease_until' => now('UTC')->addMinute()]);
             $delivery->setRelation('endpoint', $endpoint);
 
             return $delivery;
@@ -63,7 +63,7 @@ class ClientWebhookSender
         try {
             $endpoint = $delivery->endpoint ?? throw new \RuntimeException('The webhook endpoint is unavailable.');
             $target = $this->target->resolve($endpoint->url);
-            $timestamp = (string) now()->timestamp;
+            $timestamp = (string) now('UTC')->timestamp;
             $key = base64_decode(substr($endpoint->secret, 6), true);
             if ($key === false || strlen($key) !== 32) {
                 throw new \RuntimeException('Invalid signing key.');
@@ -89,7 +89,7 @@ class ClientWebhookSender
             $status = $response->status();
             $rawRetryAfter = $response->header('Retry-After');
             if ($rawRetryAfter !== '') {
-                $retryAfter = ctype_digit($rawRetryAfter) ? (int) $rawRetryAfter : max(0, (strtotime($rawRetryAfter) ?: now()->getTimestamp()) - now()->getTimestamp());
+                $retryAfter = ctype_digit($rawRetryAfter) ? (int) $rawRetryAfter : max(0, (strtotime($rawRetryAfter) ?: now('UTC')->getTimestamp()) - now('UTC')->getTimestamp());
                 $retryAfter = min(86400, $retryAfter);
             }
             $error = $response->successful() ? null : 'http_error';
@@ -113,8 +113,8 @@ class ClientWebhookSender
             $retry = ! $success && ! $terminal && $current->attempts < 8;
             $current->update([
                 'status' => $success ? 'delivered' : ($retry ? 'pending' : 'failed'), 'http_status' => $status, 'error_code' => $error,
-                'next_attempt_at' => $retry ? now()->addSeconds(max(self::RETRY_SECONDS[$current->attempts - 1], $retryAfter)) : null,
-                'delivered_at' => $success ? now() : null, 'lease_token' => null, 'lease_until' => null, 'dispatched_at' => null,
+                'next_attempt_at' => $retry ? now('UTC')->addSeconds(max(self::RETRY_SECONDS[$current->attempts - 1], $retryAfter)) : null,
+                'delivered_at' => $success ? now('UTC') : null, 'lease_token' => null, 'lease_until' => null, 'dispatched_at' => null,
             ]);
             if ($status === 410) {
                 $current->endpoint()->update(['enabled' => false]);

@@ -940,6 +940,9 @@ public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotifica
 public function client(): Illuminate\Database\Eloquent\Relations\BelongsTo
 @return BelongsTo<Client, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifications\Models\Client, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function media(): Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -988,6 +991,9 @@ public function effectiveMailSettings(): array
 public function flagRules(): Illuminate\Database\Eloquent\Relations\HasMany
 @return HasMany<EmailFlagRule, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\HasMany<Nvl\MailNotifications\Models\EmailFlagRule, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getMorphClass(): string
 public function getTable(): string
@@ -1033,6 +1039,9 @@ public function allows(string $ability): bool
 public function client(): Illuminate\Database\Eloquent\Relations\BelongsTo
 @return BelongsTo<Client, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifications\Models\Client, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function isUsable(): bool
@@ -1063,6 +1072,9 @@ public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotifica
 public function client(): Illuminate\Database\Eloquent\Relations\BelongsTo
 @return BelongsTo<Client, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifications\Models\Client, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function providerAccount(): Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -1098,6 +1110,9 @@ public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotifica
 public function endpoint(): Illuminate\Database\Eloquent\Relations\BelongsTo
 @return BelongsTo<ClientWebhookEndpoint, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifications\Models\ClientWebhookEndpoint, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 @property int $attempts
@@ -1140,6 +1155,9 @@ resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifi
 public function deliveries(): Illuminate\Database\Eloquent\Relations\HasMany
 @return HasMany<ClientWebhookDelivery, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\HasMany<Nvl\MailNotifications\Models\ClientWebhookDelivery, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public static function newSecret(): string
@@ -1166,6 +1184,9 @@ public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotifica
 public function emailMessage(): Illuminate\Database\Eloquent\Relations\BelongsTo
 @return BelongsTo<EmailMessage, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifications\Models\EmailMessage, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function providerAccount(): Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -1205,6 +1226,9 @@ resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifi
 public function emailRecipient(): Illuminate\Database\Eloquent\Relations\BelongsTo
 @return BelongsTo<EmailRecipient, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifications\Models\EmailRecipient, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function providerAccount(): Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -1236,6 +1260,9 @@ public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotifica
 public function client(): Illuminate\Database\Eloquent\Relations\BelongsTo
 @return BelongsTo<Client, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifications\Models\Client, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function messageFlags(): Illuminate\Database\Eloquent\Relations\HasMany
@@ -1273,6 +1300,9 @@ resolved @return Illuminate\Database\Eloquent\Relations\HasMany<Nvl\MailNotifica
 public function flags(): Illuminate\Database\Eloquent\Relations\HasMany
 @return HasMany<EmailMessageFlag, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\HasMany<Nvl\MailNotifications\Models\EmailMessageFlag, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function messageAssets(): Illuminate\Database\Eloquent\Relations\HasMany
@@ -1351,6 +1381,9 @@ resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifi
 public function emailMessage(): Illuminate\Database\Eloquent\Relations\BelongsTo
 @return BelongsTo<EmailMessage, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifications\Models\EmailMessage, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function rule(): Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -1383,6 +1416,9 @@ resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifi
 public function emailMessage(): Illuminate\Database\Eloquent\Relations\BelongsTo
 @return BelongsTo<EmailMessage, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifications\Models\EmailMessage, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public mixed $timestamps=false
@@ -1405,6 +1441,9 @@ resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifi
 public function events(): Illuminate\Database\Eloquent\Relations\HasMany
 @return HasMany<EmailEvent, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\HasMany<Nvl\MailNotifications\Models\EmailEvent, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 @property (CarbonImmutable | null) $bounced_at
@@ -1444,6 +1483,9 @@ resolved @property (Illuminate\Support\Carbon | null) $updated_at
 class Nvl\MailNotifications\Models\Integration extends Illuminate\Database\Eloquent\Model
 public const array SUPPORTED_KEYS=['mailersend', 'sendgrid', 'mailgun', 'smtp']
 public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables::Integrations
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function providerAccounts(): Illuminate\Database\Eloquent\Relations\HasMany
@@ -1582,6 +1624,9 @@ public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotifica
 public function client(): Illuminate\Database\Eloquent\Relations\BelongsTo
 @return BelongsTo<Client, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifications\Models\Client, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 @property string $client_id
@@ -1611,6 +1656,9 @@ public function durableMetadata(): array
 public function emailMessage(): Illuminate\Database\Eloquent\Relations\BelongsTo
 @return BelongsTo<EmailMessage, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifications\Models\EmailMessage, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function media(): Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -1657,6 +1705,9 @@ public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotifica
 public function clients(): Illuminate\Database\Eloquent\Relations\HasMany
 @return HasMany<Client, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\HasMany<Nvl\MailNotifications\Models\Client, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function isActive(): bool
@@ -1692,6 +1743,9 @@ public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotifica
 public function defaultProviderAccount(): Illuminate\Database\Eloquent\Relations\BelongsTo
 @return BelongsTo<ProviderAccount, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifications\Models\ProviderAccount, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function owner(): Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -1719,6 +1773,9 @@ resolved @property (Illuminate\Support\Carbon | null) $updated_at
 #[Illuminate\Database\Eloquent\Attributes\Hidden(['credentials', 'webhook_secret', 'webhook_public_key'])]
 class Nvl\MailNotifications\Models\ProviderAccount extends Illuminate\Database\Eloquent\Model
 public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables::ProviderAccounts
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function integration(): Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -1760,6 +1817,9 @@ resolved @property (Illuminate\Support\Carbon | null) $updated_at
 #[Illuminate\Database\Eloquent\Attributes\Hidden(['active_provider_account_id', 'checkpoint', 'cursor', 'queue_connection', 'configuration_fingerprint', 'lease_token', 'lease_until', 'dispatched_at'])]
 class Nvl\MailNotifications\Models\ProviderSyncRun extends Illuminate\Database\Eloquent\Model
 public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables::ProviderSyncRuns
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function providerAccount(): Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -1809,6 +1869,9 @@ resolved @property (Illuminate\Support\Carbon | null) $updated_at
 #[Illuminate\Database\Eloquent\Attributes\Fillable(['provider_account_id', 'email', 'reason', 'released_at'])]
 class Nvl\MailNotifications\Models\RecipientSuppression extends Illuminate\Database\Eloquent\Model
 public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables::RecipientSuppressions
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function providerAccount(): Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -1898,6 +1961,9 @@ resolved @property Carbon\CarbonImmutable $updated_at
 #[Illuminate\Database\Eloquent\Attributes\Fillable(['owner_id', 'provider_account_id', 'email', 'name', 'verified_at', 'sending_domain_id', 'remote_id', 'status', 'verification_source', 'reply_to_email', 'reply_to_name', 'last_synced_at'])]
 class Nvl\MailNotifications\Models\SenderIdentity extends Illuminate\Database\Eloquent\Model
 public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables::SenderIdentities
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function isVerified(): bool
@@ -1940,6 +2006,9 @@ resolved @property (Carbon\CarbonImmutable | null) $verified_at
 #[Illuminate\Database\Eloquent\Attributes\Fillable(['owner_id', 'provider_account_id', 'remote_id', 'domain', 'status', 'verification_source', 'dns_records', 'verified_at', 'last_synced_at'])]
 class Nvl\MailNotifications\Models\SendingDomain extends Illuminate\Database\Eloquent\Model
 public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables::SendingDomains
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function isVerified(): bool
@@ -1981,6 +2050,9 @@ public const mixed UPDATED_AT=null
 public function client(): Illuminate\Database\Eloquent\Relations\BelongsTo
 @return BelongsTo<Client, $this>
 resolved @return Illuminate\Database\Eloquent\Relations\BelongsTo<Nvl\MailNotifications\Models\Client, $this>
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 @property string $client_id
@@ -1997,6 +2069,9 @@ resolved @property Carbon\CarbonImmutable $created_at
 #[Illuminate\Database\Eloquent\Attributes\Fillable(['provider_account_id', 'payload_hash', 'payload', 'status', 'processing_attempts', 'next_attempt_at', 'verified_at', 'processed_at', 'error_code'])]
 class Nvl\MailNotifications\Models\WebhookReceipt extends Illuminate\Database\Eloquent\Model
 public const string TABLE=\Nvl\MailNotifications\Definitions\Tables\MailNotificationsTables::WebhookReceipts
+public function fromDateTime(mixed $value): mixed
+@param mixed $value
+@return mixed
 public function getConnectionName(): ?string
 public function getTable(): string
 public function providerAccount(): Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -2393,6 +2468,7 @@ public readonly bool $force
 
 ```text
 final readonly class Nvl\MailNotifications\ValueObjects\ScheduleMailData
+public const int MAX_PAYLOAD_VERSION=32767
 public function __construct(string $factoryAlias, int $payloadVersion, array $payload, Nvl\MailNotifications\ValueObjects\ScheduledRecipients $recipients, Carbon\CarbonImmutable $scheduledFor, ?Nvl\MailNotifications\ValueObjects\NotifiableReference $notifiable=null, array $metadata=[], ?int $maxAttempts=null, ?Carbon\CarbonImmutable $availableAt=null): mixed
 @param array<string, mixed> $payload
 @param array<string, mixed> $metadata

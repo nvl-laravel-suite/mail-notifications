@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Carbon\CarbonImmutable;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Gate;
@@ -19,6 +20,7 @@ use Nvl\MailNotifications\Models\ProviderAccount;
 use Nvl\MailNotifications\Models\SenderIdentity;
 use Nvl\MailNotifications\Models\StagedMailFile;
 use Nvl\MailNotifications\Services\Delivery\MailTesting;
+use Nvl\MailNotifications\Services\Delivery\MessageDispatcher;
 use Nvl\MailNotifications\Services\ManagedDelivery;
 use Nvl\MailNotifications\Services\MessageInputValidator;
 use Symfony\Component\HttpFoundation\File\File;
@@ -221,6 +223,44 @@ it('accepts native enum and date inputs without mutation and replays their stabl
     expect(app(MessageInputValidator::class)->validate($input, 'native-values')['send_at'])->toBe($sendAt);
     $this->assertDatabaseCount((new EmailMessage)->getTable(), 1);
 });
+
+it('dispatches a scheduled send at its instant under a non-UTC application timezone', function (): void {
+    Queue::fake();
+    $timezone = date_default_timezone_get();
+    config()->set('app.timezone', 'Europe/Sofia');
+    date_default_timezone_set('Europe/Sofia');
+    $at = static fn (string $instant): CarbonImmutable => CarbonImmutable::parse($instant)->setTimezone('Europe/Sofia');
+
+    try {
+        $this->travelTo($at('2026-11-20T09:00:00Z'));
+        $input = ['to' => [['email' => 'target@example.com']], 'subject' => 'Sofia schedule', 'text' => 'Body', 'send_at' => '2026-11-20T10:00:00Z'];
+        $message = app(ManagedDelivery::class)->send(managedBoundaryClient(), $input, 'sofia-schedule', static fn (Client $current): bool => true);
+        $dispatcher = app(MessageDispatcher::class);
+
+        expect($message->send_at->getTimestamp())->toBe(CarbonImmutable::parse('2026-11-20T10:00:00Z')->getTimestamp());
+        Queue::assertNothingPushed();
+        $this->travelTo($at('2026-11-20T09:59:59Z'));
+        expect($dispatcher->dispatchPending())->toBe(0);
+        $this->travelTo($at('2026-11-20T10:00:00Z'));
+        expect($dispatcher->dispatchPending())->toBe(1);
+        Queue::assertPushed(SendEmailMessage::class, 1);
+    } finally {
+        date_default_timezone_set($timezone);
+    }
+});
+
+it('replays a scheduled send written with an equivalent UTC offset', function (string $retry): void {
+    Queue::fake();
+    $client = managedBoundaryClient();
+    $input = ['to' => [['email' => 'target@example.com']], 'subject' => 'Offset retry', 'text' => 'Body', 'send_at' => now()->addHour()->utc()->format('Y-m-d\TH:i:s\Z')];
+    $service = app(ManagedDelivery::class);
+    $allow = static fn (Client $current): bool => true;
+
+    $first = $service->send($client, $input, 'offset-retry', $allow);
+    $again = $service->send($client, [...$input, 'send_at' => CarbonImmutable::parse($input['send_at'])->setTimezone($retry)->format('Y-m-d\TH:i:sP')], 'offset-retry', $allow);
+
+    expect($again->id)->toBe($first->id);
+})->with(['+00:00' => 'UTC', 'Europe/Sofia offset' => 'Europe/Sofia']);
 
 it('rejects non-string disposition objects without coercion or framework type errors', function (): void {
     $input = ['to' => [['email' => 'target@example.com']], 'subject' => 'Subject', 'text' => 'Body', 'attachments' => [['content_base64' => base64_encode('bytes'), 'disposition' => new stdClass]]];

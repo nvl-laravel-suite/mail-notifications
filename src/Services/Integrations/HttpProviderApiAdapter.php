@@ -210,10 +210,10 @@ class HttpProviderApiAdapter implements ProviderApiAdapter
             if (empty($filters['domain_id'])) {
                 return new ProviderApiResult('missing_configuration', message: 'Select a synchronized domain to inspect individual emails.');
             }
-            $result = $this->request($account, 'GET', '/v1/emails', ['domain_id' => $filters['domain_id'], 'date_from' => $filters['date_from'] ?? now()->subDay()->getTimestamp(), 'date_to' => $filters['date_to'] ?? now()->getTimestamp(), 'limit' => 100]);
+            $result = $this->request($account, 'GET', '/v1/emails', ['domain_id' => $filters['domain_id'], 'date_from' => $filters['date_from'] ?? now('UTC')->subDay()->getTimestamp(), 'date_to' => $filters['date_to'] ?? now('UTC')->getTimestamp(), 'limit' => 100]);
             $rows = $result->data['data'] ?? null;
         } elseif ($this->key === 'sendgrid') {
-            $query = 'sg_message_id_created_at >= TIMESTAMP "'.gmdate('Y-m-d\\TH:i:s\\Z', $filters['date_from'] ?? now()->subDay()->getTimestamp()).'" AND sg_message_id_created_at <= TIMESTAMP "'.gmdate('Y-m-d\\TH:i:s\\Z', $filters['date_to'] ?? now()->getTimestamp()).'"';
+            $query = 'sg_message_id_created_at >= TIMESTAMP "'.gmdate('Y-m-d\\TH:i:s\\Z', $filters['date_from'] ?? now('UTC')->subDay()->getTimestamp()).'" AND sg_message_id_created_at <= TIMESTAMP "'.gmdate('Y-m-d\\TH:i:s\\Z', $filters['date_to'] ?? now('UTC')->getTimestamp()).'"';
             if (isset($filters['message_id'])) {
                 $result = $this->message($account, $filters['message_id']);
 
@@ -232,7 +232,7 @@ class HttpProviderApiAdapter implements ProviderApiAdapter
             if (isset($filters['message_id'])) {
                 $predicates[] = $this->predicate('message_id', trim($filters['message_id'], '<>'));
             }
-            $result = $this->request($account, 'POST', '/v1/analytics/logs', ['start' => gmdate(DATE_RFC2822, $filters['date_from'] ?? now()->subDays(30)->getTimestamp()), 'end' => gmdate(DATE_RFC2822, $filters['date_to'] ?? now()->getTimestamp()), 'filter' => ['AND' => $predicates], 'include_subaccounts' => false, 'pagination' => ['limit' => 100, 'sort' => 'timestamp:desc']]);
+            $result = $this->request($account, 'POST', '/v1/analytics/logs', ['start' => gmdate(DATE_RFC2822, $filters['date_from'] ?? now('UTC')->subDays(30)->getTimestamp()), 'end' => gmdate(DATE_RFC2822, $filters['date_to'] ?? now('UTC')->getTimestamp()), 'filter' => ['AND' => $predicates], 'include_subaccounts' => false, 'pagination' => ['limit' => 100, 'sort' => 'timestamp:desc']]);
             $rows = $result->data['items'] ?? null;
         }
         if ($result->status !== 'ok') {
@@ -515,7 +515,7 @@ class HttpProviderApiAdapter implements ProviderApiAdapter
             return 60;
         }
 
-        return max(1, min(86400, $date->getTimestamp() - now()->getTimestamp()));
+        return max(1, min(86400, $date->getTimestamp() - now('UTC')->getTimestamp()));
     }
 
     /** @param array<array-key, mixed> $row

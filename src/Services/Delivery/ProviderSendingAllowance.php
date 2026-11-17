@@ -22,7 +22,7 @@ class ProviderSendingAllowance
     public function reserve(ProviderAccount $account): int
     {
         $key = 'provider-send:'.$account->id;
-        $cooldown = $this->cachedUntil($key.':cooldown') - now()->getTimestamp();
+        $cooldown = $this->cachedUntil($key.':cooldown') - now('UTC')->getTimestamp();
         if ($cooldown > 0) {
             return $cooldown;
         }
@@ -60,8 +60,8 @@ class ProviderSendingAllowance
     {
         $key = 'provider-send:'.$account->id.':cooldown';
         Cache::lock($key.':lock', 5)->block(1, function () use ($key, $seconds): void {
-            $until = max($this->cachedUntil($key), now()->getTimestamp() + max(1, $seconds));
-            Cache::put($key, $until, max(1, $until - now()->getTimestamp()));
+            $until = max($this->cachedUntil($key), now('UTC')->getTimestamp() + max(1, $seconds));
+            Cache::put($key, $until, max(1, $until - now('UTC')->getTimestamp()));
         });
     }
 }

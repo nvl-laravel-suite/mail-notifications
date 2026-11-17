@@ -28,7 +28,7 @@ class MessageDispatcher
         if (! ManagedConfiguration::sendingEnabled()) {
             return 0;
         }
-        $ids = EmailMessage::query()->whereIn('status', ['accepted', 'queued'])->where(fn ($q) => $q->whereNull('send_at')->orWhere('send_at', '<=', now()))->where(fn ($q) => $q->whereNull('next_attempt_at')->orWhere('next_attempt_at', '<=', now()))->where(fn ($q) => $q->whereNull('dispatched_at')->orWhere('dispatched_at', '<=', now()->subMinutes(5)))->orderBy('created_at')->limit(min(1000, max(1, $limit)))->pluck('id');
+        $ids = EmailMessage::query()->whereIn('status', ['accepted', 'queued'])->where(fn ($q) => $q->whereNull('send_at')->orWhere('send_at', '<=', now('UTC')))->where(fn ($q) => $q->whereNull('next_attempt_at')->orWhere('next_attempt_at', '<=', now('UTC')))->where(fn ($q) => $q->whereNull('dispatched_at')->orWhere('dispatched_at', '<=', now('UTC')->subMinutes(5)))->orderBy('created_at')->limit(min(1000, max(1, $limit)))->pluck('id');
         $count = 0;
         foreach ($ids as $id) {
             if (! is_string($id)) {
@@ -49,10 +49,10 @@ class MessageDispatcher
     {
         $claimed = DB::connection(ManagedConfiguration::connection())->transaction(function () use ($id): bool {
             $message = EmailMessage::query()->lockForUpdate()->whereKey($id)->first();
-            if (! ManagedConfiguration::sendingEnabled() || ! $message || ! in_array($message->status, ['accepted', 'queued'], true) || $message->send_at?->isFuture() || $message->next_attempt_at?->isFuture() || $message->dispatched_at?->greaterThan(now()->subMinutes(5))) {
+            if (! ManagedConfiguration::sendingEnabled() || ! $message || ! in_array($message->status, ['accepted', 'queued'], true) || $message->send_at?->isFuture() || $message->next_attempt_at?->isFuture() || $message->dispatched_at?->greaterThan(now('UTC')->subMinutes(5))) {
                 return false;
             }
-            $message->update(['status' => 'queued', 'dispatched_at' => now()]);
+            $message->update(['status' => 'queued', 'dispatched_at' => now('UTC')]);
 
             return true;
         });
@@ -76,7 +76,7 @@ class MessageDispatcher
      */
     public function recoverExpiredLeases(): int
     {
-        $ids = EmailMessage::where('status', 'sending')->where('lease_until', '<=', now())->limit(1000)->pluck('id');
+        $ids = EmailMessage::where('status', 'sending')->where('lease_until', '<=', now('UTC'))->limit(1000)->pluck('id');
         foreach ($ids as $id) {
             if (! is_string($id)) {
                 throw new \UnexpectedValueException('Message identifiers must be strings.');
@@ -86,7 +86,7 @@ class MessageDispatcher
                 if ($message?->status !== 'sending' || ! $message->lease_until?->isPast()) {
                     return;
                 }
-                $message->attempts()->where('status', 'sending')->update(['status' => 'unknown', 'error_code' => 'worker_interrupted', 'completed_at' => now()]);
+                $message->attempts()->where('status', 'sending')->update(['status' => 'unknown', 'error_code' => 'worker_interrupted', 'completed_at' => now('UTC')]);
                 $message->update(['status' => 'unknown', 'error_code' => 'worker_interrupted', 'error_message' => 'Submission may have reached the provider. Reconciliation is required.', 'lease_until' => null]);
                 $lastAttempt = $message->attempts()->orderByDesc('number')->first();
                 $this->clientWebhooks->publish($message, 'message.unknown', 'lease-expired:'.$message->id.':'.($lastAttempt->number ?? ''));

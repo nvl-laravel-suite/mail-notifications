@@ -29,6 +29,23 @@ No schema or data change is required. Review these where they touch host code:
 - A scheduled-message factory that must fail permanently should throw from `validate()`. An exception from `make()` is retried until `max_attempts`.
 - Persist provider receipts with the default `pending` status; reconciliation reads `pending`, `unmatched` and `failed` only.
 
+## Corrections after 7.2.0
+
+No schema change is required. With `app.timezone` set to `UTC` no data change is required either.
+
+Every managed delivery table now stores its timestamps in UTC, matching the tracking and scheduling tables (`notifications`, `events`, `scheduled_messages`), which already did. Earlier releases wrote the delivery tables' timestamps in the application timezone, except `email_messages.send_at`, which was already written in UTC. With a non-UTC `app.timezone`, convert existing rows once before resuming delivery:
+
+1. Pause delivery (`NVL_MAIL_NOTIFICATIONS_DELIVERY_ENABLED=false`) and stop the workers and scheduler.
+2. Back up the delivery tables.
+3. Convert every `timestamp` column of every delivery table (use the configured physical table names) from the old application timezone to UTC, leaving `email_messages.send_at` unchanged. For example, on PostgreSQL with `Europe/Sofia`: `UPDATE email_events SET occurred_at = (occurred_at AT TIME ZONE 'Europe/Sofia') AT TIME ZONE 'UTC', created_at = (created_at AT TIME ZONE 'Europe/Sofia') AT TIME ZONE 'UTC';`. On SQLite, recompute the values in PHP. Values written during a repeated DST fallback hour are ambiguous; review those rows by hand.
+4. Deploy the new release, then resume delivery.
+
+Raw SQL or reports that read the delivery tables must now treat their values as UTC. A zone-less string assigned to a delivery model's date attribute is now read as UTC rather than in the application timezone; pass a date object or an offset string.
+
+The idempotency fingerprint normalizes `send_at` to its UTC instant. A retry that spans the upgrade with a string `send_at` under an already-used key may report a conflict; resubmit with a new key.
+
+`ScheduleMailData` and the factory registry reject payload versions above 32767, which PostgreSQL could never store. History and scheduled-mail pagination rejects a page whose offset overflows a 64-bit integer.
+
 ## Historical upgrade notes
 
 The following sections describe pre-Light releases and their old APIs, compatibility windows and commands. They remain useful for understanding existing installations, but are not Light setup instructions. The old Tenancy bridge, DTO/Action contracts, package HTTP and type generation are retired in Light.

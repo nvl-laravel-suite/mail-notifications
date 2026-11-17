@@ -74,7 +74,7 @@ class AssetManager
             if ($asset->media_id !== null && $asset->is_public) {
                 $this->media->relocate($asset, ManagedConfiguration::string('storage.disk', 'local'), false);
             }
-            $asset->update(['archived_at' => now(), 'is_public' => false]);
+            $asset->update(['archived_at' => now('UTC'), 'is_public' => false]);
         });
     }
 

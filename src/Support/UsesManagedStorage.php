@@ -6,9 +6,11 @@ namespace Nvl\MailNotifications\Support;
 
 use Nvl\Support\Config\PackageStorage;
 
-/** Keeps managed routing identities and delivery records separate from host models. */
+/** Keeps managed routing identities and delivery records separate from host models, with UTC timestamps. */
 trait UsesManagedStorage
 {
+    use StoresUtcTimestamps;
+
     /**
      * Resolve this record's logical table through canonical package storage configuration.
      */

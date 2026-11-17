@@ -26,13 +26,13 @@ class MailFilePruner
      */
     public function prune(bool $dryRun = false): array
     {
-        $cutoff = now()->subHours(max(1, min(168, ManagedConfiguration::integer('storage.orphan_grace_hours', 24))));
-        $deadline = now()->addSeconds(max(1, min(300, ManagedConfiguration::integer('maintenance.max_seconds', 30))));
+        $cutoff = now('UTC')->subHours(max(1, min(168, ManagedConfiguration::integer('storage.orphan_grace_hours', 24))));
+        $deadline = now('UTC')->addSeconds(max(1, min(300, ManagedConfiguration::integer('maintenance.max_seconds', 30))));
         $batchSize = max(1, min(1000, ManagedConfiguration::integer('maintenance.batch_size', 1000)));
         $counts = ['files' => 0, 'records' => 0];
 
         foreach (StagedMailFile::where('created_at', '<=', $cutoff)->lazyById($batchSize) as $candidate) {
-            if (now()->greaterThanOrEqualTo($deadline)) {
+            if (now('UTC')->greaterThanOrEqualTo($deadline)) {
                 break;
             }
             try {

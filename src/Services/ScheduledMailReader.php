@@ -6,6 +6,8 @@ namespace Nvl\MailNotifications\Services;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Nvl\MailNotifications\Contracts\ScheduledMailReadAuthorization;
 use Nvl\MailNotifications\Enums\ScheduledMailReadAbility;
@@ -54,9 +56,13 @@ final readonly class ScheduledMailReader
         $query = $this->filter($filters);
         $maximum = config('nvl-mail-notifications.management.scheduled_maximum_per_page', 100);
         $maximum = is_int($maximum) && $maximum > 0 ? $maximum : 100;
+        $perPage = min($query->perPage, $maximum);
+        if ($query->page - 1 > intdiv(PHP_INT_MAX, $perPage)) {
+            throw new InvalidArgumentException('The scheduled mail page is too large.');
+        }
         $paginator = $this->queries->build($query)->select(self::LIST_COLUMNS)
             ->orderBy($query->sort, $query->direction)->orderBy('id', $query->direction)
-            ->paginate(perPage: min($query->perPage, $maximum), page: $query->page);
+            ->paginate(perPage: $perPage, page: $query->page);
 
         return [
             'items' => $paginator->getCollection()->map(fn (ScheduledMailMessage $message): array => $this->project($message))->values()->all(),
@@ -75,8 +81,12 @@ final readonly class ScheduledMailReader
     public function get(Authenticatable $actor, string $id): array
     {
         $actor = $this->actors->resolve($actor);
-        $message = $this->boundary->query(MailModelRegistry::scheduledQuery(), 'mail.scheduled')
-            ->select(self::DETAIL_COLUMNS)->findOrFail($id);
+        $query = $this->boundary->query(MailModelRegistry::scheduledQuery(), 'mail.scheduled')
+            ->select(self::DETAIL_COLUMNS);
+        if (! Str::isUuid($id)) {
+            throw (new ModelNotFoundException)->setModel($query->getModel()::class, [$id]);
+        }
+        $message = $query->findOrFail($id);
         $this->authorization->authorize(ScheduledMailReadAbility::View, $actor, $message);
 
         return [

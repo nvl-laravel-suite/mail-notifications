@@ -55,11 +55,11 @@ final readonly class ScheduledMailReadQueryBuilder
         }
 
         if ($filters->from !== null) {
-            $query->where('scheduled_for', '>=', $filters->from);
+            $query->where('scheduled_for', '>=', DatabaseTimestamp::format($filters->from));
         }
 
         if ($filters->to !== null) {
-            $query->where('scheduled_for', '<=', $filters->to);
+            $query->where('scheduled_for', '<=', DatabaseTimestamp::format($filters->to));
         }
 
         if ($filters->dueOnly) {

@@ -8,7 +8,9 @@ use Carbon\CarbonImmutable;
 use DomainException;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Nvl\MailNotifications\Contracts\MailNotificationReadAuthorization;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
@@ -51,8 +53,12 @@ final readonly class MailHistory
     public function get(Authenticatable $actor, string $id): array
     {
         $actor = $this->actors->resolve($actor);
-        $notification = $this->boundary->query(MailModelRegistry::notificationsQuery(), 'mail.notifications')
-            ->select(self::COLUMNS)->findOrFail($id);
+        $query = $this->boundary->query(MailModelRegistry::notificationsQuery(), 'mail.notifications')
+            ->select(self::COLUMNS);
+        if (! Str::isUuid($id)) {
+            throw (new ModelNotFoundException)->setModel($query->getModel()::class, [$id]);
+        }
+        $notification = $query->findOrFail($id);
         $this->authorization->authorize(MailNotificationReadAbility::View, $actor, $notification);
         $notification->setRelation('providerEvents', $notification->providerEvents()
             ->select(['id', 'mail_notification_id', 'provider', 'provider_event_id', 'provider_message_id',
@@ -173,14 +179,12 @@ final readonly class MailHistory
         }
         $maximum = config('nvl-mail-notifications.management.suggestion_limit', 20);
         $maximum = is_int($maximum) && $maximum > 0 ? $maximum : 20;
-        $term = "%{$search}%";
-        $query = $this->boundary->query(MailModelRegistry::notificationsQuery(), 'mail.notifications')
-            ->select(['id', 'subject', 'primary_recipient_email', 'status', 'created_at'])
-            ->where(static function (Builder $query) use ($term): void {
-                $query->where('subject', 'like', $term)
-                    ->orWhere('primary_recipient_email', 'like', $term)
-                    ->orWhere('provider_message_id', 'like', $term);
-            });
+        $query = $this->queries->search(
+            $this->boundary->query(MailModelRegistry::notificationsQuery(), 'mail.notifications')
+                ->select(['id', 'subject', 'primary_recipient_email', 'status', 'created_at']),
+            $search,
+            ['subject', 'primary_recipient_email', 'provider_message_id'],
+        );
         if ($status instanceof MailDeliveryStatus) {
             $query->where('status', $status->value);
         }
@@ -281,9 +285,13 @@ final readonly class MailHistory
     {
         $maximum = config('nvl-mail-notifications.management.maximum_per_page', 100);
         $maximum = is_int($maximum) && $maximum > 0 ? $maximum : 100;
+        $perPage = min($filters->perPage, $maximum);
+        if ($filters->page - 1 > intdiv(PHP_INT_MAX, $perPage)) {
+            throw new InvalidArgumentException('The mail notification page is too large.');
+        }
         $paginator = $builder->orderBy($filters->sort, $filters->direction)
             ->orderBy('id', $filters->direction)
-            ->paginate(perPage: min($filters->perPage, $maximum), page: $filters->page);
+            ->paginate(perPage: $perPage, page: $filters->page);
 
         return [
             'items' => $paginator->getCollection()->map(fn (MailNotification $notification): array => $this->project($notification))->values()->all(),

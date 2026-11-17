@@ -35,8 +35,8 @@ class MailHistoryPruner
      */
     public function prune(int $days = 365, bool $dryRun = false): array
     {
-        $cutoff = now()->subDays($days);
-        $deadline = now()->addSeconds(min(300, max(1, ManagedConfiguration::integer('maintenance.max_seconds', 30))));
+        $cutoff = now('UTC')->subDays($days);
+        $deadline = now('UTC')->addSeconds(min(300, max(1, ManagedConfiguration::integer('maintenance.max_seconds', 30))));
         $messages = EmailMessage::query()->where('updated_at', '<', $cutoff)
             ->where(function (Builder $query) use ($cutoff): void {
                 $query->whereIn('status', ['delivered', 'partially_delivered', 'failed', 'cancelled', 'blocked'])
@@ -63,7 +63,7 @@ class MailHistoryPruner
                     if (! $this->attachments->deleteOwnedFile($attachment)) {
                         $cleaned = false;
                     } elseif ($attachment->bytes_deleted_at === null) {
-                        $attachment->update(['bytes_deleted_at' => now()]);
+                        $attachment->update(['bytes_deleted_at' => now('UTC')]);
                     }
                 }
 
@@ -145,6 +145,6 @@ class MailHistoryPruner
     /** @phpstan-impure */
     private function deadlineReached(CarbonInterface $deadline): bool
     {
-        return now()->greaterThanOrEqualTo($deadline);
+        return now('UTC')->greaterThanOrEqualTo($deadline);
     }
 }

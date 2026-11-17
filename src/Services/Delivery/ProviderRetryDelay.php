@@ -41,11 +41,11 @@ class ProviderRetryDelay
         if (preg_match('/\A\d+\z/', $header) === 1) {
             $seconds = filter_var($header, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
 
-            return $seconds === false || $seconds > 253402300799 - now()->getTimestamp() ? null : max(1, $seconds);
+            return $seconds === false || $seconds > 253402300799 - now('UTC')->getTimestamp() ? null : max(1, $seconds);
         }
         $date = DateTimeImmutable::createFromFormat(DATE_RFC7231, $header);
 
-        return $date === false ? null : max(1, $date->getTimestamp() - now()->getTimestamp());
+        return $date === false ? null : max(1, $date->getTimestamp() - now('UTC')->getTimestamp());
     }
 
     private function quotaReset(?string $header): ?int
@@ -54,7 +54,7 @@ class ProviderRetryDelay
             return null;
         }
         try {
-            return max(0, CarbonImmutable::parse($header)->getTimestamp() - now()->getTimestamp());
+            return max(0, CarbonImmutable::parse($header)->getTimestamp() - now('UTC')->getTimestamp());
         } catch (Throwable) {
             return null;
         }

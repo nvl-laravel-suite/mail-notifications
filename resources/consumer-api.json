@@ -899,6 +899,7 @@
             "file": "src/Models/Asset.php",
             "methods": [
                 "client",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "media",
@@ -933,6 +934,7 @@
                 "assets",
                 "effectiveMailSettings",
                 "flagRules",
+                "fromDateTime",
                 "getConnectionName",
                 "getMorphClass",
                 "getTable",
@@ -964,6 +966,7 @@
             "methods": [
                 "allows",
                 "client",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "isUsable"
@@ -991,6 +994,7 @@
             "file": "src/Models/ClientMailSettings.php",
             "methods": [
                 "client",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "providerAccount",
@@ -1019,6 +1023,7 @@
             "file": "src/Models/ClientWebhookDelivery.php",
             "methods": [
                 "endpoint",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable"
             ],
@@ -1052,6 +1057,7 @@
             "methods": [
                 "client",
                 "deliveries",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "newSecret"
@@ -1076,6 +1082,7 @@
             "file": "src/Models/EmailAttempt.php",
             "methods": [
                 "emailMessage",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "providerAccount"
@@ -1107,6 +1114,7 @@
             "methods": [
                 "emailMessage",
                 "emailRecipient",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "providerAccount",
@@ -1134,6 +1142,7 @@
             "file": "src/Models/EmailFlagRule.php",
             "methods": [
                 "client",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "messageFlags"
@@ -1161,6 +1170,7 @@
                 "client",
                 "events",
                 "flags",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "messageAssets",
@@ -1220,6 +1230,7 @@
             "methods": [
                 "client",
                 "emailMessage",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "rule"
@@ -1246,6 +1257,7 @@
             "methods": [
                 "client",
                 "emailMessage",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable"
             ],
@@ -1267,6 +1279,7 @@
             "methods": [
                 "emailMessage",
                 "events",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable"
             ],
@@ -1298,6 +1311,7 @@
             "kind": "class",
             "file": "src/Models/Integration.php",
             "methods": [
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "providerAccounts"
@@ -1409,6 +1423,7 @@
             "file": "src/Models/MarketingOptOut.php",
             "methods": [
                 "client",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable"
             ],
@@ -1432,6 +1447,7 @@
                 "downloadStatus",
                 "durableMetadata",
                 "emailMessage",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "media",
@@ -1468,6 +1484,7 @@
             "file": "src/Models/Owner.php",
             "methods": [
                 "clients",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "isActive",
@@ -1494,6 +1511,7 @@
             "file": "src/Models/OwnerMailSettings.php",
             "methods": [
                 "defaultProviderAccount",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "owner"
@@ -1518,6 +1536,7 @@
             "kind": "class",
             "file": "src/Models/ProviderAccount.php",
             "methods": [
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "integration",
@@ -1548,6 +1567,7 @@
             "kind": "class",
             "file": "src/Models/ProviderSyncRun.php",
             "methods": [
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "providerAccount"
@@ -1590,6 +1610,7 @@
             "kind": "class",
             "file": "src/Models/RecipientSuppression.php",
             "methods": [
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "providerAccount"
@@ -1663,6 +1684,7 @@
             "kind": "class",
             "file": "src/Models/SenderIdentity.php",
             "methods": [
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "isVerified",
@@ -1697,6 +1719,7 @@
             "kind": "class",
             "file": "src/Models/SendingDomain.php",
             "methods": [
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "isVerified",
@@ -1728,6 +1751,7 @@
             "file": "src/Models/StagedMailFile.php",
             "methods": [
                 "client",
+                "fromDateTime",
                 "getConnectionName",
                 "getTable"
             ],
@@ -1747,6 +1771,7 @@
             "kind": "class",
             "file": "src/Models/WebhookReceipt.php",
             "methods": [
+                "fromDateTime",
                 "getConnectionName",
                 "getTable",
                 "providerAccount"
@@ -2151,7 +2176,9 @@
                 "recipients",
                 "scheduledFor"
             ],
-            "constants": []
+            "constants": [
+                "MAX_PAYLOAD_VERSION"
+            ]
         },
         "Nvl\\MailNotifications\\ValueObjects\\ScheduledMailReadQuery": {
             "kind": "class",

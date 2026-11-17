@@ -229,8 +229,8 @@ class SyncProviderConfiguration
                 $run->phase.'_status' => 'running',
                 'page_attempts' => $run->page_attempts + 1,
                 'lease_token' => $token,
-                'lease_until' => now()->addSeconds(self::LEASE_SECONDS),
-                'started_at' => $run->started_at ?? now(),
+                'lease_until' => now('UTC')->addSeconds(self::LEASE_SECONDS),
+                'started_at' => $run->started_at ?? now('UTC'),
                 'next_retry_at' => null,
                 'error_code' => null,
                 'error_message' => null,
@@ -246,9 +246,9 @@ class SyncProviderConfiguration
     public function recover(int $limit = 100): int
     {
         $runs = ProviderSyncRun::whereNotNull('active_provider_account_id')
-            ->where(fn (Builder $query) => $query->whereNull('next_retry_at')->orWhere('next_retry_at', '<=', now()))
-            ->where(fn (Builder $query) => $query->whereNull('lease_until')->orWhere('lease_until', '<=', now()))
-            ->where(fn (Builder $query) => $query->whereNull('dispatched_at')->orWhere('dispatched_at', '<=', now()->subMinute()))
+            ->where(fn (Builder $query) => $query->whereNull('next_retry_at')->orWhere('next_retry_at', '<=', now('UTC')))
+            ->where(fn (Builder $query) => $query->whereNull('lease_until')->orWhere('lease_until', '<=', now('UTC')))
+            ->where(fn (Builder $query) => $query->whereNull('dispatched_at')->orWhere('dispatched_at', '<=', now('UTC')->subMinute()))
             ->orderBy('updated_at')->limit(max(1, min(1000, $limit)))->get();
         $dispatched = 0;
         foreach ($runs as $run) {
@@ -278,13 +278,13 @@ class SyncProviderConfiguration
     {
         $run = DB::connection(ManagedConfiguration::connection())->transaction(function () use ($runId, $checkpoint): ?ProviderSyncRun {
             $run = ProviderSyncRun::whereKey($runId)->lockForUpdate()->first();
-            if ($run === null || ! $run->status->isActive() || $run->checkpoint !== $checkpoint || $run->lease_until?->isFuture() || ($run->dispatched_at !== null && $run->dispatched_at->greaterThan(now()->subMinute()))) {
+            if ($run === null || ! $run->status->isActive() || $run->checkpoint !== $checkpoint || $run->lease_until?->isFuture() || ($run->dispatched_at !== null && $run->dispatched_at->greaterThan(now('UTC')->subMinute()))) {
                 return null;
             }
-            if (config('queue.connections.'.$run->queue_connection.'.driver') === 'sqs' && $run->next_retry_at?->greaterThan(now()->addSeconds(900))) {
+            if (config('queue.connections.'.$run->queue_connection.'.driver') === 'sqs' && $run->next_retry_at?->greaterThan(now('UTC')->addSeconds(900))) {
                 return null;
             }
-            $run->forceFill(['dispatched_at' => now(), 'lease_token' => null, 'lease_until' => null])->save();
+            $run->forceFill(['dispatched_at' => now('UTC'), 'lease_token' => null, 'lease_until' => null])->save();
 
             return $run;
         }, 3);
@@ -296,11 +296,11 @@ class SyncProviderConfiguration
                 throw new InvalidArgumentException('A durable queue is required.');
             }
             $job = new ProcessProviderSyncPage($run->id, $run->checkpoint);
-            $delay = $run->next_retry_at?->isFuture() ? $run->next_retry_at : now();
+            $delay = $run->next_retry_at?->isFuture() ? $run->next_retry_at : now('UTC');
             $job->onConnection($run->queue_connection)->delay($delay);
             Queue::connection($run->queue_connection)->later($delay, $job);
         } catch (Throwable) {
-            $retryAt = $run->next_retry_at?->greaterThan(now()->addMinute()) ? $run->next_retry_at : now()->addMinute();
+            $retryAt = $run->next_retry_at?->greaterThan(now('UTC')->addMinute()) ? $run->next_retry_at : now('UTC')->addMinute();
             ProviderSyncRun::whereKey($run->id)->where('checkpoint', $checkpoint)->where('dispatched_at', $run->dispatched_at)->whereIn('status', ['queued', 'running', 'retrying'])->whereNull('lease_token')->update([
                 'error_code' => 'queue_unavailable',
                 'error_message' => $this->errorMessage('queue_unavailable'),
@@ -368,7 +368,7 @@ class SyncProviderConfiguration
             'status' => ProviderSyncStatus::Retrying,
             $run->phase.'_status' => 'retrying',
             'retry_count' => $run->retry_count + 1,
-            'next_retry_at' => now()->addSeconds($delay),
+            'next_retry_at' => now('UTC')->addSeconds($delay),
             'lease_token' => null,
             'lease_until' => null,
             'dispatched_at' => null,
@@ -383,7 +383,7 @@ class SyncProviderConfiguration
             'status' => ProviderSyncStatus::Failed,
             $run->phase.'_status' => 'failed',
             'active_provider_account_id' => null,
-            'finished_at' => now(),
+            'finished_at' => now('UTC'),
             'lease_token' => null,
             'lease_until' => null,
             'next_retry_at' => null,
@@ -404,7 +404,7 @@ class SyncProviderConfiguration
             'cursor' => null,
             'page_attempts' => 0,
             'active_provider_account_id' => $completed ? null : $run->provider_account_id,
-            'finished_at' => $completed ? now() : null,
+            'finished_at' => $completed ? now('UTC') : null,
             'lease_token' => null,
             'lease_until' => null,
             'next_retry_at' => null,
@@ -435,7 +435,7 @@ class SyncProviderConfiguration
     {
         $count = 0;
         foreach ($this->domainRows($result->data) as $remote) {
-            $account->sendingDomains()->where('owner_id', $account->owner_id)->where('remote_id', $remote['remote_id'])->where('domain', '!=', $remote['domain'])->update(['status' => 'missing', 'verified_at' => null, 'last_synced_at' => now()]);
+            $account->sendingDomains()->where('owner_id', $account->owner_id)->where('remote_id', $remote['remote_id'])->where('domain', '!=', $remote['domain'])->update(['status' => 'missing', 'verified_at' => null, 'last_synced_at' => now('UTC')]);
             $domain = $account->sendingDomains()->where('owner_id', $account->owner_id)->firstOrNew(['domain' => $remote['domain']]);
             if ($domain->last_seen_sync_run_id !== $run->id) {
                 $count++;
@@ -443,8 +443,8 @@ class SyncProviderConfiguration
             $domain->forceFill([
                 'owner_id' => $account->owner_id, 'provider_account_id' => $account->id,
                 'remote_id' => $remote['remote_id'], 'status' => $remote['status'], 'verification_source' => 'provider',
-                'dns_records' => $remote['dns_records'], 'verified_at' => $remote['status'] === 'verified' ? now() : null,
-                'last_synced_at' => now(), 'last_seen_sync_run_id' => $run->id,
+                'dns_records' => $remote['dns_records'], 'verified_at' => $remote['status'] === 'verified' ? now('UTC') : null,
+                'last_synced_at' => now('UTC'), 'last_seen_sync_run_id' => $run->id,
             ])->save();
         }
 
@@ -455,7 +455,7 @@ class SyncProviderConfiguration
     {
         $count = 0;
         foreach ($this->senderRows($result->data) as $remote) {
-            $account->senderIdentities()->where('owner_id', $account->owner_id)->where('remote_id', $remote['remote_id'])->where('email', '!=', $remote['email'])->update(['status' => 'missing', 'verified_at' => null, 'last_synced_at' => now()]);
+            $account->senderIdentities()->where('owner_id', $account->owner_id)->where('remote_id', $remote['remote_id'])->where('email', '!=', $remote['email'])->update(['status' => 'missing', 'verified_at' => null, 'last_synced_at' => now('UTC')]);
             $domain = isset($remote['domain_remote_id']) ? $account->sendingDomains()->where('owner_id', $account->owner_id)->where('remote_id', $remote['domain_remote_id'])->where('status', '!=', 'missing')->first() : null;
             $sender = $account->senderIdentities()->where('owner_id', $account->owner_id)->firstOrNew(['email' => $remote['email']]);
             if ($sender->last_seen_sync_run_id !== $run->id) {
@@ -465,7 +465,7 @@ class SyncProviderConfiguration
                 'owner_id' => $account->owner_id, 'provider_account_id' => $account->id,
                 'remote_id' => $remote['remote_id'], 'name' => $remote['name'], 'status' => $remote['status'], 'verification_source' => 'provider',
                 'sending_domain_id' => $domain?->id, 'reply_to_email' => $remote['reply_to_email'], 'reply_to_name' => $remote['reply_to_name'],
-                'verified_at' => $remote['status'] === 'verified' ? now() : null, 'last_synced_at' => now(), 'last_seen_sync_run_id' => $run->id,
+                'verified_at' => $remote['status'] === 'verified' ? now('UTC') : null, 'last_synced_at' => now('UTC'), 'last_seen_sync_run_id' => $run->id,
             ])->save();
         }
 
@@ -477,11 +477,11 @@ class SyncProviderConfiguration
         if ($run->phase === 'domains') {
             $account->sendingDomains()->where('owner_id', $account->owner_id)->where('verification_source', 'provider')
                 ->where(/** @param Builder<SendingDomain> $query */ fn (Builder $query) => $query->whereNull('last_seen_sync_run_id')->orWhere('last_seen_sync_run_id', '!=', $run->id))
-                ->update(['status' => 'missing', 'verified_at' => null, 'last_synced_at' => now()]);
+                ->update(['status' => 'missing', 'verified_at' => null, 'last_synced_at' => now('UTC')]);
         } else {
             $account->senderIdentities()->where('owner_id', $account->owner_id)->where('verification_source', 'provider')
                 ->where(/** @param Builder<SenderIdentity> $query */ fn (Builder $query) => $query->whereNull('last_seen_sync_run_id')->orWhere('last_seen_sync_run_id', '!=', $run->id))
-                ->update(['status' => 'missing', 'verified_at' => null, 'last_synced_at' => now()]);
+                ->update(['status' => 'missing', 'verified_at' => null, 'last_synced_at' => now('UTC')]);
         }
     }
 
@@ -496,7 +496,7 @@ class SyncProviderConfiguration
             ->where('verification_source', 'domain')
             ->whereHas('sendingDomain', fn (Builder $query) => $query->getQuery()->where('owner_id', $account->owner_id)->where('provider_account_id', $account->id)->where('status', 'verified')->whereNotNull('verified_at'))
             ->where(fn (Builder $query) => $query->where('status', '!=', 'verified')->orWhereNull('verified_at'))
-            ->update(['verified_at' => now(), 'status' => 'verified']);
+            ->update(['verified_at' => now('UTC'), 'status' => 'verified']);
     }
 
     /**

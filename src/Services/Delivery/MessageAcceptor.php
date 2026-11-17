@@ -158,8 +158,9 @@ class MessageAcceptor
         if (($input['type'] ?? null) instanceof EmailMessageType) {
             $input['type'] = $input['type']->value;
         }
-        if (($input['send_at'] ?? null) instanceof DateTimeInterface) {
-            $input['send_at'] = $input['send_at']->format('Y-m-d\TH:i:s.uP');
+        $sendAt = $input['send_at'] ?? null;
+        if ($sendAt instanceof DateTimeInterface || (is_string($sendAt) && trim($sendAt) !== '')) {
+            $input['send_at'] = CarbonImmutable::parse($sendAt)->utc()->format('Y-m-d\TH:i:s.uP');
         }
         if (($input['type'] ?? EmailMessageType::Transactional->value) === EmailMessageType::Transactional->value) {
             unset($input['type']);

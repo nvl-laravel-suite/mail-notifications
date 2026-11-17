@@ -45,7 +45,7 @@ class MessageSender
             $reason = $this->blockingReason($message);
             if ($reason !== null) {
                 $message->update(['status' => 'blocked', 'error_code' => $reason, 'error_message' => 'Submission was blocked before contacting the provider.', 'dispatched_at' => null, 'next_attempt_at' => null]);
-                $message->attempts()->where('status', 'pending')->update(['status' => 'blocked', 'error_code' => $reason, 'completed_at' => now()]);
+                $message->attempts()->where('status', 'pending')->update(['status' => 'blocked', 'error_code' => $reason, 'completed_at' => now('UTC')]);
                 $this->attachments->markDisposition($message);
                 $this->clientWebhooks->publish($message, 'message.blocked', 'blocked:'.$message->id.':'.Str::uuid());
 
@@ -53,7 +53,7 @@ class MessageSender
             }
             $delay = $this->allowance->reserve($message->providerAccount ?? throw new \RuntimeException('The provider account is unavailable.'));
             if ($delay > 0) {
-                $message->update(['status' => 'accepted', 'next_attempt_at' => now()->addSeconds($delay), 'dispatched_at' => null, 'lease_until' => null, 'error_code' => 'provider_rate_limited', 'error_message' => 'Waiting for this provider account sending allowance.']);
+                $message->update(['status' => 'accepted', 'next_attempt_at' => now('UTC')->addSeconds($delay), 'dispatched_at' => null, 'lease_until' => null, 'error_code' => 'provider_rate_limited', 'error_message' => 'Waiting for this provider account sending allowance.']);
                 $this->clientWebhooks->publish($message, 'message.retry_scheduled', 'allowance:'.$message->id.':'.$message->next_attempt_at?->timestamp);
 
                 return null;
@@ -62,8 +62,8 @@ class MessageSender
             if (! $attempt) {
                 $attempt = $message->attempts()->create(['provider_account_id' => $message->provider_account_id, 'number' => ($message->attempts()->orderByDesc('number')->first()->number ?? 0) + 1, 'status' => 'pending']);
             }
-            $attempt->update(['status' => 'sending', 'started_at' => now()]);
-            $message->update(['status' => 'sending', 'lease_until' => now()->addMinutes(2), 'error_code' => null, 'error_message' => null]);
+            $attempt->update(['status' => 'sending', 'started_at' => now('UTC')]);
+            $message->update(['status' => 'sending', 'lease_until' => now('UTC')->addMinutes(2), 'error_code' => null, 'error_message' => null]);
             $attempt->setRelation('emailMessage', $message);
             $attempt->setRelation('providerAccount', $message->providerAccount);
 
@@ -97,21 +97,21 @@ class MessageSender
                 return;
             }
             $wasSubmitted = $attempt->status === 'submitted';
-            $attempt->update(['status' => $result->status, 'provider_message_id' => $result->providerMessageId ?? $attempt->provider_message_id, 'retryable' => $result->retryable, 'response' => $result->response, 'error_code' => $result->errorCode, 'error_message' => $result->errorMessage, 'completed_at' => now()]);
+            $attempt->update(['status' => $result->status, 'provider_message_id' => $result->providerMessageId ?? $attempt->provider_message_id, 'retryable' => $result->retryable, 'response' => $result->response, 'error_code' => $result->errorCode, 'error_message' => $result->errorMessage, 'completed_at' => now('UTC')]);
             if ($result->errorCode === 'all_suppressed') {
-                $message->recipients()->whereIn('delivery_status', ['pending', 'submitted'])->update(['delivery_status' => 'suppressed', 'suppressed_at' => now()]);
+                $message->recipients()->whereIn('delivery_status', ['pending', 'submitted'])->update(['delivery_status' => 'suppressed', 'suppressed_at' => now('UTC')]);
             }
             foreach ($result->suppressedEmails as $email) {
-                $message->recipients()->where('email', mb_strtolower($email))->whereIn('delivery_status', ['pending', 'submitted'])->update(['delivery_status' => 'suppressed', 'suppressed_at' => now()]);
+                $message->recipients()->where('email', mb_strtolower($email))->whereIn('delivery_status', ['pending', 'submitted'])->update(['delivery_status' => 'suppressed', 'suppressed_at' => now('UTC')]);
             }
             if ($result->status === 'submitted') {
-                $message->update(['status' => $message->completed_at ? $message->status : 'submitted', 'submitted_at' => $message->submitted_at ?? now(), 'lease_until' => null, 'next_attempt_at' => null, 'error_code' => null, 'error_message' => null]);
+                $message->update(['status' => $message->completed_at ? $message->status : 'submitted', 'submitted_at' => $message->submitted_at ?? now('UTC'), 'lease_until' => null, 'next_attempt_at' => null, 'error_code' => null, 'error_message' => null]);
                 $message->recipients()->where('delivery_status', 'pending')->update(['delivery_status' => 'submitted']);
                 $this->statuses->refresh($message);
             } else {
                 $count = $message->attempts()->whereNotNull('started_at')->count();
                 $retry = $result->status === 'failed' && $result->retryable && $count < 3;
-                $message->update(['status' => $retry ? 'accepted' : $result->status, 'next_attempt_at' => $retry ? now()->addSeconds(max([60, 300][$count - 1], $result->retryAfter ?? 0)) : null, 'dispatched_at' => null, 'lease_until' => null, 'error_code' => $result->errorCode, 'error_message' => $result->errorMessage]);
+                $message->update(['status' => $retry ? 'accepted' : $result->status, 'next_attempt_at' => $retry ? now('UTC')->addSeconds(max([60, 300][$count - 1], $result->retryAfter ?? 0)) : null, 'dispatched_at' => null, 'lease_until' => null, 'error_code' => $result->errorCode, 'error_message' => $result->errorMessage]);
             }
             $this->attachments->markDisposition($message);
             if (! $wasSubmitted) {
@@ -136,8 +136,8 @@ class MessageSender
             if (! (in_array($message->status, ['accepted', 'queued', 'blocked', 'failed'], true) && ! $message->attempts()->whereIn('status', ['sending', 'submitted', 'unknown'])->exists())) {
                 throw new ManagedDeliveryConflict('This message can no longer be cancelled.');
             }
-            $message->update(['status' => 'cancelled', 'cancelled_at' => now(), 'dispatched_at' => null, 'next_attempt_at' => null]);
-            $message->attempts()->where('status', 'pending')->update(['status' => 'cancelled', 'completed_at' => now()]);
+            $message->update(['status' => 'cancelled', 'cancelled_at' => now('UTC'), 'dispatched_at' => null, 'next_attempt_at' => null]);
+            $message->attempts()->where('status', 'pending')->update(['status' => 'cancelled', 'completed_at' => now('UTC')]);
             $this->attachments->markDisposition($message);
             $this->clientWebhooks->publish($message, 'message.cancelled', 'cancelled:'.$message->id);
 

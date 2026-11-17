@@ -36,7 +36,7 @@ class WebhookProcessor
     public function reconcile(int $limit = 100, ?string $providerAccountId = null): int
     {
         $query = WebhookReceipt::query()->whereNull('processed_at')->whereIn('status', ['pending', 'unmatched', 'failed'])
-            ->where(fn ($query) => $query->whereNull('next_attempt_at')->orWhere('next_attempt_at', '<=', now()));
+            ->where(fn ($query) => $query->whereNull('next_attempt_at')->orWhere('next_attempt_at', '<=', now('UTC')));
         if ($providerAccountId !== null) {
             $query->where('provider_account_id', $providerAccountId);
         }
@@ -123,18 +123,18 @@ class WebhookProcessor
             $attempt = EmailAttempt::query()->lockForUpdate()->findOrFail($attempt->id);
             $isSendGrid = $receipt->providerAccount?->provider === 'sendgrid';
             if (! $isSendGrid && $attempt->provider_message_id !== null && $attempt->provider_message_id !== $data['message_id']) {
-                $receipt->update(['status' => 'unmatched', 'error_code' => 'correlation_conflict', 'processed_at' => now(), 'next_attempt_at' => null, 'processing_attempts' => $receipt->processing_attempts + 1]);
+                $receipt->update(['status' => 'unmatched', 'error_code' => 'correlation_conflict', 'processed_at' => now('UTC'), 'next_attempt_at' => null, 'processing_attempts' => $receipt->processing_attempts + 1]);
 
                 return;
             }
             $recipient = $message->recipients()->where('email', mb_strtolower($data['recipient']))->lockForUpdate()->first();
             if (! $recipient) {
-                $receipt->update(['status' => 'unmatched', 'error_code' => 'recipient_unmatched', 'processed_at' => now(), 'next_attempt_at' => null, 'processing_attempts' => $receipt->processing_attempts + 1]);
+                $receipt->update(['status' => 'unmatched', 'error_code' => 'recipient_unmatched', 'processed_at' => now('UTC'), 'next_attempt_at' => null, 'processing_attempts' => $receipt->processing_attempts + 1]);
 
                 return;
             }
             if (EmailEvent::where('provider_account_id', $receipt->provider_account_id)->where('provider_event_id', $data['id'])->exists()) {
-                $receipt->update(['status' => 'duplicate', 'processed_at' => now()]);
+                $receipt->update(['status' => 'duplicate', 'processed_at' => now('UTC')]);
 
                 return;
             }
@@ -146,11 +146,11 @@ class WebhookProcessor
             try {
                 $event = $connection->transaction(fn (): EmailEvent => EmailEvent::create(['provider_account_id' => $receipt->provider_account_id, 'email_message_id' => $message->id, 'email_recipient_id' => $recipient->id, 'webhook_receipt_id' => $receipt->id, 'provider_event_id' => $data['id'], 'type' => $type, 'occurred_at' => $at, 'metadata' => $metadata]));
             } catch (UniqueConstraintViolationException) {
-                $receipt->update(['status' => 'duplicate', 'processed_at' => now()]);
+                $receipt->update(['status' => 'duplicate', 'processed_at' => now('UTC')]);
 
                 return;
             }
-            $attemptUpdates = ['status' => 'submitted', 'retryable' => false, 'completed_at' => $attempt->completed_at ?? now()];
+            $attemptUpdates = ['status' => 'submitted', 'retryable' => false, 'completed_at' => $attempt->completed_at ?? now('UTC')];
             if ($isSendGrid) {
                 if ($data['message_id'] !== '') {
                     $attemptUpdates['remote_message_ids'] = array_slice(array_values(array_unique([...($attempt->remote_message_ids ?? []), $data['message_id']])), 0, 100);
@@ -159,7 +159,7 @@ class WebhookProcessor
                 $attemptUpdates['provider_message_id'] = $data['message_id'];
             }
             $attempt->update($attemptUpdates);
-            $message->update(['submitted_at' => $message->submitted_at ?? now(), 'lease_until' => null, 'next_attempt_at' => null, 'error_code' => null, 'error_message' => null]);
+            $message->update(['submitted_at' => $message->submitted_at ?? now('UTC'), 'lease_until' => null, 'next_attempt_at' => null, 'error_code' => null, 'error_message' => null]);
             $message->recipients()->where('delivery_status', 'pending')->update(['delivery_status' => 'submitted']);
             $recipient->refresh();
             $this->applyEvent($recipient, $type, $at, $metadata, $receipt->provider_account_id);
@@ -169,7 +169,7 @@ class WebhookProcessor
             if ($message->status !== $previousStatus && in_array($message->status, ['submitted', 'failed'], true) && $type !== $message->status) {
                 $this->clientWebhooks->publish($message, 'message.'.$message->status, 'provider-status:'.$event->id, null, $at);
             }
-            $receipt->update(['status' => 'processed', 'processed_at' => now(), 'error_code' => null, 'next_attempt_at' => null, 'processing_attempts' => $receipt->processing_attempts + 1]);
+            $receipt->update(['status' => 'processed', 'processed_at' => now('UTC'), 'error_code' => null, 'next_attempt_at' => null, 'processing_attempts' => $receipt->processing_attempts + 1]);
         });
     }
 
@@ -184,9 +184,9 @@ class WebhookProcessor
                 return;
             }
             $attempts = $receipt->processing_attempts + 1;
-            $expired = $attempts >= 12 || $receipt->created_at?->lessThanOrEqualTo(now()->subHours(6));
+            $expired = $attempts >= 12 || $receipt->created_at?->lessThanOrEqualTo(now('UTC')->subHours(6));
             $receipt->update(['status' => $status, 'error_code' => $errorCode, 'processing_attempts' => $attempts,
-                'processed_at' => $expired ? now() : null, 'next_attempt_at' => $expired ? null : now()->addMinutes(5)]);
+                'processed_at' => $expired ? now('UTC') : null, 'next_attempt_at' => $expired ? null : now('UTC')->addMinutes(5)]);
         });
     }
 
@@ -200,12 +200,12 @@ class WebhookProcessor
         try {
             $event = $this->payload($receipt);
         } catch (\UnexpectedValueException) {
-            $receipt->update(['status' => 'failed', 'error_code' => 'invalid_payload', 'processed_at' => now(), 'next_attempt_at' => null]);
+            $receipt->update(['status' => 'failed', 'error_code' => 'invalid_payload', 'processed_at' => now('UTC'), 'next_attempt_at' => null]);
 
             return null;
         }
         if ($event === null) {
-            $receipt->update(['status' => 'ignored', 'processed_at' => now()]);
+            $receipt->update(['status' => 'ignored', 'processed_at' => now('UTC')]);
         }
 
         return $event;

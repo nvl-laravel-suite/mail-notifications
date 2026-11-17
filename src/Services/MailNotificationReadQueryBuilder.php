@@ -7,7 +7,9 @@ namespace Nvl\MailNotifications\Services;
 use Illuminate\Database\Eloquent\Builder;
 use Nvl\MailNotifications\Enums\MailDeliveryStatus;
 use Nvl\MailNotifications\Models\MailNotification;
+use Nvl\MailNotifications\Support\DatabaseTimestamp;
 use Nvl\MailNotifications\ValueObjects\MailNotificationReadQuery;
+use Nvl\Support\Contracts\TextMatcher;
 use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 
 /**
@@ -18,7 +20,7 @@ use Nvl\Support\Ownership\Contracts\OwnershipBoundary;
 final readonly class MailNotificationReadQueryBuilder
 {
     /** Create the tenant-bounded read builder. */
-    public function __construct(private OwnershipBoundary $boundary) {}
+    public function __construct(private OwnershipBoundary $boundary, private TextMatcher $textMatcher) {}
 
     /**
      * Apply the validated history query filters to the already authorized tracked-notification read boundary.
@@ -31,13 +33,7 @@ final readonly class MailNotificationReadQueryBuilder
             ->select(MailHistory::COLUMNS);
 
         if ($filters->search !== null) {
-            $term = "%{$filters->search}%";
-            $query->where(static function (Builder $search) use ($term): void {
-                $search->where('subject', 'like', $term)
-                    ->orWhere('from_email', 'like', $term)
-                    ->orWhere('primary_recipient_email', 'like', $term)
-                    ->orWhere('provider_message_id', 'like', $term);
-            });
+            $this->search($query, $filters->search, ['subject', 'from_email', 'primary_recipient_email', 'provider_message_id']);
         }
 
         if ($filters->status instanceof MailDeliveryStatus) {
@@ -53,11 +49,11 @@ final readonly class MailNotificationReadQueryBuilder
         }
 
         if ($filters->from !== null) {
-            $query->where('created_at', '>=', $filters->from);
+            $query->where('created_at', '>=', DatabaseTimestamp::format($filters->from));
         }
 
         if ($filters->to !== null) {
-            $query->where('created_at', '<=', $filters->to);
+            $query->where('created_at', '<=', DatabaseTimestamp::format($filters->to));
         }
 
         if ($filters->acceptedOnly) {
@@ -69,6 +65,29 @@ final readonly class MailNotificationReadQueryBuilder
         }
 
         return $query;
+    }
+
+    /**
+     * Match a literal, case-insensitive substring in any of the given columns.
+     *
+     * @template TQuery of Builder<MailNotification>
+     *
+     * @param  TQuery  $query
+     * @param  non-empty-list<string>  $columns
+     * @return TQuery
+     */
+    public function search(Builder $query, string $search, array $columns): Builder
+    {
+        return $query->where(function (Builder $matches) use ($search, $columns): void {
+            foreach ($columns as $index => $column) {
+                $matches->setQuery($this->textMatcher->contains(
+                    $matches->getQuery(),
+                    $column,
+                    $search,
+                    boolean: $index === 0 ? 'and' : 'or',
+                ));
+            }
+        });
     }
 
     /**

@@ -131,7 +131,7 @@ it('uses fixed safe diagnostics when configuration resolution throws', function 
 
     $checks = app(ManagedDoctor::class)->inspect();
 
-    expect(json_encode($checks, JSON_THROW_ON_ERROR))->not->toContain($secret, 'never-print-this');
+    expect(json_encode($checks, JSON_THROW_ON_ERROR))->not->toContain($secret)->not->toContain('never-print-this');
     expect(collect($checks)->firstWhere('key', 'managed.connections')->passed)->toBeFalse();
     expect(collect($checks)->firstWhere('key', 'managed.authorization')->passed)->toBeFalse();
 });

@@ -14,6 +14,9 @@ use InvalidArgumentException;
  */
 final readonly class ScheduleMailData
 {
+    /** Largest payload version every supported database stores (PostgreSQL smallint). */
+    public const int MAX_PAYLOAD_VERSION = 32767;
+
     public string $factoryAlias;
 
     /**
@@ -53,9 +56,9 @@ final readonly class ScheduleMailData
             );
         }
 
-        if ($payloadVersion < 1) {
+        if ($payloadVersion < 1 || $payloadVersion > self::MAX_PAYLOAD_VERSION) {
             throw new InvalidArgumentException(
-                'Scheduled message payload versions must be positive integers.',
+                'Scheduled message payload versions must be integers between 1 and '.self::MAX_PAYLOAD_VERSION.'.',
             );
         }
 
